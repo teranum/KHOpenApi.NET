@@ -1,0 +1,14 @@
+﻿<Window x:Class="WpfApp1.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfApp1"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="223" Width="371">
+    <Grid>
+        <WindowsFormsHost Name="axContainer" Height="0" Width="0"/>
+        <Button x:Name="button_login" Content="로그인" HorizontalAlignment="Left" Margin="66,46,0,0" VerticalAlignment="Top" Width="87" Click="button_login_Click"/>
+        <TextBox x:Name="textBox1" HorizontalAlignment="Left" Margin="66,92,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="132" Height="20"/>
+    </Grid>
+</Window>
