@@ -1,6 +1,6 @@
 # KHOpenApi.NET 테스트
 
-NET6.0 WinForms
+1. WinForms(NET6.0)
 ---------------
 
 #### Form1.cs
@@ -48,7 +48,7 @@ namespace WinFormsApp1
 
 ```
 
-NET6.0 WPF
+2. WPF(NET6.0)
 ---------------
 프로젝트 설정 추가 : UseWindowsForms=True
 
