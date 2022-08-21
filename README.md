@@ -50,7 +50,7 @@ namespace WinFormsApp1
 
 NET6.0 WPF
 ---------------
-프로젝트 설정 추가 : <UseWindowsForms>True</UseWindowsForms> 
+프로젝트 설정 추가 : UseWindowsForms=True
 
 #### MainWindow.xaml
 
