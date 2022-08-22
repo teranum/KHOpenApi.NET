@@ -117,3 +117,19 @@ namespace WpfApp1
 }
 
 ```
+
+## 3. WinForms_NET Framework4.8
+---------------
+    1항참고
+
+## 4. Wpf_NET Framework4.8
+---------------
+    프로젝트 파일편집 및 추가(.csproj)
+    
+```xml
+<ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="WindowsFormsIntegration" />
+</ItemGroup>
+```
+
