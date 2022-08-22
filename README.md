@@ -120,7 +120,7 @@ namespace WpfApp1
 
 ## 3. WinForms_NET Framework4.8
 ---------------
-    1항참고
+    1항 참고
 
 ## 4. Wpf_NET Framework4.8
 ---------------
@@ -132,4 +132,4 @@ namespace WpfApp1
     <Reference Include="WindowsFormsIntegration" />
 </ItemGroup>
 ```
-
+ 추가 2항 참고
