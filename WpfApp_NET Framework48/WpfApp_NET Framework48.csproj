@@ -50,8 +50,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="KHOpenApi.NET, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\KHOpenApi.NET.1.0.3\lib\net48\KHOpenApi.NET.dll</HintPath>
+    <Reference Include="KHOpenApi.NET, Version=1.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\KHOpenApi.NET.1.0.4\lib\net48\KHOpenApi.NET.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
