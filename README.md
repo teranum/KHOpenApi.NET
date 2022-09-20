@@ -5,8 +5,8 @@
 - WinUI3, WPF, Winforms 지원
 * 소스코드상 국내키워드: KH, 해외키워드: KF
 
-## 1. WinUI3 (target platforms: x86, UnPackaged)
 ---------------
+## 1. WinUI3 (target platforms: x86, UnPackaged)
 #### MainWindow.xaml.cs
 
 ```c#
@@ -48,8 +48,8 @@
 
 ```
 
-## 2. WPF (NET6.0), WPF_NET48
 ---------------
+## 2. WPF (NET6.0), WPF_NET48
 #### MainWindow.xaml.cs
 
 ```c#
@@ -90,8 +90,8 @@
 
 ```
 
-## 3. WinForms (NET6.0), WinForm_NET48
 ---------------
+## 3. WinForms (NET6.0), WinForm_NET48
 #### Form1.cs
 
 ```c#
