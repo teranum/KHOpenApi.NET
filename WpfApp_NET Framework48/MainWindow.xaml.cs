@@ -1,5 +1,6 @@
 ﻿using KHOpenApi.NET;
 using System.Windows;
+using System.Windows.Interop;
 
 namespace WpfApp_NET_Framework48
 {
@@ -15,9 +16,10 @@ namespace WpfApp_NET_Framework48
         {
             InitializeComponent();
             // ActiveX 세팅
-            axKHOpenAPI = new AxKHOpenAPI();
+            axKHOpenAPI = new AxKHOpenAPI( new WindowInteropHelper(Application.Current.MainWindow).EnsureHandle() );
             axKHOpenAPI.OnEventConnect += new _DKHOpenAPIEvents_OnEventConnectEventHandler(this.axKHOpenAPI_OnEventConnect);
-            axContainer.Child = axKHOpenAPI;
+
+            button_login.IsEnabled = axKHOpenAPI.Created;
         }
 
         // 로그인 이벤트 핸들러

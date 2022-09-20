@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "UiKHOpenApiTest (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "UiKHOpenApiTest (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

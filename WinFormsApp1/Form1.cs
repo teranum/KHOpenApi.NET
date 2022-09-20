@@ -11,9 +11,10 @@ namespace WinFormsApp1
         {
             InitializeComponent();
             // 새로 추가
-            axKHOpenAPI = new AxKHOpenAPI();
+            axKHOpenAPI = new AxKHOpenAPI( Handle );
             axKHOpenAPI.OnEventConnect += new _DKHOpenAPIEvents_OnEventConnectEventHandler(axKHOpenAPI_OnEventConnect);
-            Controls.Add(axKHOpenAPI);
+
+            button_login.Enabled = axKHOpenAPI.Created;
         }
 
         // 로그인 이벤트 핸들러

@@ -4,13 +4,13 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
+    <UseWindowsForms>True</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="KHOpenApi.NET" Version="1.0.4" />
+    <ProjectReference Include="..\KHOpenApi.NET\KHOpenApi.NET.csproj" />
   </ItemGroup>
 
 </Project>
