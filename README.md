@@ -3,7 +3,7 @@
 - netstandard2.0 지원
 - WinUI3, WPF, Winforms 지원
 
-## 1. WinUI3 (target platforms: x86)
+## 1. WinUI3 (target platforms: x86, UnPackaged)
 ---------------
 #### MainWindow.xaml.cs
 
