@@ -3,11 +3,9 @@
 	<PropertyGroup>
 		<LangVersion>10.0</LangVersion>
 		<TargetFrameworks>netstandard2.0</TargetFrameworks>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
 		<PlatformTarget>AnyCPU</PlatformTarget>
-		<Description>32bit/64bit common wrapper for Kiwoom</Description>
-		<Version>1.0.5</Version>
+		<Description>Common wrapper for Kiwoom Hero and Global</Description>
+		<Version>1.0.6</Version>
 		<Title>KHOpenAPI.NET</Title>
 		<PackageTags>kiwoom, KOA</PackageTags>
 		<Authors>teranum</Authors>
@@ -16,7 +14,6 @@
 		<PackageIcon>icon.png</PackageIcon>
 		<Company>$(Authors)</Company>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<DefineConstants Condition=" '$(TargetFramework)' == 'net48' ">NET48</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -24,14 +21,6 @@
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
 		</None>
-	</ItemGroup>
-
-	<PropertyGroup Condition="'$(TargetFramework)'=='net48'">
-		<TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-	</PropertyGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)'=='net48'">
-		<Reference Include="System.Net.Http" />
 	</ItemGroup>
 
 </Project>

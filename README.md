@@ -1,7 +1,9 @@
 # KHOpenApi.NET
 - 키움증권 OpenApi C# wrapper class
+- 국내주식/선물(HERO), 해외선물(Global)지원
 - netstandard2.0 지원
 - WinUI3, WPF, Winforms 지원
+* 소스코드상 국내키워드: KH, 해외키워드: KF
 
 ## 1. WinUI3 (target platforms: x86, UnPackaged)
 ---------------

@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfApp_NET Framework48", "W
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KHOpenApi.NET", "KHOpenApi.NET\KHOpenApi.NET.csproj", "{FB86AE12-195E-4368-B63E-5C47DB6301BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinUI3_test", "WinUI3_test\WinUI3_test.csproj", "{3F8F15C8-EEB8-40C9-9DA9-F72708965F41}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinUI3_test", "WinUI3_test\WinUI3_test.csproj", "{3F8F15C8-EEB8-40C9-9DA9-F72708965F41}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{80FB305E-47BD-488D-AD05-97B3F5343393}"
 	ProjectSection(SolutionItems) = preProject

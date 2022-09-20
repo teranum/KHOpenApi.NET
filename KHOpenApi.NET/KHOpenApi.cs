@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace KHOpenApi.NET
@@ -563,15 +564,13 @@ namespace KHOpenApi.NET
         private IntPtr hWndContainer = IntPtr.Zero;
 
         private _DKHOpenAPI ocx;
-        private System.Runtime.InteropServices.ComTypes.IConnectionPoint? _pConnectionPoint;
+        private System.Runtime.InteropServices.ComTypes.IConnectionPoint _pConnectionPoint;
         private int _nCookie = 0;
         private bool bInitialized = false;
 
         public bool Created => bInitialized;
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public AxKHOpenAPI(IntPtr hWndParent)
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             string clsid = System.Environment.Is64BitProcess ? "{0f3a0d96-1432-4d05-a1ac-220e202bb52c}" : "{a1574a0d-6bfa-4bd7-9020-ded88711818d}";
             if (!bInitialized)
