@@ -1,4 +1,7 @@
-# KHOpenApi.NET 테스트
+# KHOpenApi.NET
+- 키움증권 OpenApi C# wrapper class
+- netstandard2.0 지원
+- winforms, wpf, winui3 지원
 
 ## 1. WinForms (NET6.0), WinForm_NET48
 ---------------
