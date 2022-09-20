@@ -87,7 +87,7 @@
 
 ```
 
-## 3. WinUI3
+## 3. WinUI3 (target platforms: x86)
 ---------------
 #### MainWindow.xaml.cs
 
