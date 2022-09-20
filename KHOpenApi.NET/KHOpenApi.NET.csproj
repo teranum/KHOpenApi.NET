@@ -12,7 +12,7 @@
 		<PackageTags>kiwoom, KOA</PackageTags>
 		<Authors>teranum</Authors>
 		<Copyright>Copyright © teranum 2022</Copyright>
-		<PackageProjectUrl>https://github.com/terapark/Test_KHOpenApi.NET</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/terapark/KHOpenApi.NET</PackageProjectUrl>
 		<PackageIcon>icon.png</PackageIcon>
 		<Company>$(Authors)</Company>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
