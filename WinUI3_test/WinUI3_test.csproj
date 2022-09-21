@@ -26,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="KHOpenApi.NET" Version="1.0.7" />
+    <PackageReference Include="KHOpenApi.NET" Version="1.1.0" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.1.5" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.1" />
     <Manifest Include="$(ApplicationManifest)" />

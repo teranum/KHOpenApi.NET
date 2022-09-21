@@ -308,6 +308,8 @@ namespace KFOpenApi.NET
         private static extern int AtlAxGetControl(IntPtr h, [MarshalAs(UnmanagedType.IUnknown)] out object pp);
         [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern IntPtr CreateWindowEx(int dwExStyle, string lpClassName, string lpWindowName, int dwStyle, int x, int y, int nWidth, int nHeight, IntPtr hWndParent, IntPtr hMenu, IntPtr hInstance, IntPtr lpParam);
+        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern bool DestroyWindow(IntPtr hWnd);
 
         private const int WS_VISIBLE = 0x10000000;
         private const int WS_CHILD = 0x40000000;
@@ -329,23 +331,34 @@ namespace KFOpenApi.NET
                 if (AtlAxWinInit())
                 {
                     hWndContainer = CreateWindowEx(0, "AtlAxWin", clsid, WS_VISIBLE | WS_CHILD, -100, -100, 20, 20, hWndParent, (IntPtr)9002, IntPtr.Zero, IntPtr.Zero);
-                    object pUnknown;
-                    AtlAxGetControl(hWndContainer, out pUnknown);
-                    if (pUnknown != null)
+                    if (hWndContainer != IntPtr.Zero)
                     {
-                        ocx = (_DKFOpenAPI)pUnknown;
-                        if (ocx != null)
+                        try
                         {
-                            Guid guidEvents = typeof(_DKFOpenAPIEvents).GUID;
-                            System.Runtime.InteropServices.ComTypes.IConnectionPointContainer pConnectionPointContainer;
-                            pConnectionPointContainer = (System.Runtime.InteropServices.ComTypes.IConnectionPointContainer)pUnknown;
-                            pConnectionPointContainer.FindConnectionPoint(ref guidEvents, out _pConnectionPoint);
-                            if (_pConnectionPoint != null)
+                            object pUnknown;
+                            AtlAxGetControl(hWndContainer, out pUnknown);
+                            if (pUnknown != null)
                             {
-                                AxKFOpenAPIEventMulticaster pEventSink = new AxKFOpenAPIEventMulticaster(this);
-                                _pConnectionPoint.Advise(pEventSink, out _nCookie);
+                                ocx = (_DKFOpenAPI)pUnknown;
+                                if (ocx != null)
+                                {
+                                    Guid guidEvents = typeof(_DKFOpenAPIEvents).GUID;
+                                    System.Runtime.InteropServices.ComTypes.IConnectionPointContainer pConnectionPointContainer;
+                                    pConnectionPointContainer = (System.Runtime.InteropServices.ComTypes.IConnectionPointContainer)pUnknown;
+                                    pConnectionPointContainer.FindConnectionPoint(ref guidEvents, out _pConnectionPoint);
+                                    if (_pConnectionPoint != null)
+                                    {
+                                        AxKFOpenAPIEventMulticaster pEventSink = new AxKFOpenAPIEventMulticaster(this);
+                                        _pConnectionPoint.Advise(pEventSink, out _nCookie);
+                                    }
+                                    bInitialized = true;
+                                }
                             }
-                            bInitialized = true;
+                        }
+                        catch (Exception)
+                        {
+                            DestroyWindow(hWndContainer);
+                            hWndContainer = IntPtr.Zero;
                         }
                     }
                 }
