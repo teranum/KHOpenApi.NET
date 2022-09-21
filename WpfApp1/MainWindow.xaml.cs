@@ -1,7 +1,7 @@
-﻿using KHOpenApi.NET;
-using KFOpenApi.NET;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Interop;
+using KHOpenApi.NET;
+using KFOpenApi.NET;
 
 namespace WpfApp1
 {
@@ -11,8 +11,8 @@ namespace WpfApp1
     public partial class MainWindow : Window
     {
         // ocx인터페이스 추가
-        private AxKHOpenAPI axKHOpenAPI;
-        private AxKFOpenAPI axKFOpenAPI;
+        private AxKHOpenAPI axKHOpenAPI; // 국내 (영웅문)
+        private AxKFOpenAPI axKFOpenAPI; // 해외 (영웅문 글로벌)
 
         public MainWindow()
         {

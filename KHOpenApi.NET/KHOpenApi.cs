@@ -560,7 +560,6 @@ namespace KHOpenApi.NET
         private const int WS_VISIBLE = 0x10000000;
         private const int WS_CHILD = 0x40000000;
 
-        private IntPtr _hWndParent = IntPtr.Zero;
         private IntPtr hWndContainer = IntPtr.Zero;
 
         private _DKHOpenAPI ocx;
@@ -577,11 +576,7 @@ namespace KHOpenApi.NET
             {
                 if (AtlAxWinInit())
                 {
-                    _hWndParent = hWndParent;
-
-                    Guid guidEvents = typeof(_DKHOpenAPIEvents).GUID;
-
-                    hWndContainer = CreateWindowEx(0, "AtlAxWin", clsid, WS_VISIBLE | WS_CHILD, -100, -100, 20, 20, _hWndParent, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+                    hWndContainer = CreateWindowEx(0, "AtlAxWin", clsid, WS_VISIBLE | WS_CHILD, -100, -100, 20, 20, hWndParent, (IntPtr)9001, IntPtr.Zero, IntPtr.Zero);
                     object pUnknown;
                     AtlAxGetControl(hWndContainer, out pUnknown);
                     if (pUnknown != null)
@@ -589,10 +584,10 @@ namespace KHOpenApi.NET
                         ocx = (_DKHOpenAPI)pUnknown;
                         if (ocx != null)
                         {
+                            Guid guidEvents = typeof(_DKHOpenAPIEvents).GUID;
                             System.Runtime.InteropServices.ComTypes.IConnectionPointContainer pConnectionPointContainer;
                             pConnectionPointContainer = (System.Runtime.InteropServices.ComTypes.IConnectionPointContainer)pUnknown;
                             pConnectionPointContainer.FindConnectionPoint(ref guidEvents, out _pConnectionPoint);
-                            //Marshal.ReleaseComObject(pConnectionPointContainer);
                             if (_pConnectionPoint != null)
                             {
                                 AxKHOpenAPIEventMulticaster pEventSink = new AxKHOpenAPIEventMulticaster(this);

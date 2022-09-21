@@ -7,7 +7,9 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="173" Width="353">
     <Grid>
-        <Button x:Name="button_login" Content="로그인" HorizontalAlignment="Left" Margin="69,31,0,0" VerticalAlignment="Top" Width="64" Click="button_login_Click"/>
-        <TextBlock x:Name="textBox1" HorizontalAlignment="Left" Margin="60,0,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Center" Width="148"/>
+        <Button x:Name="button_login_KH" Content="국내로그인" HorizontalAlignment="Left" Margin="30,31,0,0" VerticalAlignment="Top" Width="64" Click="button_login_KH_Click"/>
+        <TextBlock x:Name="textBox1" HorizontalAlignment="Left" Margin="21,0,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Center" Width="148"/>
+        <Button x:Name="button_login_KF" Content="해외로그인" HorizontalAlignment="Left" Margin="192,31,0,0" VerticalAlignment="Top" Width="64" Click="button_login_KF_Click"/>
+        <TextBlock x:Name="textBox2" HorizontalAlignment="Left" Margin="183,0,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Center" Width="148"/>
     </Grid>
 </Window>

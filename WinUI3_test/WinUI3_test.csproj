@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+	  <LangVersion>10.0</LangVersion>
+	  <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>WinUI3_test</RootNamespace>
@@ -25,9 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="KHOpenApi.NET" Version="1.0.6" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.1.3" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22000.194" />
+    <PackageReference Include="KHOpenApi.NET" Version="1.0.7" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.1.5" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.1" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 

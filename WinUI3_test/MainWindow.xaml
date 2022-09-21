@@ -7,8 +7,20 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <TextBlock Name="textBox1">로그인 상태</TextBlock>
-        <Button x:Name="myButton" Click="myButton_Click">Click Me</Button>
-    </StackPanel>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="50*" />
+            <ColumnDefinition Width="50*" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Button x:Name="button_login_KH" IsEnabled="False" Click="button_login_KH_Click">국내 로그인</Button>
+            <TextBlock Name="textBox1">로그인 상태</TextBlock>
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Button x:Name="button_login_KF" IsEnabled="False" Click="button_login_KF_Click">해외 로그인</Button>
+            <TextBlock Name="textBox2">로그인 상태</TextBlock>
+        </StackPanel>
+
+    </Grid>
 </Window>

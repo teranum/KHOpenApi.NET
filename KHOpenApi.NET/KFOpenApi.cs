@@ -10,9 +10,9 @@ namespace KFOpenApi.NET
     [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
     public interface _DKFOpenAPI
     {
-        [MethodImpl(MethodImplOptions.PreserveSig | MethodImplOptions.InternalCall)]
-        [DispId(-552)]
-        void AboutBox();
+        //[MethodImpl(MethodImplOptions.PreserveSig | MethodImplOptions.InternalCall)]
+        //[DispId(-552)]
+        //void AboutBox();
 
         [MethodImpl(MethodImplOptions.PreserveSig | MethodImplOptions.InternalCall)]
         [DispId(1)]
@@ -20,7 +20,7 @@ namespace KFOpenApi.NET
 
         [MethodImpl(MethodImplOptions.PreserveSig | MethodImplOptions.InternalCall)]
         [DispId(2)]
-        int CommRqData([MarshalAs(UnmanagedType.BStr)] string sRQName, [MarshalAs(UnmanagedType.BStr)] string sTrCode, int nPrevNext, [MarshalAs(UnmanagedType.BStr)] string sScreenNo);
+        int CommRqData([MarshalAs(UnmanagedType.BStr)] string sRQName, [MarshalAs(UnmanagedType.BStr)] string sTrCode, [MarshalAs(UnmanagedType.BStr)] string sPrevNext, [MarshalAs(UnmanagedType.BStr)] string sScreenNo);
 
         [MethodImpl(MethodImplOptions.PreserveSig | MethodImplOptions.InternalCall)]
         [DispId(3)]
@@ -183,15 +183,15 @@ namespace KFOpenApi.NET
 
         public string sRecordName;
 
-        public string sPrevNext;
+        public string sPreNext;
 
-        public _DKFOpenAPIEvents_OnReceiveTrDataEvent(string sScrNo, string sRQName, string sTrCode, string sRecordName, string sPrevNext)
+        public _DKFOpenAPIEvents_OnReceiveTrDataEvent(string sScrNo, string sRQName, string sTrCode, string sRecordName, string sPreNext)
         {
             this.sScrNo = sScrNo;
             this.sRQName = sRQName;
             this.sTrCode = sTrCode;
             this.sRecordName = sRecordName;
-            this.sPrevNext = sPrevNext;
+            this.sPreNext = sPreNext;
         }
     }
     public class _DKFOpenAPIEvents_OnReceiveMsgEvent
@@ -269,22 +269,22 @@ namespace KFOpenApi.NET
             this.parent = parent;
         }
 
-        public virtual void OnReceiveTrData(string sScrNo, string sRQName, string sTrCode, string sRecordName, string sPrevNext)
+        public virtual void OnReceiveTrData(string sScrNo, string sRQName, string sTrCode, string sRecordName, string sPreNext)
         {
-            _DKFOpenAPIEvents_OnReceiveTrDataEvent e = new _DKFOpenAPIEvents_OnReceiveTrDataEvent(sScrNo, sRQName, sTrCode, sRecordName, sPrevNext);
+            _DKFOpenAPIEvents_OnReceiveTrDataEvent e = new _DKFOpenAPIEvents_OnReceiveTrDataEvent(sScrNo, sRQName, sTrCode, sRecordName, sPreNext);
             parent.RaiseOnOnReceiveTrData(parent, e);
-        }
-
-        public virtual void OnReceiveRealData(string sRealKey, string sRealType, string sRealData)
-        {
-            _DKFOpenAPIEvents_OnReceiveRealDataEvent e = new _DKFOpenAPIEvents_OnReceiveRealDataEvent(sRealKey, sRealType, sRealData);
-            parent.RaiseOnOnReceiveRealData(parent, e);
         }
 
         public virtual void OnReceiveMsg(string sScrNo, string sRQName, string sTrCode, string sMsg)
         {
             _DKFOpenAPIEvents_OnReceiveMsgEvent e = new _DKFOpenAPIEvents_OnReceiveMsgEvent(sScrNo, sRQName, sTrCode, sMsg);
             parent.RaiseOnOnReceiveMsg(parent, e);
+        }
+
+        public virtual void OnReceiveRealData(string sJongmokCode, string sRealType, string sRealData)
+        {
+            _DKFOpenAPIEvents_OnReceiveRealDataEvent e = new _DKFOpenAPIEvents_OnReceiveRealDataEvent(sJongmokCode, sRealType, sRealData);
+            parent.RaiseOnOnReceiveRealData(parent, e);
         }
 
         public virtual void OnReceiveChejanData(string sGubun, int nItemCnt, string sFIdList)
@@ -312,7 +312,6 @@ namespace KFOpenApi.NET
         private const int WS_VISIBLE = 0x10000000;
         private const int WS_CHILD = 0x40000000;
 
-        private IntPtr _hWndParent = IntPtr.Zero;
         private IntPtr hWndContainer = IntPtr.Zero;
 
         private _DKFOpenAPI ocx;
@@ -324,16 +323,12 @@ namespace KFOpenApi.NET
 
         public AxKFOpenAPI(IntPtr hWndParent)
         {
-            string clsid = System.Environment.Is64BitProcess ? "{6edca11c-3b88-491b-8e43-088790a2fb64}" : "{d1acab7d-a3af-49e4-9004-c9e98344e17a}";
+            string clsid = System.Environment.Is64BitProcess ? "{c42af31e-d199-4624-a57c-280d5b019cad}" : "{d1acab7d-a3af-49e4-9004-c9e98344e17a}";
             if (!bInitialized)
             {
                 if (AtlAxWinInit())
                 {
-                    _hWndParent = hWndParent;
-
-                    Guid guidEvents = typeof(_DKFOpenAPIEvents).GUID;
-
-                    hWndContainer = CreateWindowEx(0, "AtlAxWin", clsid, WS_VISIBLE | WS_CHILD, -100, -100, 20, 20, _hWndParent, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+                    hWndContainer = CreateWindowEx(0, "AtlAxWin", clsid, WS_VISIBLE | WS_CHILD, -100, -100, 20, 20, hWndParent, (IntPtr)9002, IntPtr.Zero, IntPtr.Zero);
                     object pUnknown;
                     AtlAxGetControl(hWndContainer, out pUnknown);
                     if (pUnknown != null)
@@ -341,16 +336,16 @@ namespace KFOpenApi.NET
                         ocx = (_DKFOpenAPI)pUnknown;
                         if (ocx != null)
                         {
+                            Guid guidEvents = typeof(_DKFOpenAPIEvents).GUID;
                             System.Runtime.InteropServices.ComTypes.IConnectionPointContainer pConnectionPointContainer;
                             pConnectionPointContainer = (System.Runtime.InteropServices.ComTypes.IConnectionPointContainer)pUnknown;
                             pConnectionPointContainer.FindConnectionPoint(ref guidEvents, out _pConnectionPoint);
-                            //Marshal.ReleaseComObject(pConnectionPointContainer);
                             if (_pConnectionPoint != null)
                             {
                                 AxKFOpenAPIEventMulticaster pEventSink = new AxKFOpenAPIEventMulticaster(this);
                                 _pConnectionPoint.Advise(pEventSink, out _nCookie);
-                                bInitialized = true;
                             }
+                            bInitialized = true;
                         }
                     }
                 }
@@ -407,15 +402,15 @@ namespace KFOpenApi.NET
             }
         }
 
-        public virtual void AboutBox()
-        {
-            if (ocx == null)
-            {
-                throw new InvalidActiveXStateException("AboutBox", ActiveXInvokeKind.MethodInvoke);
-            }
+        //public virtual void AboutBox()
+        //{
+        //    if (ocx == null)
+        //    {
+        //        throw new InvalidActiveXStateException("AboutBox", ActiveXInvokeKind.MethodInvoke);
+        //    }
 
-            ocx.AboutBox();
-        }
+        //    ocx.AboutBox();
+        //}
 
 
         public virtual int CommConnect(int nAutoUpgrade)
@@ -427,14 +422,14 @@ namespace KFOpenApi.NET
 
             return ocx.CommConnect(nAutoUpgrade);
         }
-        public virtual int CommRqData(string sRQName, string sTrCode, int nPrevNext, string sScreenNo)
+        public virtual int CommRqData(string sRQName, string sTrCode, string sPrevNext, string sScreenNo)
         {
             if (ocx == null)
             {
                 throw new InvalidActiveXStateException("CommRqData", ActiveXInvokeKind.MethodInvoke);
             }
 
-            return ocx.CommRqData(sRQName, sTrCode, nPrevNext, sScreenNo);
+            return ocx.CommRqData(sRQName, sTrCode, sPrevNext, sScreenNo);
         }
 
         public virtual void SetInputValue(string sID, string sValue)
