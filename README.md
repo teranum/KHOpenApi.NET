@@ -2,7 +2,8 @@
 - 키움증권 OpenApi C# wrapper class
 - netstandard2.0 지원
 - WinUI3, WPF, Winforms 지원
-
+- NUGET
+https://www.nuget.org/packages/KHOpenApi.NET
 ---------------
 ## 1. WinUI3 (target platforms: x86, UnPackaged)
 *WinuUI3 x86모드에서 글로벌OpenApi는 오류발생
