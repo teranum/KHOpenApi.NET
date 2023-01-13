@@ -28,9 +28,9 @@ namespace WinUI3_test
             button_login_KH.IsEnabled = axKHOpenAPI.Created;
 
             // WinUI3 x86모드에서 영웅문 글로벌 오류 발생
-            axKFOpenAPI = new AxKFOpenAPI(Handle);
-            axKFOpenAPI.OnEventConnect += new _DKFOpenAPIEvents_OnEventConnectEventHandler(this.axKFOpenAPI_OnEventConnect);
-            button_login_KF.IsEnabled = axKFOpenAPI.Created;
+            //axKFOpenAPI = new AxKFOpenAPI(Handle);
+            //axKFOpenAPI.OnEventConnect += new _DKFOpenAPIEvents_OnEventConnectEventHandler(this.axKFOpenAPI_OnEventConnect);
+            //button_login_KF.IsEnabled = axKFOpenAPI.Created;
         }
 
 
