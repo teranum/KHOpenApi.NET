@@ -77,7 +77,7 @@
 ```
 
 ---------------
-## 2. WPF (NET6.0), WPF_NET48
+## 2. WPF (NET7.0), WPF_NET48
 #### MainWindow.xaml.cs
 
 ```c#
@@ -144,7 +144,7 @@
 ```
 
 ---------------
-## 3. WinForms (NET6.0), WinForm_NET48
+## 3. WinForms (NET7.0), WinForm_NET48
 #### Form1.cs
 
 ```c#
