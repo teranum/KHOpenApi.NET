@@ -5,12 +5,12 @@
 		<TargetFrameworks>netstandard2.0</TargetFrameworks>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<Description>Common wrapper for Kiwoom Global</Description>
-		<Version>1.2.0</Version>
+		<Version>1.2.1</Version>
 		<Title>KFOpenAPI.NET</Title>
 		<PackageTags>kiwoom, KOA</PackageTags>
 		<Authors>teranum</Authors>
 		<Copyright>Copyright © teranum 2022</Copyright>
-		<PackageProjectUrl>https://github.com/terapark/KHOpenApi.NET</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/terapark/Kiwoom.NET</PackageProjectUrl>
 		<PackageIcon>icon.png</PackageIcon>
 		<Company>$(Authors)</Company>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
