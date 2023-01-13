@@ -4,9 +4,9 @@
 		<LangVersion>10.0</LangVersion>
 		<TargetFrameworks>netstandard2.0</TargetFrameworks>
 		<PlatformTarget>AnyCPU</PlatformTarget>
-		<Description>Common wrapper for Kiwoom Hero</Description>
+		<Description>Common wrapper for Kiwoom Global</Description>
 		<Version>1.2.0</Version>
-		<Title>KHOpenAPI.NET</Title>
+		<Title>KFOpenAPI.NET</Title>
 		<PackageTags>kiwoom, KOA</PackageTags>
 		<Authors>teranum</Authors>
 		<Copyright>Copyright © teranum 2022</Copyright>
