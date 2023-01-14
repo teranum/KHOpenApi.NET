@@ -1,10 +1,8 @@
-# KHOpenApi.NET (영웅문-Hero),  KFOpenApi.NET (영웅문-Global)
+# KHOpenApi.NET (영웅문-Hero, 영웅문-Global) [![NuGet version](https://badge.fury.io/nu/KHOpenApi.NET.svg)](https://badge.fury.io/nu/KHOpenApi.NET)
 - 32비트/64비트 공용, 키움증권 OpenApi C# wrapper class
 - netstandard2.0 지원
 - 개발환경: Visual Studio 2022
 - WinUI3, WPF, Winforms 지원
-- NUGET 영웅문-HERO https://www.nuget.org/packages/KHOpenApi.NET
-- NUGET 영웅문-Global https://www.nuget.org/packages/KFOpenApi.NET
 - 64비트사용시, 추가 설치 필요 https://github.com/terapark/64bit-kiwoom-openapi
 ---------------
 ## 1. WinUI3 (target platforms: x86/x64, UnPackaged)

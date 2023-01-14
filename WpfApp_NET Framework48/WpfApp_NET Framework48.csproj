@@ -50,11 +50,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="KFOpenApi.NET, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\KFOpenApi.NET.1.2.1\lib\netstandard2.0\KFOpenApi.NET.dll</HintPath>
-    </Reference>
-    <Reference Include="KHOpenApi.NET, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\KHOpenApi.NET.1.2.1\lib\netstandard2.0\KHOpenApi.NET.dll</HintPath>
+    <Reference Include="KHOpenApi.NET, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\KHOpenApi.NET.1.1.0\lib\netstandard2.0\KHOpenApi.NET.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
