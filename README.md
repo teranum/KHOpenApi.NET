@@ -1,4 +1,4 @@
-# [![NuGet version](https://badge.fury.io/nu/KHOpenApi.NET.svg)](https://badge.fury.io/nu/KHOpenApi.NET)  KHOpenApi.NET (영웅문-Hero, 영웅문-Global)
+# [![NuGet version](https://badge.fury.io/nu/KHOpenApi.NET.svg)](https://badge.fury.io/nu/KHOpenApi.NET)  KHOpenApi.NET (영웅문-Hero, 영웅문-Global) 
 - 32비트/64비트 공용, 키움증권 OpenApi C# wrapper class
 - netstandard2.0 지원
 - 개발환경: Visual Studio 2022
