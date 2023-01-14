@@ -4,13 +4,13 @@
 		<LangVersion>10.0</LangVersion>
 		<TargetFrameworks>netstandard2.0</TargetFrameworks>
 		<PlatformTarget>AnyCPU</PlatformTarget>
-		<Description>Common wrapper for Kiwoom Hero</Description>
-		<Version>1.2.1</Version>
+		<Description>Common wrapper for Kiwoom</Description>
+		<Version>1.1.0</Version>
 		<Title>KHOpenAPI.NET</Title>
 		<PackageTags>kiwoom, KOA</PackageTags>
 		<Authors>teranum</Authors>
 		<Copyright>Copyright © teranum 2022</Copyright>
-		<PackageProjectUrl>https://github.com/terapark/Kiwoom.NET</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/terapark/KHOpenAPI.NET</PackageProjectUrl>
 		<PackageIcon>icon.png</PackageIcon>
 		<Company>$(Authors)</Company>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
