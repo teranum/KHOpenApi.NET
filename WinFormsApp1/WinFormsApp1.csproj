@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="KHOpenApi.NET" Version="1.1.0" />
+    <PackageReference Include="KHOpenApi.NET" Version="1.3.0" />
   </ItemGroup>
 
 </Project>
