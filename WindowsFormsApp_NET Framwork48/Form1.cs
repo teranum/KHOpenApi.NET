@@ -1,7 +1,7 @@
-﻿using System;
-using System.Windows.Forms;
+﻿using KFOpenApi.NET;
 using KHOpenApi.NET;
-using KFOpenApi.NET;
+using System;
+using System.Windows.Forms;
 
 namespace WindowsFormsApp_NET_Framwork48
 {
@@ -17,11 +17,11 @@ namespace WindowsFormsApp_NET_Framwork48
 
             // ActiveX 세팅
             axKHOpenAPI = new AxKHOpenAPI(Handle);
-            axKHOpenAPI.OnEventConnect += new _DKHOpenAPIEvents_OnEventConnectEventHandler(this.axKHOpenAPI_OnEventConnect);
+            axKHOpenAPI.OnEventConnect += axKHOpenAPI_OnEventConnect;
             button_login_KH.Enabled = axKHOpenAPI.Created;
 
             axKFOpenAPI = new AxKFOpenAPI(Handle);
-            axKFOpenAPI.OnEventConnect += new _DKFOpenAPIEvents_OnEventConnectEventHandler(this.axKFOpenAPI_OnEventConnect);
+            axKFOpenAPI.OnEventConnect += axKFOpenAPI_OnEventConnect;
             button_login_KF.Enabled = axKFOpenAPI.Created;
         }
 

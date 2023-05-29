@@ -1,7 +1,7 @@
-﻿using System.Windows;
-using System.Windows.Interop;
+﻿using KFOpenApi.NET;
 using KHOpenApi.NET;
-using KFOpenApi.NET;
+using System.Windows;
+using System.Windows.Interop;
 
 namespace WpfApp_NET_Framework48
 {
@@ -21,11 +21,11 @@ namespace WpfApp_NET_Framework48
             System.IntPtr Handle = new WindowInteropHelper(Application.Current.MainWindow).EnsureHandle();
 
             axKHOpenAPI = new AxKHOpenAPI(Handle);
-            axKHOpenAPI.OnEventConnect += new _DKHOpenAPIEvents_OnEventConnectEventHandler(this.axKHOpenAPI_OnEventConnect);
+            axKHOpenAPI.OnEventConnect += axKHOpenAPI_OnEventConnect;
             button_login_KH.IsEnabled = axKHOpenAPI.Created;
 
             axKFOpenAPI = new AxKFOpenAPI(Handle);
-            axKFOpenAPI.OnEventConnect += new _DKFOpenAPIEvents_OnEventConnectEventHandler(this.axKFOpenAPI_OnEventConnect);
+            axKFOpenAPI.OnEventConnect += axKFOpenAPI_OnEventConnect;
             button_login_KF.IsEnabled = axKFOpenAPI.Created;
         }
 

@@ -1,5 +1,5 @@
-using KHOpenApi.NET;
 using KFOpenApi.NET;
+using KHOpenApi.NET;
 
 namespace WinFormsApp1
 {
@@ -15,11 +15,11 @@ namespace WinFormsApp1
 
             // ActiveX ¼¼ÆÃ
             axKHOpenAPI = new AxKHOpenAPI(Handle);
-            axKHOpenAPI.OnEventConnect += new _DKHOpenAPIEvents_OnEventConnectEventHandler(this.axKHOpenAPI_OnEventConnect);
+            axKHOpenAPI.OnEventConnect += axKHOpenAPI_OnEventConnect;
             button_login_KH.Enabled = axKHOpenAPI.Created;
 
             axKFOpenAPI = new AxKFOpenAPI(Handle);
-            axKFOpenAPI.OnEventConnect += new _DKFOpenAPIEvents_OnEventConnectEventHandler(this.axKFOpenAPI_OnEventConnect);
+            axKFOpenAPI.OnEventConnect += axKFOpenAPI_OnEventConnect;
             button_login_KF.Enabled = axKFOpenAPI.Created;
         }
 

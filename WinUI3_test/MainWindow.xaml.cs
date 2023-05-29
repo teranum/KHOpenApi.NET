@@ -1,7 +1,6 @@
-﻿using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
+﻿using KFOpenApi.NET;
 using KHOpenApi.NET;
-using KFOpenApi.NET;
+using Microsoft.UI.Xaml;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -24,12 +23,12 @@ namespace WinUI3_test
             System.IntPtr Handle = WinRT.Interop.WindowNative.GetWindowHandle(this);
 
             axKHOpenAPI = new AxKHOpenAPI(Handle);
-            axKHOpenAPI.OnEventConnect += new _DKHOpenAPIEvents_OnEventConnectEventHandler(this.axKHOpenAPI_OnEventConnect);
+            axKHOpenAPI.OnEventConnect += axKHOpenAPI_OnEventConnect;
             button_login_KH.IsEnabled = axKHOpenAPI.Created;
 
             // WinUI3 x86모드에서 영웅문 글로벌 오류 발생, x64모드에서는 정상작동
             //axKFOpenAPI = new AxKFOpenAPI(Handle);
-            //axKFOpenAPI.OnEventConnect += new _DKFOpenAPIEvents_OnEventConnectEventHandler(this.axKFOpenAPI_OnEventConnect);
+            //axKFOpenAPI.OnEventConnect += axKFOpenAPI_OnEventConnect;
             //button_login_KF.IsEnabled = axKFOpenAPI.Created;
         }
 
