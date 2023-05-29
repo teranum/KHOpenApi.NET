@@ -6,6 +6,9 @@
 - 64비트사용시, 추가 설치 필요 https://github.com/terapark/64bit-kiwoom-openapi
 
 ---------------
+WPF Full source Project : https://github.com/terapark/KOAStudio
+
+---------------
 ## 1. WPF (NET7.0), WPF_NET48
 #### MainWindow.xaml.cs
 
