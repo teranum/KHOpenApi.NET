@@ -1,17 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net48;net7.0-windows</TargetFrameworks>
-    <Nullable>enable</Nullable>
-    <UseWindowsForms>True</UseWindowsForms>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <PlatformTargets>x86;x64</PlatformTargets>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFrameworks>net48;net7.0-windows</TargetFrameworks>
+		<Nullable>enable</Nullable>
+		<UseWindowsForms>True</UseWindowsForms>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<PlatformTargets>x86;x64</PlatformTargets>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\KHOpenApi.NET\KHOpenApi.NET.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="KHOpenApi.NET" Version="*" />
+	</ItemGroup>
 
 
 </Project>
