@@ -2,14 +2,14 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
+	  <TargetFrameworks>net48;net7.0-windows</TargetFrameworks>
+	  <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="KHOpenApi.NET" Version="1.3.0" />
+    <PackageReference Include="KHOpenApi.NET" Version="*" />
   </ItemGroup>
 
 </Project>

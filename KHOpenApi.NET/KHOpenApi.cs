@@ -573,7 +573,7 @@ namespace KHOpenApi.NET
 
         public AxKHOpenAPI(IntPtr hWndParent)
         {
-            string clsid = System.Environment.Is64BitProcess ? "{0f3a0d96-1432-4d05-a1ac-220e202bb52c}" : "{a1574a0d-6bfa-4bd7-9020-ded88711818d}";
+            string clsid = /*System.Environment.Is64BitProcess ? "{0f3a0d96-1432-4d05-a1ac-220e202bb52c}" : */"{a1574a0d-6bfa-4bd7-9020-ded88711818d}";
             if (!bInitialized)
             {
                 if (AtlAxWinInit())

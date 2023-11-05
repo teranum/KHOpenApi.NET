@@ -1,5 +1,6 @@
 ﻿using KFOpenApi.NET;
 using KHOpenApi.NET;
+using System;
 using System.Windows;
 using System.Windows.Interop;
 
@@ -17,6 +18,9 @@ namespace WpfApp1
         public MainWindow()
         {
             InitializeComponent();
+
+            Title = "WpfApp " + (Environment.Is64BitProcess ? "(64비트)" : "(32비트)");
+
             // ActiveX 세팅
             System.IntPtr Handle = new WindowInteropHelper(Application.Current.MainWindow).EnsureHandle();
 

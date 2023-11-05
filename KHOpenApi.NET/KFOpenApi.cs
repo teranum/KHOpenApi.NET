@@ -324,7 +324,7 @@ namespace KFOpenApi.NET
 
         public AxKFOpenAPI(IntPtr hWndParent)
         {
-            string clsid = System.Environment.Is64BitProcess ? "{c42af31e-d199-4624-a57c-280d5b019cad}" : "{d1acab7d-a3af-49e4-9004-c9e98344e17a}";
+            string clsid = /*System.Environment.Is64BitProcess ? "{c42af31e-d199-4624-a57c-280d5b019cad}" : */"{d1acab7d-a3af-49e4-9004-c9e98344e17a}";
             if (!bInitialized)
             {
                 if (AtlAxWinInit())

@@ -13,6 +13,8 @@ namespace WinFormsApp1
         {
             InitializeComponent();
 
+            Text = "WinForm " + (Environment.Is64BitProcess ? "(64비트)" : "(32비트)");
+
             // ActiveX 세팅
             axKHOpenAPI = new AxKHOpenAPI(Handle);
             axKHOpenAPI.OnEventConnect += axKHOpenAPI_OnEventConnect;
