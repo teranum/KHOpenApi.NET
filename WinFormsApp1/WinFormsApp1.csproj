@@ -6,11 +6,12 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>True</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTargets>x86;x64</PlatformTargets>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="KHOpenApi.NET" Version="*" />
+    <ProjectReference Include="..\KHOpenApi.NET\KHOpenApi.NET.csproj" />
   </ItemGroup>
+
 
 </Project>

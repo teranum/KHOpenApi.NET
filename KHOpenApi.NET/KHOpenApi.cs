@@ -579,6 +579,12 @@ namespace KHOpenApi.NET
                 if (AtlAxWinInit())
                 {
                     hWndContainer = CreateWindowEx(0, "AtlAxWin", clsid, WS_VISIBLE | WS_CHILD, -100, -100, 20, 20, hWndParent, (IntPtr)9001, IntPtr.Zero, IntPtr.Zero);
+                    if (hWndContainer == IntPtr.Zero && Environment.Is64BitProcess)
+                    {
+                        // old 버젼 64비트 OCX경우:
+                        clsid = "{0f3a0d96-1432-4d05-a1ac-220e202bb52c}";
+                        hWndContainer = CreateWindowEx(0, "AtlAxWin", clsid, WS_VISIBLE | WS_CHILD, -100, -100, 0, 0, hWndParent, (IntPtr)9002, IntPtr.Zero, IntPtr.Zero);
+                    }
                     if (hWndContainer != IntPtr.Zero)
                     {
                         try

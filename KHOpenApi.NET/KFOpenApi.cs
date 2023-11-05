@@ -329,7 +329,13 @@ namespace KFOpenApi.NET
             {
                 if (AtlAxWinInit())
                 {
-                    hWndContainer = CreateWindowEx(0, "AtlAxWin", clsid, WS_VISIBLE | WS_CHILD, -100, -100, 20, 20, hWndParent, (IntPtr)9002, IntPtr.Zero, IntPtr.Zero);
+                    hWndContainer = CreateWindowEx(0, "AtlAxWin", clsid, WS_VISIBLE | WS_CHILD, -100, -100, 0, 0, hWndParent, (IntPtr)9002, IntPtr.Zero, IntPtr.Zero);
+                    if (hWndContainer == IntPtr.Zero && Environment.Is64BitProcess)
+                    {
+                        // old 버젼 64비트 OCX경우:
+                        clsid = "{c42af31e-d199-4624-a57c-280d5b019cad}";
+                        hWndContainer = CreateWindowEx(0, "AtlAxWin", clsid, WS_VISIBLE | WS_CHILD, -100, -100, 0, 0, hWndParent, (IntPtr)9002, IntPtr.Zero, IntPtr.Zero);
+                    }
                     if (hWndContainer != IntPtr.Zero)
                     {
                         try
