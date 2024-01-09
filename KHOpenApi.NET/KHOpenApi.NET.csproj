@@ -1,23 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<LangVersion>10.0</LangVersion>
+		<LangVersion>default</LangVersion>
 		<TargetFrameworks>netstandard2.0</TargetFrameworks>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<Description>Common wrapper for Kiwoom OpenApi</Description>
-		<Version>1.4.0</Version>
+		<Version>1.5.0</Version>
 		<Title>KHOpenAPI.NET</Title>
 		<PackageTags>kiwoom, KOA</PackageTags>
 		<Authors>teranum</Authors>
 		<Copyright>Copyright © teranum 2022</Copyright>
-		<PackageProjectUrl>https://github.com/terapark/KHOpenAPI.NET</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/teranum/KHOpenAPI.NET</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageProjectUrl>https://github.com/teranum/KHOpenAPI.NET</PackageProjectUrl>
 		<PackageIcon>icon.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<Company>$(Authors)</Company>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<None Include="icon.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="..\README.md">
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
 		</None>

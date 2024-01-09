@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace KHOpenApi.NET
 {
@@ -638,6 +640,13 @@ namespace KHOpenApi.NET
         public event _DKHOpenAPIEvents_OnReceiveConditionVerEventHandler OnReceiveConditionVer;
         internal void RaiseOnOnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
         {
+            if (_async_state == AsyncState.REQUEST)
+            {
+                _async_state = AsyncState.RESPONSE;
+                _async_tr_action(e);
+                _async_wait.Set();
+                return;
+            }
             if (this.OnReceiveTrData != null)
             {
                 this.OnReceiveTrData(sender, e);
@@ -676,7 +685,7 @@ namespace KHOpenApi.NET
             }
         }
 
-        internal void RaiseOnOnReceiveInvestRealData(object sender, _DKHOpenAPIEvents_OnReceiveInvestRealDataEvent e)
+            internal void RaiseOnOnReceiveInvestRealData(object sender, _DKHOpenAPIEvents_OnReceiveInvestRealDataEvent e)
         {
             if (this.OnReceiveInvestRealData != null)
             {
@@ -694,6 +703,13 @@ namespace KHOpenApi.NET
 
         internal void RaiseOnOnReceiveTrCondition(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e)
         {
+            if (_async_state == AsyncState.REQUEST)
+            {
+                _async_state = AsyncState.RESPONSE;
+                _async_tr_cond_action(e);
+                _async_wait.Set();
+                return;
+            }
             if (this.OnReceiveTrCondition != null)
             {
                 this.OnReceiveTrCondition(sender, e);
@@ -1292,33 +1308,119 @@ namespace KHOpenApi.NET
         {
             MethodInvoke,
             PropertyGet,
-            PropertySet
+            PropertySet,
         }
         public class InvalidActiveXStateException : Exception
         {
-            private readonly string name;
-            private readonly ActiveXInvokeKind kind;
+            private readonly string _name;
+            private readonly ActiveXInvokeKind _kind;
 
             public InvalidActiveXStateException(string name, ActiveXInvokeKind kind)
             {
-                this.name = name;
-                this.kind = kind;
+                _name = name;
+                _kind = kind;
             }
 
             public override string ToString()
             {
-                switch (kind)
+                return _kind switch
                 {
-                    case ActiveXInvokeKind.MethodInvoke:
-                        return string.Format("AXInvalidMethodInvoke {0}", name);
-                    case ActiveXInvokeKind.PropertyGet:
-                        return string.Format("AXInvalidPropertyGet {0}", name);
-                    case ActiveXInvokeKind.PropertySet:
-                        return string.Format("AXInvalidPropertySet {0}", name);
-                    default:
-                        return base.ToString();
-                }
+                    ActiveXInvokeKind.MethodInvoke => string.Format("AXInvalidMethodInvoke {0}", _name),
+                    ActiveXInvokeKind.PropertyGet => string.Format("AXInvalidPropertyGet {0}", _name),
+                    ActiveXInvokeKind.PropertySet => string.Format("AXInvalidPropertySet {0}", _name),
+                    _ => base.ToString(),
+                };
             }
         }
+
+        #region 비동기요청 (버젼 1.5.0 추가)
+
+        enum AsyncState
+        {
+            NONE = 0, // 대기
+            REQUEST = 1, // 요청
+            RESPONSE = 2, // 응답
+        }
+
+        readonly ManualResetEvent _async_wait = new(initialState: false);
+        AsyncState _async_state = AsyncState.NONE;
+        Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> _async_tr_action = null;
+        Action<_DKHOpenAPIEvents_OnReceiveTrConditionEvent> _async_tr_cond_action = null;
+        public virtual async Task<int> CommRqDataAsync(string sRQName, string sTrCode, int nPrevNext, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
+        {
+            // 비동기 요청이 이미 실행중이면 -901 리턴
+            if (_async_state != AsyncState.NONE)
+                return -901;
+            _async_state = AsyncState.REQUEST;
+            _async_tr_action = action;
+            _async_wait.Reset();
+            int nRet = CommRqData(sRQName, sTrCode, nPrevNext, sScreenNo);
+            if (nRet == 0)
+            {
+                Task taskAsync = Task.Run(() =>
+                {
+                    if (!_async_wait.WaitOne(5000))
+                    {
+                        // 5초 대기후에도 이벤트가 발생하지 않으면 -902 리턴
+                        nRet = -902;
+                    }
+                });
+                await taskAsync.ConfigureAwait(true);
+            }
+            _async_state = AsyncState.NONE;
+            return nRet;
+        }
+
+        public virtual async Task<int> CommKwRqDataAsync(string sArrCode, int bNext, int nCodeCount, int nTypeFlag, string sRQName, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
+        {
+            // 비동기 요청이 이미 실행중이면 -901 리턴
+            if (_async_state != AsyncState.NONE)
+                return -901;
+            _async_state = AsyncState.REQUEST;
+            _async_tr_action = action;
+            _async_wait.Reset();
+            int nRet = CommKwRqData(sArrCode, bNext, nCodeCount, nTypeFlag, sRQName, sScreenNo);
+            if (nRet == 0)
+            {
+                Task taskAsync = Task.Run(() =>
+                {
+                    if (!_async_wait.WaitOne(5000))
+                    {
+                        // 5초 대기후에도 이벤트가 발생하지 않으면 -902 리턴
+                        nRet = -902;
+                    }
+                });
+                await taskAsync.ConfigureAwait(true);
+            }
+            _async_state = AsyncState.NONE;
+            return nRet;
+        }
+
+        public virtual async Task<int> SendConditionAsync(string strScrNo, string strConditionName, int nIndex, int nSearch, Action<_DKHOpenAPIEvents_OnReceiveTrConditionEvent> action)
+        {
+            // 비동기 요청이 이미 실행중이면 -901 리턴
+            if (_async_state != AsyncState.NONE)
+                return -901;
+            _async_state = AsyncState.REQUEST;
+            _async_tr_cond_action = action;
+            _async_wait.Reset();
+            int nRet = SendCondition(strScrNo, strConditionName, nIndex, nSearch);
+            if (nRet == 1)
+            {
+                Task taskAsync = Task.Run(() =>
+                {
+                    if (!_async_wait.WaitOne(5000))
+                    {
+                        // 5초 대기후에도 이벤트가 발생하지 않으면 -902 리턴
+                        nRet = -902;
+                    }
+                });
+                await taskAsync.ConfigureAwait(true);
+            }
+            _async_state = AsyncState.NONE;
+            return nRet;
+        }
+
+        #endregion
     }
 }

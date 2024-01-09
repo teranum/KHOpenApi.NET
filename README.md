@@ -1,15 +1,15 @@
 # [![NuGet version](https://badge.fury.io/nu/KHOpenApi.NET.png)](https://badge.fury.io/nu/KHOpenApi.NET)  KHOpenApi.NET (영웅문-Hero, 영웅문-Global)
 - 32비트/64비트 공용, 키움증권 OpenApi C# wrapper class
-- netstandard2.0 지원
-- 개발환경: Visual Studio 2022
+- 개발환경: Visual Studio 2022, netstandard2.0
 - WinUI3, WPF, Winforms 지원
+- 비동기 TR 요청 지원 (CommRqDataAsync, CommKwRqDataAsync, SendConditionAsync)
 - 64비트사용시, 추가 설치 필요 https://github.com/teranum/64bit-kiwoom-openapi
 
 ---------------
-WPF Full source Project : https://github.com/teranum/KOAStudio
+KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
 
 ---------------
-## 1. WPF (NET7.0), WPF_NET48
+## 1. WPF
 #### MainWindow.xaml.cs
 
 ```c#
@@ -39,11 +39,11 @@ WPF Full source Project : https://github.com/teranum/KOAStudio
         {
             if (e.nErrCode == 0)
             {
-                textBox1.Text = "로그인 성공";
+                log_list.Items.Add("국내 로그인 성공");
             }
             else
             {
-                textBox1.Text = "로그인 실패";
+                log_list.Items.Add("국내 로그인 실패");
             }
         }
 
@@ -52,11 +52,11 @@ WPF Full source Project : https://github.com/teranum/KOAStudio
         {
             if (e.nErrCode == 0)
             {
-                textBox2.Text = "로그인 성공";
+                log_list.Items.Add("해외 로그인 성공");
             }
             else
             {
-                textBox2.Text = "로그인 실패";
+                log_list.Items.Add("해외 로그인 실패");
             }
         }
 
@@ -71,12 +71,35 @@ WPF Full source Project : https://github.com/teranum/KOAStudio
             // 해외 로그인 요청
             axKFOpenAPI.CommConnect(1);
         }
+
+        private void button_Async_Click(object sender, RoutedEventArgs e)
+        {
+            _ = TestAsync();
+        }
+
+        // 비동기 요청 테스트 (nuget 버전 1.5.0 이상 지원)
+        async Task TestAsync()
+        {
+            // 국내 종목정보 가져오기
+            string itemCode = "005930";
+            axKHOpenAPI.SetInputValue("종목코드", itemCode);
+            string 종목명 = string.Empty;
+            int nRet = await axKHOpenAPI.CommRqDataAsync("주식기본정보요청", "OPT10001", 0, "1000", e =>
+            {
+                종목명 = axKHOpenAPI.GetCommData(e.sTrCode, e.sRQName, 0, "종목명").Trim();
+            });
+            // nRet: 0 성공, 음수 실패(-901: 중복요청오류, -902: 5초이상 응답없음, 그외 키움 오류코드 참조)
+            if (nRet == 0)
+                log_list.Items.Add(종목명);
+            else
+                log_list.Items.Add($"비동기 요청실패({nRet})");
+        }
     }
 
 ```
 
 ---------------
-## 2. WinForms (NET7.0), WinForm_NET48
+## 2. WinForms
 #### Form1.cs
 
 ```c#
@@ -92,51 +115,11 @@ WPF Full source Project : https://github.com/teranum/KOAStudio
 
             // ActiveX 세팅
             axKHOpenAPI = new AxKHOpenAPI(Handle);
-            axKHOpenAPI.OnEventConnect += axKHOpenAPI_OnEventConnect;
-            button_login_KH.Enabled = axKHOpenAPI.Created;
 
-            axKFOpenAPI = new AxKFOpenAPI(Handle);
-            axKFOpenAPI.OnEventConnect += axKFOpenAPI_OnEventConnect;
-            button_login_KF.Enabled = axKFOpenAPI.Created;
+            // WPF샘플과 동일
+            ...
         }
-
-        // 국내로그인 이벤트 핸들러
-        private void axKHOpenAPI_OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
-        {
-            if (e.nErrCode == 0)
-            {
-                textBox1.Text = "로그인 성공";
-            }
-            else
-            {
-                textBox1.Text = "로그인 실패";
-            }
-        }
-
-        // 해외로그인 이벤트 핸들러
-        private void axKFOpenAPI_OnEventConnect(object sender, _DKFOpenAPIEvents_OnEventConnectEvent e)
-        {
-            if (e.nErrCode == 0)
-            {
-                textBox2.Text = "로그인 성공";
-            }
-            else
-            {
-                textBox2.Text = "로그인 실패";
-            }
-        }
-
-        private void button_login_KH_Click(object sender, EventArgs e)
-        {
-            // 국내 로그인 요청
-            axKHOpenAPI.CommConnect();
-        }
-
-        private void button_login_KF_Click(object sender, EventArgs e)
-        {
-            // 해외 로그인 요청
-            axKFOpenAPI.CommConnect(1);
-        }
+        ...
     }
 
 ```
@@ -160,53 +143,11 @@ WPF Full source Project : https://github.com/teranum/KOAStudio
             System.IntPtr Handle = WinRT.Interop.WindowNative.GetWindowHandle(this);
 
             axKHOpenAPI = new AxKHOpenAPI(Handle);
-            axKHOpenAPI.OnEventConnect += axKHOpenAPI_OnEventConnect;
-            button_login_KH.IsEnabled = axKHOpenAPI.Created;
 
-            // WinUI3 x86모드에서 영웅문 글로벌 오류 발생, x64모드에서는 정상작동
-            //axKFOpenAPI = new AxKFOpenAPI(Handle);
-            //axKFOpenAPI.OnEventConnect += axKFOpenAPI_OnEventConnect;
-            //button_login_KF.IsEnabled = axKFOpenAPI.Created;
+            // WPF샘플과 동일
+            ...
         }
-
-
-        // 국내로그인 이벤트 핸들러
-        private void axKHOpenAPI_OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
-        {
-            if (e.nErrCode == 0)
-            {
-                textBox1.Text = "로그인 성공";
-            }
-            else
-            {
-                textBox1.Text = "로그인 실패";
-            }
-        }
-
-        // 해외로그인 이벤트 핸들러
-        private void axKFOpenAPI_OnEventConnect(object sender, _DKFOpenAPIEvents_OnEventConnectEvent e)
-        {
-            if (e.nErrCode == 0)
-            {
-                textBox2.Text = "로그인 성공";
-            }
-            else
-            {
-                textBox2.Text = "로그인 실패";
-            }
-        }
-
-        private void button_login_KH_Click(object sender, RoutedEventArgs e)
-        {
-            // 국내 로그인 요청
-            axKHOpenAPI.CommConnect();
-        }
-
-        private void button_login_KF_Click(object sender, RoutedEventArgs e)
-        {
-            // 해외 로그인 요청
-            axKFOpenAPI.CommConnect(1);
-        }
+        ...
     }
 
 ```

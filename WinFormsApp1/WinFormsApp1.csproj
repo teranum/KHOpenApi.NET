@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFrameworks>net48;net7.0-windows</TargetFrameworks>
+		<TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<UseWindowsForms>True</UseWindowsForms>
 		<ImplicitUsings>enable</ImplicitUsings>
@@ -10,7 +10,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="KHOpenApi.NET" Version="1.4.0" />
+		<PackageReference Include="KHOpenApi.NET" Version="1.5.0" />
 	</ItemGroup>
 
 

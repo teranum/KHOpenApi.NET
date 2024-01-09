@@ -1,6 +1,7 @@
 ﻿using KFOpenApi.NET;
 using KHOpenApi.NET;
 using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 
@@ -38,11 +39,11 @@ namespace WpfApp1
         {
             if (e.nErrCode == 0)
             {
-                textBox1.Text = "로그인 성공";
+                log_list.Items.Add("국내 로그인 성공");
             }
             else
             {
-                textBox1.Text = "로그인 실패";
+                log_list.Items.Add("국내 로그인 실패");
             }
         }
 
@@ -51,11 +52,11 @@ namespace WpfApp1
         {
             if (e.nErrCode == 0)
             {
-                textBox2.Text = "로그인 성공";
+                log_list.Items.Add("해외 로그인 성공");
             }
             else
             {
-                textBox2.Text = "로그인 실패";
+                log_list.Items.Add("해외 로그인 실패");
             }
         }
 
@@ -69,6 +70,29 @@ namespace WpfApp1
         {
             // 해외 로그인 요청
             axKFOpenAPI.CommConnect(1);
+        }
+
+        private void button_Async_Click(object sender, RoutedEventArgs e)
+        {
+            _ = TestAsync();
+        }
+
+        // 비동기 요청 테스트 (nuget 버전 1.5.0 이상 지원)
+        async Task TestAsync()
+        {
+            // 국내 종목정보 가져오기
+            string itemCode = "005930";
+            axKHOpenAPI.SetInputValue("종목코드", itemCode);
+            string 종목명 = string.Empty;
+            int nRet = await axKHOpenAPI.CommRqDataAsync("주식기본정보요청", "OPT10001", 0, "1000", e =>
+            {
+                종목명 = axKHOpenAPI.GetCommData(e.sTrCode, e.sRQName, 0, "종목명").Trim();
+            });
+            // nRet: 0 성공, 음수 실패(-901: 중복요청오류, -902: 5초이상 응답없음, 그외 키움 오류코드 참조)
+            if (nRet == 0)
+                log_list.Items.Add(종목명);
+            else
+                log_list.Items.Add($"비동기 요청실패({nRet})");
         }
     }
 }
