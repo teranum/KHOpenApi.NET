@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -9,7 +11,7 @@ namespace KHOpenApi.NET
     [ComImport]
     [Guid("CF20FBB6-EDD4-4BE5-A473-FEF91977DEB6")]
     [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
-    public interface _DKHOpenAPI
+    internal interface _DKHOpenAPI
     {
         [MethodImpl(MethodImplOptions.PreserveSig | MethodImplOptions.InternalCall)]
         [DispId(1)]
@@ -283,7 +285,7 @@ namespace KHOpenApi.NET
     [ComImport]
     [Guid("7335F12D-8973-4BD5-B7F0-12DF03D175B7")]
     [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
-    public interface _DKHOpenAPIEvents
+    internal interface _DKHOpenAPIEvents
     {
         [MethodImpl(MethodImplOptions.PreserveSig | MethodImplOptions.InternalCall)]
         [DispId(1)]
@@ -322,408 +324,289 @@ namespace KHOpenApi.NET
         void OnReceiveConditionVer(int lRet, [MarshalAs(UnmanagedType.BStr)] string sMsg);
     }
 
-    public class _DKHOpenAPIEvents_OnReceiveTrDataEvent
+    /// <summary>요청했던 조회데이터를 수신했을때 발생됩니다.</summary>
+    public class _DKHOpenAPIEvents_OnReceiveTrDataEvent(string sScrNo, string sRQName, string sTrCode, string sRecordName, string sPrevNext, int nDataLength, string sErrorCode, string sMessage, string sSplmMsg) : EventArgs
     {
-        public string sScrNo;
-
-        public string sRQName;
-
-        public string sTrCode;
-
-        public string sRecordName;
-
-        public string sPrevNext;
-
-        public int nDataLength;
-
-        public string sErrorCode;
-
-        public string sMessage;
-
-        public string sSplmMsg;
-
-        public _DKHOpenAPIEvents_OnReceiveTrDataEvent(string sScrNo, string sRQName, string sTrCode, string sRecordName, string sPrevNext, int nDataLength, string sErrorCode, string sMessage, string sSplmMsg)
-        {
-            this.sScrNo = sScrNo;
-            this.sRQName = sRQName;
-            this.sTrCode = sTrCode;
-            this.sRecordName = sRecordName;
-            this.sPrevNext = sPrevNext;
-            this.nDataLength = nDataLength;
-            this.sErrorCode = sErrorCode;
-            this.sMessage = sMessage;
-            this.sSplmMsg = sSplmMsg;
-        }
-    }
-    public class _DKHOpenAPIEvents_OnReceiveRealDataEvent
-    {
-        public string sRealKey;
-
-        public string sRealType;
-
-        public string sRealData;
-
-        public _DKHOpenAPIEvents_OnReceiveRealDataEvent(string sRealKey, string sRealType, string sRealData)
-        {
-            this.sRealKey = sRealKey;
-            this.sRealType = sRealType;
-            this.sRealData = sRealData;
-        }
-    }
-    public class _DKHOpenAPIEvents_OnReceiveMsgEvent
-    {
-        public string sScrNo;
-
-        public string sRQName;
-
-        public string sTrCode;
-
-        public string sMsg;
-
-        public _DKHOpenAPIEvents_OnReceiveMsgEvent(string sScrNo, string sRQName, string sTrCode, string sMsg)
-        {
-            this.sScrNo = sScrNo;
-            this.sRQName = sRQName;
-            this.sTrCode = sTrCode;
-            this.sMsg = sMsg;
-        }
-    }
-    public class _DKHOpenAPIEvents_OnReceiveChejanDataEvent
-    {
-        public string sGubun;
-
-        public int nItemCnt;
-
-        public string sFIdList;
-
-        public _DKHOpenAPIEvents_OnReceiveChejanDataEvent(string sGubun, int nItemCnt, string sFIdList)
-        {
-            this.sGubun = sGubun;
-            this.nItemCnt = nItemCnt;
-            this.sFIdList = sFIdList;
-        }
-    }
-    public class _DKHOpenAPIEvents_OnEventConnectEvent
-    {
-        public int nErrCode;
-
-        public _DKHOpenAPIEvents_OnEventConnectEvent(int nErrCode)
-        {
-            this.nErrCode = nErrCode;
-        }
-    }
-    public class _DKHOpenAPIEvents_OnReceiveInvestRealDataEvent
-    {
-        public string sRealKey;
-
-        public _DKHOpenAPIEvents_OnReceiveInvestRealDataEvent(string sRealKey)
-        {
-            this.sRealKey = sRealKey;
-        }
-    }
-    public class _DKHOpenAPIEvents_OnReceiveRealConditionEvent
-    {
-        public string sTrCode;
-
-        public string strType;
-
-        public string strConditionName;
-
-        public string strConditionIndex;
-
-        public _DKHOpenAPIEvents_OnReceiveRealConditionEvent(string sTrCode, string strType, string strConditionName, string strConditionIndex)
-        {
-            this.sTrCode = sTrCode;
-            this.strType = strType;
-            this.strConditionName = strConditionName;
-            this.strConditionIndex = strConditionIndex;
-        }
-    }
-    public class _DKHOpenAPIEvents_OnReceiveTrConditionEvent
-    {
-        public string sScrNo;
-
-        public string strCodeList;
-
-        public string strConditionName;
-
-        public int nIndex;
-
-        public int nNext;
-
-        public _DKHOpenAPIEvents_OnReceiveTrConditionEvent(string sScrNo, string strCodeList, string strConditionName, int nIndex, int nNext)
-        {
-            this.sScrNo = sScrNo;
-            this.strCodeList = strCodeList;
-            this.strConditionName = strConditionName;
-            this.nIndex = nIndex;
-            this.nNext = nNext;
-        }
-    }
-    public class _DKHOpenAPIEvents_OnReceiveConditionVerEvent
-    {
-        public int lRet;
-
-        public string sMsg;
-
-        public _DKHOpenAPIEvents_OnReceiveConditionVerEvent(int lRet, string sMsg)
-        {
-            this.lRet = lRet;
-            this.sMsg = sMsg;
-        }
+        /// <summary>화면번호</summary>
+        public string sScrNo = sScrNo;
+        /// <summary>사용자 구분명</summary>
+        public string sRQName = sRQName;
+        /// <summary>TR이름</summary>
+        public string sTrCode = sTrCode;
+        /// <summary>레코드 이름</summary>
+        public string sRecordName = sRecordName;
+        /// <summary>연속조회 유무를 판단하는 값 0: 연속(추가조회)데이터 없음, 2:연속(추가조회) 데이터 있음</summary>
+        public string sPrevNext = sPrevNext;
+        /// <summary>사용안함</summary>
+        public int nDataLength = nDataLength;
+        /// <summary>사용안함</summary>
+        public string sErrorCode = sErrorCode;
+        /// <summary>사용안함</summary>
+        public string sMessage = sMessage;
+        /// <summary>사용안함</summary>
+        public string sSplmMsg = sSplmMsg;
     }
 
+    /// <summary>실시간데이터를 수신했을때 발생됩니다.</summary>
+    public class _DKHOpenAPIEvents_OnReceiveRealDataEvent(string sRealKey, string sRealType, string sRealData) : EventArgs
+    {
+        /// <summary>종목코드</summary>
+        public string sRealKey = sRealKey;
+        /// <summary>실시간타입</summary>
+        public string sRealType = sRealType;
+        /// <summary>실시간 데이터 전문 (사용불가)</summary>
+        public string sRealData = sRealData;
+    }
 
+    /// <summary>
+    /// 주문전송 또는 데이터 조회요청 후 서버 메시지가 수신됩니다.
+    /// ※ 메시지에 포함된 6자리 코드번호는 변경될 수 있으니, 여기에 수신된 코드번호를 특정 용도로 사용하지 마시기 바랍니다.
+    /// </summary>
+    public class _DKHOpenAPIEvents_OnReceiveMsgEvent(string sScrNo, string sRQName, string sTrCode, string sMsg) : EventArgs
+    {
+        /// <summary>실시간타입</summary>
+        public string sScrNo = sScrNo;
+        /// <summary>실시간타입</summary>
+        public string sRQName = sRQName;
+        /// <summary>실시간타입</summary>
+        public string sTrCode = sTrCode;
+        /// <summary>실시간타입</summary>
+        public string sMsg = sMsg;
+    }
+
+    /// <summary>
+    /// 주문전송 후 주문접수, 체결통보, 잔고통보를 수신할 때 마다 발생됩니다.
+    /// </summary>
+    /// <param name="sGubun">체결구분. 접수와 체결시 '0'값, 국내주식 잔고변경은 '1'값, 파생잔고변경은 '4'</param>
+    /// <param name="nItemCnt"></param>
+    /// <param name="sFIdList"></param>
+    public class _DKHOpenAPIEvents_OnReceiveChejanDataEvent(string sGubun, int nItemCnt, string sFIdList) : EventArgs
+    {
+        /// <summary>체결구분. 접수와 체결시 '0'값, 국내주식 잔고변경은 '1'값, 파생잔고변경은 '4'</summary>
+        public string sGubun = sGubun;
+        /// <summary>FIDs Count</summary>
+        public int nItemCnt = nItemCnt;
+        /// <summary>FIDs Array</summary>
+        public string sFIdList = sFIdList;
+    }
+
+    /// <summary>
+    /// 로그인 처리 이벤트입니다. 성공이면 인자값 nErrCode가 0이며 에러는 다음과 같은 값이 전달됩니다.
+    /// </summary>
+    /// <param name="nErrCode">로그인 상태</param>
+    public class _DKHOpenAPIEvents_OnEventConnectEvent(int nErrCode) : EventArgs
+    {
+        /// <summary>로그인 상태</summary>
+        public int nErrCode = nErrCode;
+    }
+    
+    /// <summary>
+    /// 예약 이벤트. 실시간 등록을 통해 등록한 실시간 데이터를 수신하면 발생합니다.
+    /// </summary>
+    /// <param name="sRealKey"></param>
+    public class _DKHOpenAPIEvents_OnReceiveInvestRealDataEvent(string sRealKey) : EventArgs
+    {
+        /// <summary>실시간타입</summary>
+        public string sRealKey = sRealKey;
+    }
+
+    /// <summary>
+    /// 실시간 조건검색 요청으로 신규종목이 편입되거나 기존 종목이 이탈될때 마다 발생됩니다. ※ 편입되었다가 순간적으로 다시 이탈되는 종목에대한 신호는 조건검색 서버마다 차이가 발생할 수 있습니다. 
+    /// </summary>
+    /// <param name="sTrCode">종목코드</param>
+    /// <param name="strType">이벤트 종류, "I":종목편입, "D", 종목이탈</param>
+    /// <param name="strConditionName">조건식 이름</param>
+    /// <param name="strConditionIndex">조건식 고유번호</param>
+    public class _DKHOpenAPIEvents_OnReceiveRealConditionEvent(string sTrCode, string strType, string strConditionName, string strConditionIndex) : EventArgs
+    {
+        /// <summary>종목코드</summary>
+        public string sTrCode = sTrCode;
+        /// <summary>이벤트 종류, "I":종목편입, "D", 종목이탈</summary>
+        public string strType = strType;
+        /// <summary>조건식 이름</summary>
+        public string strConditionName = strConditionName;
+        /// <summary>조건식 고유번호</summary>
+        public string strConditionIndex = strConditionIndex;
+    }
+
+    /// <summary>
+    /// 조건검색 요청에대한 서버 응답 수신시 발생하는 이벤트입니다. 
+    /// 종목코드 리스트는 각 종목코드가 ';'로 구분되서 전달됩니다.
+    /// </summary>
+    /// <param name="sScrNo"></param>
+    /// <param name="strCodeList"></param>
+    /// <param name="strConditionName"></param>
+    /// <param name="nIndex"></param>
+    /// <param name="nNext"></param>
+    public class _DKHOpenAPIEvents_OnReceiveTrConditionEvent(string sScrNo, string strCodeList, string strConditionName, int nIndex, int nNext) : EventArgs
+    {
+        /// <summary>화면번호</summary>
+        public string sScrNo = sScrNo;
+        /// <summary>종목코드 리스트</summary>
+        public string strCodeList = strCodeList;
+        /// <summary>조건식 이름</summary>
+        public string strConditionName = strConditionName;
+        /// <summary>조건식 고유번호</summary>
+        public int nIndex = nIndex;
+        /// <summary>연속조회 유무를 판단하는 값 0: 연속(추가조회)데이터 없음, 2:연속(추가조회) 데이터 있음</summary>
+        public int nNext = nNext;
+    }
+
+    /// <summary>
+    /// 저장된 사용자 조건식 불러오기 요청에 대한 응답 수신시 발생되는 이벤트입니다.
+    /// </summary>
+    /// <param name="lRet">호출 성공여부, 1: 성공, 나머지 실패</param>
+    /// <param name="sMsg">호출결과 메시지</param>
+    public class _DKHOpenAPIEvents_OnReceiveConditionVerEvent(int lRet, string sMsg) : EventArgs
+    {
+        /// <summary>호출 성공여부, 1: 성공, 나머지 실패</summary>
+        public int lRet = lRet;
+        /// <summary>호출결과 메시지</summary>
+        public string sMsg = sMsg;
+    }
+
+    /// <summary>요청했던 조회데이터를 수신했을때 발생됩니다.</summary>summary>
     public delegate void _DKHOpenAPIEvents_OnReceiveTrDataEventHandler(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e);
+    /// <summary>실시간데이터를 수신했을때 발생됩니다.</summary>summary>
     public delegate void _DKHOpenAPIEvents_OnReceiveRealDataEventHandler(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e);
+    /// <summary>주문전송 또는 데이터 조회요청 후 서버 메시지가 수신됩니다.</summary>summary>
     public delegate void _DKHOpenAPIEvents_OnReceiveMsgEventHandler(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e);
+    /// <summary>주문전송 후 주문접수, 체결통보, 잔고통보를 수신할 때 마다 발생됩니다.</summary>summary>
     public delegate void _DKHOpenAPIEvents_OnReceiveChejanDataEventHandler(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e);
+    /// <summary>로그인 처리 이벤트입니다. 성공이면 인자값 nErrCode가 0이며 에러는 다음과 같은 값이 전달됩니다.</summary>summary>
     public delegate void _DKHOpenAPIEvents_OnEventConnectEventHandler(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e);
+    /// <summary>예약 이벤트. 실시간 등록을 통해 등록한 실시간 데이터를 수신하면 발생합니다.</summary>summary>
     public delegate void _DKHOpenAPIEvents_OnReceiveInvestRealDataEventHandler(object sender, _DKHOpenAPIEvents_OnReceiveInvestRealDataEvent e);
+    /// <summary>실시간 조건검색 요청으로 신규종목이 편입되거나 기존 종목이 이탈될때 마다 발생됩니다. ※ 편입되었다가 순간적으로 다시 이탈되는 종목에대한 신호는 조건검색 서버마다 차이가 발생할 수 있습니다.</summary>summary>
     public delegate void _DKHOpenAPIEvents_OnReceiveRealConditionEventHandler(object sender, _DKHOpenAPIEvents_OnReceiveRealConditionEvent e);
+    /// <summary>조건검색 요청에대한 서버 응답 수신시 발생하는 이벤트입니다. </summary>summary>
     public delegate void _DKHOpenAPIEvents_OnReceiveTrConditionEventHandler(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e);
+    /// <summary>저장된 사용자 조건식 불러오기 요청에 대한 응답 수신시 발생되는 이벤트입니다.</summary>summary>
     public delegate void _DKHOpenAPIEvents_OnReceiveConditionVerEventHandler(object sender, _DKHOpenAPIEvents_OnReceiveConditionVerEvent e);
 
-
     [ClassInterface(ClassInterfaceType.None)]
-    public class AxKHOpenAPIEventMulticaster : _DKHOpenAPIEvents
+    internal class AxKHOpenAPIEventMulticaster(AxKHOpenAPI parent) : _DKHOpenAPIEvents
     {
-        private AxKHOpenAPI parent;
+        private readonly AxKHOpenAPI parent = parent;
 
-        public AxKHOpenAPIEventMulticaster(AxKHOpenAPI parent)
-        {
-            this.parent = parent;
-        }
+        public virtual void OnReceiveTrData(string sScrNo, string sRQName, string sTrCode, string sRecordName, string sPrevNext, int nDataLength, string sErrorCode, string sMessage, string sSplmMsg) => parent.RaiseOnOnReceiveTrData(parent, new(sScrNo, sRQName, sTrCode, sRecordName, sPrevNext, nDataLength, sErrorCode, sMessage, sSplmMsg));
 
-        public virtual void OnReceiveTrData(string sScrNo, string sRQName, string sTrCode, string sRecordName, string sPrevNext, int nDataLength, string sErrorCode, string sMessage, string sSplmMsg)
-        {
-            _DKHOpenAPIEvents_OnReceiveTrDataEvent e = new _DKHOpenAPIEvents_OnReceiveTrDataEvent(sScrNo, sRQName, sTrCode, sRecordName, sPrevNext, nDataLength, sErrorCode, sMessage, sSplmMsg);
-            parent.RaiseOnOnReceiveTrData(parent, e);
-        }
+        public virtual void OnReceiveRealData(string sRealKey, string sRealType, string sRealData) => parent.RaiseOnOnReceiveRealData(parent, new(sRealKey, sRealType, sRealData));
 
-        public virtual void OnReceiveRealData(string sRealKey, string sRealType, string sRealData)
-        {
-            _DKHOpenAPIEvents_OnReceiveRealDataEvent e = new _DKHOpenAPIEvents_OnReceiveRealDataEvent(sRealKey, sRealType, sRealData);
-            parent.RaiseOnOnReceiveRealData(parent, e);
-        }
+        public virtual void OnReceiveMsg(string sScrNo, string sRQName, string sTrCode, string sMsg) => parent.RaiseOnOnReceiveMsg(parent, new(sScrNo, sRQName, sTrCode, sMsg));
 
-        public virtual void OnReceiveMsg(string sScrNo, string sRQName, string sTrCode, string sMsg)
-        {
-            _DKHOpenAPIEvents_OnReceiveMsgEvent e = new _DKHOpenAPIEvents_OnReceiveMsgEvent(sScrNo, sRQName, sTrCode, sMsg);
-            parent.RaiseOnOnReceiveMsg(parent, e);
-        }
+        public virtual void OnReceiveChejanData(string sGubun, int nItemCnt, string sFIdList) => parent.RaiseOnOnReceiveChejanData(parent, new(sGubun, nItemCnt, sFIdList));
 
-        public virtual void OnReceiveChejanData(string sGubun, int nItemCnt, string sFIdList)
-        {
-            _DKHOpenAPIEvents_OnReceiveChejanDataEvent e = new _DKHOpenAPIEvents_OnReceiveChejanDataEvent(sGubun, nItemCnt, sFIdList);
-            parent.RaiseOnOnReceiveChejanData(parent, e);
-        }
+        public virtual void OnEventConnect(int nErrCode) => parent.RaiseOnOnEventConnect(parent, new(nErrCode));
 
-        public virtual void OnEventConnect(int nErrCode)
-        {
-            _DKHOpenAPIEvents_OnEventConnectEvent e = new _DKHOpenAPIEvents_OnEventConnectEvent(nErrCode);
-            parent.RaiseOnOnEventConnect(parent, e);
-        }
+        public virtual void OnReceiveInvestRealData(string sRealKey) => parent.RaiseOnOnReceiveInvestRealData(parent, new(sRealKey));
 
-        public virtual void OnReceiveInvestRealData(string sRealKey)
-        {
-            _DKHOpenAPIEvents_OnReceiveInvestRealDataEvent e = new _DKHOpenAPIEvents_OnReceiveInvestRealDataEvent(sRealKey);
-            parent.RaiseOnOnReceiveInvestRealData(parent, e);
-        }
+        public virtual void OnReceiveRealCondition(string sTrCode, string strType, string strConditionName, string strConditionIndex) => parent.RaiseOnOnReceiveRealCondition(parent, new(sTrCode, strType, strConditionName, strConditionIndex));
 
-        public virtual void OnReceiveRealCondition(string sTrCode, string strType, string strConditionName, string strConditionIndex)
-        {
-            _DKHOpenAPIEvents_OnReceiveRealConditionEvent e = new _DKHOpenAPIEvents_OnReceiveRealConditionEvent(sTrCode, strType, strConditionName, strConditionIndex);
-            parent.RaiseOnOnReceiveRealCondition(parent, e);
-        }
+        public virtual void OnReceiveTrCondition(string sScrNo, string strCodeList, string strConditionName, int nIndex, int nNext) => parent.RaiseOnOnReceiveTrCondition(parent, new(sScrNo, strCodeList, strConditionName, nIndex, nNext));
 
-        public virtual void OnReceiveTrCondition(string sScrNo, string strCodeList, string strConditionName, int nIndex, int nNext)
-        {
-            _DKHOpenAPIEvents_OnReceiveTrConditionEvent e = new _DKHOpenAPIEvents_OnReceiveTrConditionEvent(sScrNo, strCodeList, strConditionName, nIndex, nNext);
-            parent.RaiseOnOnReceiveTrCondition(parent, e);
-        }
-
-        public virtual void OnReceiveConditionVer(int lRet, string sMsg)
-        {
-            _DKHOpenAPIEvents_OnReceiveConditionVerEvent e = new _DKHOpenAPIEvents_OnReceiveConditionVerEvent(lRet, sMsg);
-            parent.RaiseOnOnReceiveConditionVer(parent, e);
-        }
+        public virtual void OnReceiveConditionVer(int lRet, string sMsg) => parent.RaiseOnOnReceiveConditionVer(parent, new(lRet, sMsg));
     }
 
+    /// <summary>
+    /// OpenAPI 클래스
+    /// </summary>
     public class AxKHOpenAPI
     {
-        [DllImport("Atl.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        private static extern bool AtlAxWinInit();
-        [DllImport("Atl.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        private static extern int AtlAxGetControl(IntPtr h, [MarshalAs(UnmanagedType.IUnknown)] out object pp);
-        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        private static extern IntPtr CreateWindowEx(int dwExStyle, string lpClassName, string lpWindowName, int dwStyle, int x, int y, int nWidth, int nHeight, IntPtr hWndParent, IntPtr hMenu, IntPtr hInstance, IntPtr lpParam);
-        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        private static extern bool DestroyWindow(IntPtr hWnd);
-
-        private const int WS_VISIBLE = 0x10000000;
-        private const int WS_CHILD = 0x40000000;
-
-        private IntPtr hWndContainer = IntPtr.Zero;
-
-        private _DKHOpenAPI ocx;
-        private System.Runtime.InteropServices.ComTypes.IConnectionPoint _pConnectionPoint;
-        private int _nCookie = 0;
-        private bool bInitialized = false;
-
-        public bool Created => bInitialized;
-
-        public AxKHOpenAPI(IntPtr hWndParent)
-        {
-            string clsid = /*System.Environment.Is64BitProcess ? "{0f3a0d96-1432-4d05-a1ac-220e202bb52c}" : */"{a1574a0d-6bfa-4bd7-9020-ded88711818d}";
-            if (!bInitialized)
-            {
-                if (AtlAxWinInit())
-                {
-                    hWndContainer = CreateWindowEx(0, "AtlAxWin", clsid, WS_VISIBLE | WS_CHILD, -100, -100, 20, 20, hWndParent, (IntPtr)9001, IntPtr.Zero, IntPtr.Zero);
-                    if (hWndContainer == IntPtr.Zero && Environment.Is64BitProcess)
-                    {
-                        // old 버젼 64비트 OCX경우:
-                        clsid = "{0f3a0d96-1432-4d05-a1ac-220e202bb52c}";
-                        hWndContainer = CreateWindowEx(0, "AtlAxWin", clsid, WS_VISIBLE | WS_CHILD, -100, -100, 0, 0, hWndParent, (IntPtr)9002, IntPtr.Zero, IntPtr.Zero);
-                    }
-                    if (hWndContainer != IntPtr.Zero)
-                    {
-                        try
-                        {
-                            object pUnknown;
-                            AtlAxGetControl(hWndContainer, out pUnknown);
-                            if (pUnknown != null)
-                            {
-                                ocx = (_DKHOpenAPI)pUnknown;
-                                if (ocx != null)
-                                {
-                                    Guid guidEvents = typeof(_DKHOpenAPIEvents).GUID;
-                                    System.Runtime.InteropServices.ComTypes.IConnectionPointContainer pConnectionPointContainer;
-                                    pConnectionPointContainer = (System.Runtime.InteropServices.ComTypes.IConnectionPointContainer)pUnknown;
-                                    pConnectionPointContainer.FindConnectionPoint(ref guidEvents, out _pConnectionPoint);
-                                    if (_pConnectionPoint != null)
-                                    {
-                                        AxKHOpenAPIEventMulticaster pEventSink = new AxKHOpenAPIEventMulticaster(this);
-                                        _pConnectionPoint.Advise(pEventSink, out _nCookie);
-                                        bInitialized = true;
-                                    }
-                                }
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            DestroyWindow(hWndContainer);
-                            hWndContainer = IntPtr.Zero;
-                        }
-                    }
-                }
-            }
-        }
-
+        /// <summary>요청했던 조회데이터를 수신했을때 발생됩니다.</summary>summary>
         public event _DKHOpenAPIEvents_OnReceiveTrDataEventHandler OnReceiveTrData;
 
+        /// <summary>실시간데이터를 수신했을때 발생됩니다.</summary>summary>
         public event _DKHOpenAPIEvents_OnReceiveRealDataEventHandler OnReceiveRealData;
 
+        /// <summary>주문전송 또는 데이터 조회요청 후 서버 메시지가 수신됩니다.</summary>summary>
         public event _DKHOpenAPIEvents_OnReceiveMsgEventHandler OnReceiveMsg;
 
+        /// <summary>주문전송 후 주문접수, 체결통보, 잔고통보를 수신할 때 마다 발생됩니다.</summary>summary>
         public event _DKHOpenAPIEvents_OnReceiveChejanDataEventHandler OnReceiveChejanData;
 
+        /// <summary>로그인 처리 이벤트입니다. 성공이면 인자값 nErrCode가 0이며 에러는 다음과 같은 값이 전달됩니다.</summary>summary>
         public event _DKHOpenAPIEvents_OnEventConnectEventHandler OnEventConnect;
 
+        /// <summary>예약 이벤트. 실시간 등록을 통해 등록한 실시간 데이터를 수신하면 발생합니다.</summary>summary>
         public event _DKHOpenAPIEvents_OnReceiveInvestRealDataEventHandler OnReceiveInvestRealData;
 
+        /// <summary>실시간 조건검색 요청으로 신규종목이 편입되거나 기존 종목이 이탈될때 마다 발생됩니다. ※ 편입되었다가 순간적으로 다시 이탈되는 종목에대한 신호는 조건검색 서버마다 차이가 발생할 수 있습니다. </summary>summary>
         public event _DKHOpenAPIEvents_OnReceiveRealConditionEventHandler OnReceiveRealCondition;
 
+        /// <summary>조건검색 요청에대한 서버 응답 수신시 발생하는 이벤트입니다. </summary>summary>
         public event _DKHOpenAPIEvents_OnReceiveTrConditionEventHandler OnReceiveTrCondition;
 
+        /// <summary>저장된 사용자 조건식 불러오기 요청에 대한 응답 수신시 발생되는 이벤트입니다.</summary>summary>
         public event _DKHOpenAPIEvents_OnReceiveConditionVerEventHandler OnReceiveConditionVer;
         internal void RaiseOnOnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
         {
-            if (_async_state == AsyncState.REQUEST)
+            int async_ident_id = AsyncNode.GetIdentId([e.sRQName, e.sTrCode, int.Parse(e.sScrNo)]);
+            var async_node = _async_list.Find(x => x._ident_id == async_ident_id);
+            if (async_node is not null)
             {
-                _async_state = AsyncState.RESPONSE;
-                _async_tr_action(e);
-                _async_wait.Set();
+                _async_list.Remove(async_node);
+                async_node._async_tr_action?.Invoke(e);
+                async_node._async_wait.Set();
                 return;
             }
-            if (this.OnReceiveTrData != null)
-            {
-                this.OnReceiveTrData(sender, e);
-            }
+            OnReceiveTrData?.Invoke(this, e);
         }
 
         internal void RaiseOnOnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
         {
-            if (this.OnReceiveRealData != null)
-            {
-                this.OnReceiveRealData(sender, e);
-            }
+            OnReceiveRealData?.Invoke(this, e);
         }
 
         internal void RaiseOnOnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
-            if (this.OnReceiveMsg != null)
-            {
-                this.OnReceiveMsg(sender, e);
-            }
+            OnReceiveMsg?.Invoke(this, e);
         }
 
         internal void RaiseOnOnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
         {
-            if (this.OnReceiveChejanData != null)
-            {
-                this.OnReceiveChejanData(sender, e);
-            }
+            OnReceiveChejanData?.Invoke(this, e);
         }
 
         internal void RaiseOnOnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
-            if (this.OnEventConnect != null)
-            {
-                this.OnEventConnect(sender, e);
-            }
+            OnEventConnect?.Invoke(this, e);
         }
 
-            internal void RaiseOnOnReceiveInvestRealData(object sender, _DKHOpenAPIEvents_OnReceiveInvestRealDataEvent e)
+        internal void RaiseOnOnReceiveInvestRealData(object sender, _DKHOpenAPIEvents_OnReceiveInvestRealDataEvent e)
         {
-            if (this.OnReceiveInvestRealData != null)
-            {
-                this.OnReceiveInvestRealData(sender, e);
-            }
+            OnReceiveInvestRealData?.Invoke(this, e);
         }
 
         internal void RaiseOnOnReceiveRealCondition(object sender, _DKHOpenAPIEvents_OnReceiveRealConditionEvent e)
         {
-            if (this.OnReceiveRealCondition != null)
-            {
-                this.OnReceiveRealCondition(sender, e);
-            }
+            OnReceiveRealCondition?.Invoke(this, e);
         }
 
         internal void RaiseOnOnReceiveTrCondition(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e)
         {
-            if (_async_state == AsyncState.REQUEST)
+            int async_ident_id = AsyncNode.GetIdentId([e.sScrNo, e.strConditionName]);
+            var async_node = _async_list.Find(x => x._ident_id == async_ident_id);
+            if (async_node is not null)
             {
-                _async_state = AsyncState.RESPONSE;
-                _async_tr_cond_action(e);
-                _async_wait.Set();
+                _async_list.Remove(async_node);
+                async_node._async_tr_cond_action?.Invoke(e);
+                async_node._async_wait.Set();
                 return;
             }
-            if (this.OnReceiveTrCondition != null)
-            {
-                this.OnReceiveTrCondition(sender, e);
-            }
+            OnReceiveTrCondition?.Invoke(this, e);
         }
 
         internal void RaiseOnOnReceiveConditionVer(object sender, _DKHOpenAPIEvents_OnReceiveConditionVerEvent e)
         {
-            if (this.OnReceiveConditionVer != null)
-            {
-                this.OnReceiveConditionVer(sender, e);
-            }
+            OnReceiveConditionVer?.Invoke(this, e);
         }
 
+        /// <summary>
+        /// 수동 로그인설정인 경우 로그인창을 출력.
+        /// </summary>
+        /// <returns>0: 성공, other: 실패</returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int CommConnect()
         {
             if (ocx == null)
@@ -731,9 +614,13 @@ namespace KHOpenApi.NET
                 throw new InvalidActiveXStateException("CommConnect", ActiveXInvokeKind.MethodInvoke);
             }
 
-            return ocx.CommConnect();
+            return ocx?.CommConnect() ?? throw new InvalidActiveXStateException("CommConnect", ActiveXInvokeKind.MethodInvoke);
         }
 
+        /// <summary>
+        /// 프로그램 종료없이 서버와의 접속만 단절시키는 함수입니다. ※ 함수 사용 후 사용자의 오해소지가 생기는 이유로 더 이상 사용할 수 없는 함수입니다.
+        /// </summary>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual void CommTerminate()
         {
             if (ocx == null)
@@ -744,6 +631,15 @@ namespace KHOpenApi.NET
             ocx.CommTerminate();
         }
 
+        /// <summary>
+        /// 조회요청 함수입니다.
+        /// </summary>
+        /// <param name="sRQName">사용자 구분명 (임의로 지정, 한글지원)</param>
+        /// <param name="sTrCode">조회하려는 TR이름</param>
+        /// <param name="nPrevNext">연속조회여부</param>
+        /// <param name="sScreenNo">화면번호 (4자리 숫자 임의로 지정)</param>
+        /// <returns>리턴값 0이면 조회요청 정상 나머지는 에러</returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int CommRqData(string sRQName, string sTrCode, int nPrevNext, string sScreenNo)
         {
             if (ocx == null)
@@ -754,6 +650,12 @@ namespace KHOpenApi.NET
             return ocx.CommRqData(sRQName, sTrCode, nPrevNext, sScreenNo);
         }
 
+        /// <summary>
+        /// 로그인 후 사용할 수 있으며 인자값에 대응하는 정보를 얻을 수 있습니다.
+        /// </summary>
+        /// <param name="sTag">"ACCOUNT_CNT",  "ACCLIST", "ACCNO", "USER_ID", "USER_NAME", "GetServerGubun", "KEY_BSECGB", "FIREW_SECGB"</param>
+        /// <returns>인자값에 대응하는 정보를 얻을 수 있습니다.</returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetLoginInfo(string sTag)
         {
             if (ocx == null)
@@ -764,6 +666,20 @@ namespace KHOpenApi.NET
             return ocx.GetLoginInfo(sTag);
         }
 
+        /// <summary>
+        /// 서버에 주문을 전송하는 함수 입니다.
+        /// </summary>
+        /// <param name="sRQName">사용자 구분명</param>
+        /// <param name="sScreenNo">화면번호</param>
+        /// <param name="sAccNo">계좌번호 10자리</param>
+        /// <param name="nOrderType">주문유형 1:신규매수, 2:신규매도 3:매수취소, 4:매도취소, 5:매수정정, 6:매도정정, 7:프로그램매매 매수, 8:프로그램매매 매도</param>
+        /// <param name="sCode">종목코드 (6자리)</param>
+        /// <param name="nQty">주문수량</param>
+        /// <param name="nPrice">주문가격</param>
+        /// <param name="sHogaGb">거래구분(혹은 호가구분)은 아래 참고</param>
+        /// <param name="sOrgOrderNo"></param>
+        /// <returns>원주문번호. 신규주문에는 공백 입력, 정정/취소시 입력합니다.</returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int SendOrder(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, int nPrice, string sHogaGb, string sOrgOrderNo)
         {
             if (ocx == null)
@@ -774,6 +690,21 @@ namespace KHOpenApi.NET
             return ocx.SendOrder(sRQName, sScreenNo, sAccNo, nOrderType, sCode, nQty, nPrice, sHogaGb, sOrgOrderNo);
         }
 
+        /// <summary>
+        /// 서버에 주문을 전송하는 함수 입니다, 코스피지수200 선물옵션 전용 주문함수입니다.
+        /// </summary>
+        /// <param name="sRQName">사용자 구분명</param>
+        /// <param name="sScreenNo">화면번호</param>
+        /// <param name="sAccNo">계좌번호 10자리</param>
+        /// <param name="sCode">종목코드</param>
+        /// <param name="lOrdKind">주문종류 1:신규매매, 2:정정, 3:취소</param>
+        /// <param name="sSlbyTp">매매구분	1: 매도, 2:매수</param>
+        /// <param name="sOrdTp">거래구분(혹은 호가구분)은 아래 참고</param>
+        /// <param name="lQty">주문수량</param>
+        /// <param name="sPrice">주문가격</param>
+        /// <param name="sOrgOrdNo">원주문번호</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int SendOrderFO(string sRQName, string sScreenNo, string sAccNo, string sCode, int lOrdKind, string sSlbyTp, string sOrdTp, int lQty, string sPrice, string sOrgOrdNo)
         {
             if (ocx == null)
@@ -784,6 +715,12 @@ namespace KHOpenApi.NET
             return ocx.SendOrderFO(sRQName, sScreenNo, sAccNo, sCode, lOrdKind, sSlbyTp, sOrdTp, lQty, sPrice, sOrgOrdNo);
         }
 
+        /// <summary>
+        /// 조회요청시 TR의 Input값을 지정하는 함수입니다.
+        /// </summary>
+        /// <param name="sID">TR에 명시된 Input이름</param>
+        /// <param name="sValue">Input이름으로 지정한 값</param>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual void SetInputValue(string sID, string sValue)
         {
             if (ocx == null)
@@ -794,6 +731,7 @@ namespace KHOpenApi.NET
             ocx.SetInputValue(sID, sValue);
         }
 
+        /// <summary>SetOutputFID</summary>
         public virtual int SetOutputFID(string sID)
         {
             if (ocx == null)
@@ -804,6 +742,11 @@ namespace KHOpenApi.NET
             return ocx.SetOutputFID(sID);
         }
 
+        /// <summary>
+        /// 일부 TR에서 사용상 제약이 있음므로 이 함수 대신 GetCommData()함수를 사용하시기 바랍니다.
+        /// </summary>
+        /// <exception cref="InvalidActiveXStateException"></exception>
+        [Obsolete("일부 TR에서 사용상 제약이 있음므로 이 함수 대신 GetCommData()함수를 사용하시기 바랍니다.")]
         public virtual string CommGetData(string sJongmokCode, string sRealType, string sFieldName, int nIndex, string sInnerFieldName)
         {
             if (ocx == null)
@@ -814,6 +757,11 @@ namespace KHOpenApi.NET
             return ocx.CommGetData(sJongmokCode, sRealType, sFieldName, nIndex, sInnerFieldName);
         }
 
+        /// <summary>
+        /// 화면 내의 모든 리얼데이터 요청을 제거한다.
+        /// </summary>
+        /// <param name="sScnNo">4자리의 화면번호 입력 (1 ~ 9999 : 숫자형식으로만 가능)</param>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual void DisconnectRealData(string sScnNo)
         {
             if (ocx == null)
@@ -824,6 +772,13 @@ namespace KHOpenApi.NET
             ocx.DisconnectRealData(sScnNo);
         }
 
+        /// <summary>
+        /// 수신데이타(멀티데이타) 반복횟수를 반환한다.
+        /// </summary>
+        /// <param name="sTrCode">Tr목록의 TrCode</param>
+        /// <param name="sRecordName">조회시 sRQName  </param>
+        /// <returns>데이타 반복횟수</returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int GetRepeatCnt(string sTrCode, string sRecordName)
         {
             if (ocx == null)
@@ -834,6 +789,17 @@ namespace KHOpenApi.NET
             return ocx.GetRepeatCnt(sTrCode, sRecordName);
         }
 
+        /// <summary>
+        /// 한번에 100종목까지 조회할 수 있는 복수종목 조회함수 입니다. 함수인자로 사용하는 종목코드 리스트는 조회하려는 종목코드 사이에 구분자';'를 추가해서 만들면 됩니다.
+        /// </summary>
+        /// <param name="sArrCode">조회하려는 종목코드 리스트</param>
+        /// <param name="bNext">연속조회 여부 0:기본값, 1:연속조회(지원안함)</param>
+        /// <param name="nCodeCount">종목코드 갯수</param>
+        /// <param name="nTypeFlag">0:주식 종목, 3:선물옵션 종목</param>
+        /// <param name="sRQName">사용자 구분명</param>
+        /// <param name="sScreenNo">화면번호</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int CommKwRqData(string sArrCode, int bNext, int nCodeCount, int nTypeFlag, string sRQName, string sScreenNo)
         {
             if (ocx == null)
@@ -844,6 +810,11 @@ namespace KHOpenApi.NET
             return ocx.CommKwRqData(sArrCode, bNext, nCodeCount, nTypeFlag, sRQName, sScreenNo);
         }
 
+        /// <summary>
+        /// ocx 모듈경로를 반환합니다.
+        /// </summary>
+        /// <returns>경로</returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetAPIModulePath()
         {
             if (ocx == null)
@@ -854,6 +825,12 @@ namespace KHOpenApi.NET
             return ocx.GetAPIModulePath();
         }
 
+        /// <summary>
+        /// 주식 시장별 종목코드 리스트를 ';'로 구분해서 전달합니다. 시장구분값을 ""공백으로하면 전체시장 코드리스트를 전달합니다.
+        /// </summary>
+        /// <param name="sMarket">시장구분값</param>
+        /// <returns>종목코드 리스트</returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetCodeListByMarket(string sMarket)
         {
             if (ocx == null)
@@ -864,6 +841,11 @@ namespace KHOpenApi.NET
             return ocx.GetCodeListByMarket(sMarket);
         }
 
+        /// <summary>
+        /// 서버와 현재 접속 상태를 알려줍니다.
+        /// </summary>
+        /// <returns>1:연결, 0:연결안됨</returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int GetConnectState()
         {
             if (ocx == null)
@@ -874,6 +856,12 @@ namespace KHOpenApi.NET
             return ocx.GetConnectState();
         }
 
+        /// <summary>
+        /// 종목코드에 해당하는 종목명을 전달합니다.
+        /// </summary>
+        /// <param name="sTrCode">종목코드</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetMasterCodeName(string sTrCode)
         {
             if (ocx == null)
@@ -884,6 +872,12 @@ namespace KHOpenApi.NET
             return ocx.GetMasterCodeName(sTrCode);
         }
 
+        /// <summary>
+        /// 입력한 종목코드에 해당하는 종목 상장주식수를 전달합니다.
+        /// </summary>
+        /// <param name="sTrCode">종목코드</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int GetMasterListedStockCnt(string sTrCode)
         {
             if (ocx == null)
@@ -894,6 +888,12 @@ namespace KHOpenApi.NET
             return ocx.GetMasterListedStockCnt(sTrCode);
         }
 
+        /// <summary>
+        /// 입력한 종목코드에 해당하는 종목의 감리구분을 전달합니다. (정상, 투자주의, 투자경고, 투자위험, 투자주의환기종목)
+        /// </summary>
+        /// <param name="sTrCode">종목코드</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetMasterConstruction(string sTrCode)
         {
             if (ocx == null)
@@ -904,6 +904,12 @@ namespace KHOpenApi.NET
             return ocx.GetMasterConstruction(sTrCode);
         }
 
+        /// <summary>
+        /// 입력한 종목의 상장일을 전달합니다.
+        /// </summary>
+        /// <param name="sTrCode">종목코드</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetMasterListedStockDate(string sTrCode)
         {
             if (ocx == null)
@@ -914,6 +920,12 @@ namespace KHOpenApi.NET
             return ocx.GetMasterListedStockDate(sTrCode);
         }
 
+        /// <summary>
+        /// 입력한 종목의 당일 기준가를 전달합니다.
+        /// </summary>
+        /// <param name="sTrCode">종목코드</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetMasterLastPrice(string sTrCode)
         {
             if (ocx == null)
@@ -924,6 +936,12 @@ namespace KHOpenApi.NET
             return ocx.GetMasterLastPrice(sTrCode);
         }
 
+        /// <summary>
+        /// 입력한 종목의 증거금 비율, 거래정지, 관리종목, 감리종목, 투자융의종목, 담보대출, 액면분할, 신용가능 여부를 전달합니다.
+        /// </summary>
+        /// <param name="sTrCode">종목코드</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetMasterStockState(string sTrCode)
         {
             if (ocx == null)
@@ -934,6 +952,7 @@ namespace KHOpenApi.NET
             return ocx.GetMasterStockState(sTrCode);
         }
 
+        /// <summary>GetDataCount</summary>
         public virtual int GetDataCount(string strRecordName)
         {
             if (ocx == null)
@@ -944,6 +963,7 @@ namespace KHOpenApi.NET
             return ocx.GetDataCount(strRecordName);
         }
 
+        /// <summary>GetOutputValue</summary>
         public virtual string GetOutputValue(string strRecordName, int nRepeatIdx, int nItemIdx)
         {
             if (ocx == null)
@@ -954,6 +974,15 @@ namespace KHOpenApi.NET
             return ocx.GetOutputValue(strRecordName, nRepeatIdx, nItemIdx);
         }
 
+        /// <summary>
+        /// OnReceiveTRData()이벤트가 발생될때 수신한 데이터를 얻어오는 함수입니다. 이 함수는 OnReceiveTRData()이벤트가 발생될때 그 안에서 사용해야 합니다.
+        /// </summary>
+        /// <param name="strTrCode">TR 이름</param>
+        /// <param name="strRecordName">레코드이름</param>
+        /// <param name="nIndex">nIndex번째</param>
+        /// <param name="strItemName">nIndex번째</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetCommData(string strTrCode, string strRecordName, int nIndex, string strItemName)
         {
             if (ocx == null)
@@ -964,6 +993,13 @@ namespace KHOpenApi.NET
             return ocx.GetCommData(strTrCode, strRecordName, nIndex, strItemName);
         }
 
+        /// <summary>
+        /// 실시간시세 데이터 수신 이벤트인 OnReceiveRealData() 가 발생될때 실시간데이터를 얻어오는 함수입니다. 이 함수는 OnReceiveRealData()이벤트가 발생될때 그 안에서 사용해야 합니다.
+        /// </summary>
+        /// <param name="sTrCode"></param>
+        /// <param name="nFid"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetCommRealData(string sTrCode, int nFid)
         {
             if (ocx == null)
@@ -974,6 +1010,12 @@ namespace KHOpenApi.NET
             return ocx.GetCommRealData(sTrCode, nFid);
         }
 
+        /// <summary>
+        /// OnReceiveChejan()이벤트가 발생될때 FID에 해당되는 값을 구하는 함수입니다. 이 함수는 OnReceiveChejan() 이벤트 안에서 사용해야 합니다.
+        /// </summary>
+        /// <param name="nFid">실시간 타입에 포함된 FID(Field ID)</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetChejanData(int nFid)
         {
             if (ocx == null)
@@ -984,6 +1026,7 @@ namespace KHOpenApi.NET
             return ocx.GetChejanData(nFid);
         }
 
+        /// <summary>GetThemeGroupList</summary>
         public virtual string GetThemeGroupList(int nType)
         {
             if (ocx == null)
@@ -994,6 +1037,7 @@ namespace KHOpenApi.NET
             return ocx.GetThemeGroupList(nType);
         }
 
+        /// <summary>GetThemeGroupCode</summary>
         public virtual string GetThemeGroupCode(string strThemeCode)
         {
             if (ocx == null)
@@ -1004,6 +1048,11 @@ namespace KHOpenApi.NET
             return ocx.GetThemeGroupCode(strThemeCode);
         }
 
+        /// <summary>
+        /// 지수선물 종목코드 리스트를 ';'로 구분해서 전달합니다.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetFutureList()
         {
             if (ocx == null)
@@ -1014,6 +1063,7 @@ namespace KHOpenApi.NET
             return ocx.GetFutureList();
         }
 
+        /// <summary>GetFutureCodeByIndex</summary>
         public virtual string GetFutureCodeByIndex(int nIndex)
         {
             if (ocx == null)
@@ -1024,6 +1074,11 @@ namespace KHOpenApi.NET
             return ocx.GetFutureCodeByIndex(nIndex);
         }
 
+        /// <summary>
+        /// 지수옵션 행사가에 100을 곱해서 소수점이 없는 값을 ';'로 구분해서 전달합니다.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetActPriceList()
         {
             if (ocx == null)
@@ -1034,6 +1089,11 @@ namespace KHOpenApi.NET
             return ocx.GetActPriceList();
         }
 
+        /// <summary>
+        /// 지수옵션 월물정보를 ';'로 구분해서 전달하는데 순서는 콜 11월물 ~ 콜 최근월물 풋 최근월물 ~ 풋 최근월물가 됩니다.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetMonthList()
         {
             if (ocx == null)
@@ -1044,6 +1104,14 @@ namespace KHOpenApi.NET
             return ocx.GetMonthList();
         }
 
+        /// <summary>
+        /// 인자로 지정한 지수옵션 코드를 전달합니다
+        /// </summary>
+        /// <param name="strActPrice">소수점을 포함한 행사가</param>
+        /// <param name="nCp">콜풋구분값, 콜:2, 풋:3</param>
+        /// <param name="strMonth">6자리 월물</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetOptionCode(string strActPrice, int nCp, string strMonth)
         {
             if (ocx == null)
@@ -1054,6 +1122,7 @@ namespace KHOpenApi.NET
             return ocx.GetOptionCode(strActPrice, nCp, strMonth);
         }
 
+        /// <summary>GetOptionCodeByMonth</summary>
         public virtual string GetOptionCodeByMonth(string sTrCode, int nCp, string strMonth)
         {
             if (ocx == null)
@@ -1064,6 +1133,14 @@ namespace KHOpenApi.NET
             return ocx.GetOptionCodeByMonth(sTrCode, nCp, strMonth);
         }
 
+        /// <summary>
+        /// 옵션전용 함수. 인자로 지정한 지수옵션 종목의 n틱 차이에 해당되는 종목코드를 전달합니다.
+        /// </summary>
+        /// <param name="sTrCode">기준이 되는 종목코드</param>
+        /// <param name="nCp">콜풋구분값, 콜:2, 풋:3</param>
+        /// <param name="nTick">기준종목의 n틱 (0값 제외)</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetOptionCodeByActPrice(string sTrCode, int nCp, int nTick)
         {
             if (ocx == null)
@@ -1074,6 +1151,12 @@ namespace KHOpenApi.NET
             return ocx.GetOptionCodeByActPrice(sTrCode, nCp, nTick);
         }
 
+        /// <summary>
+        /// 기초자산 구분값을 인자로 받아서 주식선물 종목코드, 종목명, 기초자산이름을 구할수 있습니다. 입력값을 공백으로 하면 주식선물 전체 종목코드를 얻을 수 있습니다.
+        /// </summary>
+        /// <param name="strBaseAssetCode">기초자산 구분값</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetSFutureList(string strBaseAssetCode)
         {
             if (ocx == null)
@@ -1084,6 +1167,7 @@ namespace KHOpenApi.NET
             return ocx.GetSFutureList(strBaseAssetCode);
         }
 
+        /// <summary>GetSFutureCodeByIndex</summary>
         public virtual string GetSFutureCodeByIndex(string strBaseAssetCode, int nIndex)
         {
             if (ocx == null)
@@ -1094,6 +1178,7 @@ namespace KHOpenApi.NET
             return ocx.GetSFutureCodeByIndex(strBaseAssetCode, nIndex);
         }
 
+        /// <summary>GetSActPriceList</summary>
         public virtual string GetSActPriceList(string strBaseAssetGb)
         {
             if (ocx == null)
@@ -1104,6 +1189,7 @@ namespace KHOpenApi.NET
             return ocx.GetSActPriceList(strBaseAssetGb);
         }
 
+        /// <summary>GetSMonthList</summary>
         public virtual string GetSMonthList(string strBaseAssetGb)
         {
             if (ocx == null)
@@ -1114,6 +1200,7 @@ namespace KHOpenApi.NET
             return ocx.GetSMonthList(strBaseAssetGb);
         }
 
+        /// <summary>GetSOptionCode</summary>
         public virtual string GetSOptionCode(string strBaseAssetGb, string strActPrice, int nCp, string strMonth)
         {
             if (ocx == null)
@@ -1124,6 +1211,7 @@ namespace KHOpenApi.NET
             return ocx.GetSOptionCode(strBaseAssetGb, strActPrice, nCp, strMonth);
         }
 
+        /// <summary>GetSOptionCodeByMonth</summary>
         public virtual string GetSOptionCodeByMonth(string strBaseAssetGb, string sTrCode, int nCp, string strMonth)
         {
             if (ocx == null)
@@ -1134,6 +1222,7 @@ namespace KHOpenApi.NET
             return ocx.GetSOptionCodeByMonth(strBaseAssetGb, sTrCode, nCp, strMonth);
         }
 
+        /// <summary>GetSOptionCodeByActPrice</summary>
         public virtual string GetSOptionCodeByActPrice(string strBaseAssetGb, string sTrCode, int nCp, int nTick)
         {
             if (ocx == null)
@@ -1144,6 +1233,7 @@ namespace KHOpenApi.NET
             return ocx.GetSOptionCodeByActPrice(strBaseAssetGb, sTrCode, nCp, nTick);
         }
 
+        /// <summary>GetSFOBasisAssetList</summary>
         public virtual string GetSFOBasisAssetList()
         {
             if (ocx == null)
@@ -1154,6 +1244,11 @@ namespace KHOpenApi.NET
             return ocx.GetSFOBasisAssetList();
         }
 
+        /// <summary>
+        /// 지수옵션 소수점을 제거한 ATM값을 전달합니다. 예를들어 ATM값이 247.50 인 경우 24750이 전달됩니다.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetOptionATM()
         {
             if (ocx == null)
@@ -1164,6 +1259,7 @@ namespace KHOpenApi.NET
             return ocx.GetOptionATM();
         }
 
+        /// <summary>GetSOptionATM</summary>
         public virtual string GetSOptionATM(string strBaseAssetGb)
         {
             if (ocx == null)
@@ -1174,6 +1270,7 @@ namespace KHOpenApi.NET
             return ocx.GetSOptionATM(strBaseAssetGb);
         }
 
+        /// <summary>GetBranchCodeName</summary>
         public virtual string GetBranchCodeName()
         {
             if (ocx == null)
@@ -1184,6 +1281,7 @@ namespace KHOpenApi.NET
             return ocx.GetBranchCodeName();
         }
 
+        /// <summary>CommInvestRqData</summary>
         public virtual int CommInvestRqData(string sMarketGb, string sRQName, string sScreenNo)
         {
             if (ocx == null)
@@ -1194,6 +1292,22 @@ namespace KHOpenApi.NET
             return ocx.CommInvestRqData(sMarketGb, sRQName, sScreenNo);
         }
 
+        /// <summary>
+        /// 서버에 주문을 전송하는 함수 입니다.
+        /// </summary>
+        /// <param name="sRQName">사용자 구분명</param>
+        /// <param name="sScreenNo">화면번호</param>
+        /// <param name="sAccNo">계좌번호 10자리</param>
+        /// <param name="nOrderType">주문유형 1:신규매수, 2:신규매도 3:매수취소, 4:매도취소, 5:매수정정, 6:매도정정, 7:프로그램매매 매수, 8:프로그램매매 매도</param>
+        /// <param name="sCode">종목코드</param>
+        /// <param name="nQty">주문수량</param>
+        /// <param name="nPrice">주문가격</param>
+        /// <param name="sHogaGb">거래구분(혹은 호가구분)은 아래 참고</param>
+        /// <param name="sCreditGb">신용거래구분 (아래에서 참고)</param>
+        /// <param name="sLoanDate">대출일 (YYYYMMDD. 아래에서 참고)</param>
+        /// <param name="sOrgOrderNo">원주문번호</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int SendOrderCredit(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, int nPrice, string sHogaGb, string sCreditGb, string sLoanDate, string sOrgOrderNo)
         {
             if (ocx == null)
@@ -1204,6 +1318,13 @@ namespace KHOpenApi.NET
             return ocx.SendOrderCredit(sRQName, sScreenNo, sAccNo, nOrderType, sCode, nQty, nPrice, sHogaGb, sCreditGb, sLoanDate, sOrgOrderNo);
         }
 
+        /// <summary>
+        /// OpenAPI기본 기능외에 기능을 사용하기 쉽도록 만든 함수입니다.
+        /// </summary>
+        /// <param name="sFunctionName">함수이름 혹은 기능이름</param>
+        /// <param name="sParam">함수 매개변수</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string KOA_Functions(string sFunctionName, string sParam)
         {
             if (ocx == null)
@@ -1214,6 +1335,7 @@ namespace KHOpenApi.NET
             return ocx.KOA_Functions(sFunctionName, sParam);
         }
 
+        /// <summary>SetInfoData</summary>
         public virtual int SetInfoData(string sInfoData)
         {
             if (ocx == null)
@@ -1224,6 +1346,15 @@ namespace KHOpenApi.NET
             return ocx.SetInfoData(sInfoData);
         }
 
+        /// <summary>
+        /// 종목코드와 FID 리스트를 이용해서 실시간 시세를 등록하는 함수입니다.
+        /// </summary>
+        /// <param name="strScreenNo">화면번호</param>
+        /// <param name="strCodeList">종목코드 리스트</param>
+        /// <param name="strFidList">실시간 FID리스트</param>
+        /// <param name="strOptType">실시간 등록 타입, 0또는 1</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int SetRealReg(string strScreenNo, string strCodeList, string strFidList, string strOptType)
         {
             if (ocx == null)
@@ -1234,6 +1365,11 @@ namespace KHOpenApi.NET
             return ocx.SetRealReg(strScreenNo, strCodeList, strFidList, strOptType);
         }
 
+        /// <summary>
+        /// 서버에 저장된 사용자 조건검색 목록을 요청합니다. 조건검색 목록을 모두 수신하면 OnReceiveConditionVer()이벤트가 발생됩니다.
+        /// </summary>
+        /// <returns>조건검색 목록 요청을 성공하면 1, 아니면 0을 리턴합니다.</returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int GetConditionLoad()
         {
             if (ocx == null)
@@ -1244,6 +1380,12 @@ namespace KHOpenApi.NET
             return ocx.GetConditionLoad();
         }
 
+        /// <summary>
+        /// 서버에서 수신한 사용자 조건식을 조건식의 고유번호와 조건식 이름을 한 쌍으로 하는 문자열들로 전달합니다.
+        /// </summary>
+        /// <remarks>이 함수는 OnReceiveConditionVer()이벤트에서 사용해야 합니다.</remarks>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetConditionNameList()
         {
             if (ocx == null)
@@ -1254,6 +1396,15 @@ namespace KHOpenApi.NET
             return ocx.GetConditionNameList();
         }
 
+        /// <summary>
+        /// 서버에 조건검색을 요청하는 함수입니다.
+        /// </summary>
+        /// <param name="strScrNo">화면번호</param>
+        /// <param name="strConditionName">조건식 이름</param>
+        /// <param name="nIndex">조건식 고유번호</param>
+        /// <param name="nSearch">실시간옵션. 0:조건검색만, 1:조건검색+실시간 조건검색</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int SendCondition(string strScrNo, string strConditionName, int nIndex, int nSearch)
         {
             if (ocx == null)
@@ -1264,6 +1415,13 @@ namespace KHOpenApi.NET
             return ocx.SendCondition(strScrNo, strConditionName, nIndex, nSearch);
         }
 
+        /// <summary>
+        /// 실시간 조건검색을 중지할 때 사용하는 함수입니다.
+        /// </summary>
+        /// <param name="strScrNo">화면번호</param>
+        /// <param name="strConditionName">조건식 이름</param>
+        /// <param name="nIndex">조건식 고유번호</param>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual void SendConditionStop(string strScrNo, string strConditionName, int nIndex)
         {
             if (ocx == null)
@@ -1274,6 +1432,13 @@ namespace KHOpenApi.NET
             ocx.SendConditionStop(strScrNo, strConditionName, nIndex);
         }
 
+        /// <summary>
+        /// 조회 수신데이터 크기가 큰 차트데이터를 한번에 가져올 목적으로 만든 차트조회 전용함수입니다.
+        /// </summary>
+        /// <param name="strTrCode">TR 이름</param>
+        /// <param name="strRecordName">레코드이름</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual object GetCommDataEx(string strTrCode, string strRecordName)
         {
             if (ocx == null)
@@ -1284,6 +1449,12 @@ namespace KHOpenApi.NET
             return ocx.GetCommDataEx(strTrCode, strRecordName);
         }
 
+        /// <summary>
+        /// 실시간시세 해지 함수이며 화면번호와 종목코드를 이용해서 상세하게 설정할 수 있습니다.
+        /// </summary>
+        /// <param name="strScrNo">화면번호 또는 ALL</param>
+        /// <param name="strDelCode">종목코드 또는 ALL</param>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual void SetRealRemove(string strScrNo, string strDelCode)
         {
             if (ocx == null)
@@ -1294,6 +1465,12 @@ namespace KHOpenApi.NET
             ocx.SetRealRemove(strScrNo, strDelCode);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sTrCode">종목코드</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int GetMarketType(string sTrCode)
         {
             if (ocx == null)
@@ -1304,22 +1481,16 @@ namespace KHOpenApi.NET
             return ocx.GetMarketType(sTrCode);
         }
 
-        public enum ActiveXInvokeKind
+        internal enum ActiveXInvokeKind
         {
             MethodInvoke,
             PropertyGet,
             PropertySet,
         }
-        public class InvalidActiveXStateException : Exception
+        internal class InvalidActiveXStateException(string name, ActiveXInvokeKind kind) : Exception
         {
-            private readonly string _name;
-            private readonly ActiveXInvokeKind _kind;
-
-            public InvalidActiveXStateException(string name, ActiveXInvokeKind kind)
-            {
-                _name = name;
-                _kind = kind;
-            }
+            private readonly string _name = name;
+            private readonly ActiveXInvokeKind _kind = kind;
 
             public override string ToString()
             {
@@ -1333,91 +1504,237 @@ namespace KHOpenApi.NET
             }
         }
 
-        #region 비동기요청 (버젼 1.5.0 추가)
+        [DllImport("Atl.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern bool AtlAxWinInit();
+        [DllImport("Atl.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern int AtlAxGetControl(IntPtr h, [MarshalAs(UnmanagedType.IUnknown)] out object pp);
+        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern IntPtr CreateWindowEx(int dwExStyle, string lpClassName, string lpWindowName, int dwStyle, int x, int y, int nWidth, int nHeight, IntPtr hWndParent, IntPtr hMenu, IntPtr hInstance, IntPtr lpParam);
+        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern bool DestroyWindow(IntPtr hWnd);
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GetConsoleWindow();
 
-        enum AsyncState
+        private const int WS_VISIBLE = 0x10000000;
+        private const int WS_CHILD = 0x40000000;
+
+        private readonly IntPtr hWndContainer = IntPtr.Zero;
+
+        private readonly _DKHOpenAPI ocx;
+        private readonly System.Runtime.InteropServices.ComTypes.IConnectionPoint _pConnectionPoint;
+        private readonly bool bInitialized = false;
+        private int _async_TimeOut = 5000;
+        /// <summary>
+        /// 비동기 요청시 타임아웃 시간을 설정합니다. 기본값은 5000ms입니다.
+        /// </summary>
+        public int AsyncTimeOut
         {
-            NONE = 0, // 대기
-            REQUEST = 1, // 요청
-            RESPONSE = 2, // 응답
+            get => _async_TimeOut;
+            set
+            {
+                _async_TimeOut = (value < 1000) ? 1000 : value;
+            }
         }
 
-        readonly ManualResetEvent _async_wait = new(initialState: false);
-        AsyncState _async_state = AsyncState.NONE;
-        Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> _async_tr_action = null;
-        Action<_DKHOpenAPIEvents_OnReceiveTrConditionEvent> _async_tr_cond_action = null;
+        /// <summary>
+        /// OCX 컨트롤이 생성되었는지 여부를 반환합니다.
+        /// </summary>
+        public bool Created => bInitialized;
+
+        /// <summary>
+        /// OCX 컨트롤을 생성합니다.
+        /// </summary>
+        /// <param name="hWndParent"></param>
+        public AxKHOpenAPI(nint hWndParent = 0)
+        {
+            if (hWndParent == IntPtr.Zero)
+            {
+                hWndParent = Process.GetCurrentProcess().MainWindowHandle;
+                if (hWndParent == IntPtr.Zero)
+                {
+                    // 콘솔지원 (버젼 1.5.1 추가)
+                    hWndParent = GetConsoleWindow();
+                }
+            }
+
+            string clsid = "{a1574a0d-6bfa-4bd7-9020-ded88711818d}";
+
+            if (AtlAxWinInit())
+            {
+                hWndContainer = CreateWindowEx(0, "AtlAxWin", clsid, WS_VISIBLE | WS_CHILD, -100, -100, 20, 20, hWndParent, (IntPtr)9001, IntPtr.Zero, IntPtr.Zero);
+                if (hWndContainer == IntPtr.Zero && Environment.Is64BitProcess)
+                {
+                    // old 버젼 64비트 OCX경우:
+                    clsid = "{0f3a0d96-1432-4d05-a1ac-220e202bb52c}";
+                    hWndContainer = CreateWindowEx(0, "AtlAxWin", clsid, WS_VISIBLE | WS_CHILD, -100, -100, 0, 0, hWndParent, (IntPtr)9002, IntPtr.Zero, IntPtr.Zero);
+                }
+                if (hWndContainer != IntPtr.Zero)
+                {
+                    try
+                    {
+                        AtlAxGetControl(hWndContainer, out object pUnknown);
+                        if (pUnknown != null)
+                        {
+                            ocx = (_DKHOpenAPI)pUnknown;
+                            if (ocx != null)
+                            {
+                                Guid guidEvents = typeof(_DKHOpenAPIEvents).GUID;
+                                System.Runtime.InteropServices.ComTypes.IConnectionPointContainer pConnectionPointContainer;
+                                pConnectionPointContainer = (System.Runtime.InteropServices.ComTypes.IConnectionPointContainer)pUnknown;
+                                pConnectionPointContainer.FindConnectionPoint(ref guidEvents, out _pConnectionPoint);
+                                if (_pConnectionPoint != null)
+                                {
+                                    AxKHOpenAPIEventMulticaster pEventSink = new(this);
+                                    _pConnectionPoint.Advise(pEventSink, out int nCookie);
+                                    bInitialized = true;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        DestroyWindow(hWndContainer);
+                        hWndContainer = IntPtr.Zero;
+                    }
+                }
+            }
+        }
+
+        #region 비동기요청 (버젼 1.5.0 추가), 멀티 업데이트 (버젼 1.5.1 추가)
+        class AsyncNode(object[] objs)
+        {
+            public readonly int _ident_id = GetIdentId(objs);
+
+            public static int GetIdentId(object[] objs)
+            {
+                int id = 0;
+                for (int i = 0; i < objs.Length; i++)
+                {
+                    id = id * 31 + objs[i].GetHashCode();
+                }
+                return id;
+            }
+
+            public readonly ManualResetEvent _async_wait = new(initialState: false);
+            public Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> _async_tr_action = null;
+            public Action<_DKHOpenAPIEvents_OnReceiveTrConditionEvent> _async_tr_cond_action = null;
+        }
+
+        readonly List<AsyncNode> _async_list = [];
+
+        /// <summary>
+        /// 비동기 요청을 수행합니다.
+        /// </summary>
+        /// <param name="sRQName">사용자 구분명 (임의로 지정, 한글지원)</param>
+        /// <param name="sTrCode">조회하려는 TR이름</param>
+        /// <param name="nPrevNext">연속조회여부</param>
+        /// <param name="sScreenNo">화면번호 (4자리 숫자 임의로 지정)</param>
+        /// <param name="action">이벤트 콜백 함수</param>
+        /// <returns></returns>
         public virtual async Task<int> CommRqDataAsync(string sRQName, string sTrCode, int nPrevNext, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
         {
-            // 비동기 요청이 이미 실행중이면 -901 리턴
-            if (_async_state != AsyncState.NONE)
-                return -901;
-            _async_state = AsyncState.REQUEST;
-            _async_tr_action = action;
-            _async_wait.Reset();
+            var newAsync = new AsyncNode([sRQName, sTrCode, int.Parse(sScreenNo)])
+            {
+                _async_tr_action = action,
+            };
+            _async_list.Add(newAsync);
+
             int nRet = CommRqData(sRQName, sTrCode, nPrevNext, sScreenNo);
             if (nRet == 0)
             {
+                bool bTimeOut = false;
                 Task taskAsync = Task.Run(() =>
                 {
-                    if (!_async_wait.WaitOne(5000))
+                    if (!newAsync._async_wait.WaitOne(AsyncTimeOut))
                     {
-                        // 5초 대기후에도 이벤트가 발생하지 않으면 -902 리턴
-                        nRet = -902;
+                        bTimeOut = true;
                     }
                 });
                 await taskAsync.ConfigureAwait(true);
+                if (bTimeOut && _async_list.IndexOf(newAsync) >= 0)
+                {
+                    nRet = -902;
+                }
             }
-            _async_state = AsyncState.NONE;
+            _async_list.Remove(newAsync);
             return nRet;
         }
 
+        /// <summary>
+        /// 비동기 요청을 수행합니다.
+        /// </summary>
+        /// <param name="sArrCode">조회하려는 종목코드 리스트</param>
+        /// <param name="bNext">연속조회 여부 0:기본값, 1:연속조회(지원안함)</param>
+        /// <param name="nCodeCount">종목코드 갯수</param>
+        /// <param name="nTypeFlag">0:주식 종목, 3:선물옵션 종목</param>
+        /// <param name="sRQName">사용자 구분명</param>
+        /// <param name="sScreenNo">화면번호</param>
+        /// <param name="action">이벤트 콜백 함수</param>
+        /// <returns></returns>
         public virtual async Task<int> CommKwRqDataAsync(string sArrCode, int bNext, int nCodeCount, int nTypeFlag, string sRQName, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
         {
-            // 비동기 요청이 이미 실행중이면 -901 리턴
-            if (_async_state != AsyncState.NONE)
-                return -901;
-            _async_state = AsyncState.REQUEST;
-            _async_tr_action = action;
-            _async_wait.Reset();
+            var newAsync = new AsyncNode([sRQName, "OPTKWFID", int.Parse(sScreenNo)])
+            {
+                _async_tr_action = action,
+            };
+            _async_list.Add(newAsync);
+
             int nRet = CommKwRqData(sArrCode, bNext, nCodeCount, nTypeFlag, sRQName, sScreenNo);
             if (nRet == 0)
             {
+                bool bTimeOut = false;
                 Task taskAsync = Task.Run(() =>
                 {
-                    if (!_async_wait.WaitOne(5000))
+                    if (!newAsync._async_wait.WaitOne(AsyncTimeOut))
                     {
-                        // 5초 대기후에도 이벤트가 발생하지 않으면 -902 리턴
-                        nRet = -902;
+                        bTimeOut = true;
                     }
                 });
                 await taskAsync.ConfigureAwait(true);
+                if (bTimeOut && _async_list.IndexOf(newAsync) >= 0)
+                {
+                    nRet = -902;
+                }
             }
-            _async_state = AsyncState.NONE;
+            _async_list.Remove(newAsync);
             return nRet;
         }
 
+        /// <summary>
+        /// 비동기 조건검색을 수행합니다.
+        /// </summary>
+        /// <param name="strScrNo">화면번호</param>
+        /// <param name="strConditionName">조건식 이름</param>
+        /// <param name="nIndex">조건식 고유번호</param>
+        /// <param name="nSearch">실시간옵션. 0:조건검색만, 1:조건검색+실시간 조건검색</param>
+        /// <param name="action">이벤트 콜백 함수</param>
+        /// <returns>리턴값 1이면 성공이며, 0이면 실패입니다.</returns>
         public virtual async Task<int> SendConditionAsync(string strScrNo, string strConditionName, int nIndex, int nSearch, Action<_DKHOpenAPIEvents_OnReceiveTrConditionEvent> action)
         {
-            // 비동기 요청이 이미 실행중이면 -901 리턴
-            if (_async_state != AsyncState.NONE)
-                return -901;
-            _async_state = AsyncState.REQUEST;
-            _async_tr_cond_action = action;
-            _async_wait.Reset();
-            int nRet = SendCondition(strScrNo, strConditionName, nIndex, nSearch);
-            if (nRet == 1)
+            var newAsync = new AsyncNode([strScrNo, strConditionName])
             {
+                _async_tr_cond_action = action,
+            };
+            _async_list.Add(newAsync);
+
+            int nRet = SendCondition(strScrNo, strConditionName, nIndex, nSearch);
+            if (nRet == 0)
+            {
+                bool bTimeOut = false;
                 Task taskAsync = Task.Run(() =>
                 {
-                    if (!_async_wait.WaitOne(5000))
+                    if (!newAsync._async_wait.WaitOne(AsyncTimeOut))
                     {
-                        // 5초 대기후에도 이벤트가 발생하지 않으면 -902 리턴
-                        nRet = -902;
+                        bTimeOut = true;
                     }
                 });
                 await taskAsync.ConfigureAwait(true);
+                if (bTimeOut && _async_list.IndexOf(newAsync) >= 0)
+                {
+                    nRet = -902;
+                }
             }
-            _async_state = AsyncState.NONE;
+            _async_list.Remove(newAsync);
             return nRet;
         }
 
