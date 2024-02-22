@@ -29,33 +29,32 @@
         private void InitializeComponent()
         {
             this.button_login_KH = new System.Windows.Forms.Button();
-            this.textBox1 = new System.Windows.Forms.TextBox();
             this.button_login_KF = new System.Windows.Forms.Button();
             this.textBox2 = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.textBox_KH_code = new System.Windows.Forms.TextBox();
+            this.button_KH_info = new System.Windows.Forms.Button();
+            this.listBox_result = new System.Windows.Forms.ListBox();
+            this.button_KH_chart = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // button_login_KH
             // 
-            this.button_login_KH.Location = new System.Drawing.Point(21, 35);
+            this.button_login_KH.Location = new System.Drawing.Point(21, 28);
+            this.button_login_KH.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.button_login_KH.Name = "button_login_KH";
-            this.button_login_KH.Size = new System.Drawing.Size(75, 23);
+            this.button_login_KH.Size = new System.Drawing.Size(75, 20);
             this.button_login_KH.TabIndex = 0;
             this.button_login_KH.Text = "국내로그인";
             this.button_login_KH.UseVisualStyleBackColor = true;
             this.button_login_KH.Click += new System.EventHandler(this.button_login_KH_Click);
             // 
-            // textBox1
-            // 
-            this.textBox1.Location = new System.Drawing.Point(21, 64);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(114, 23);
-            this.textBox1.TabIndex = 1;
-            // 
             // button_login_KF
             // 
-            this.button_login_KF.Location = new System.Drawing.Point(187, 35);
+            this.button_login_KF.Location = new System.Drawing.Point(443, 28);
+            this.button_login_KF.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.button_login_KF.Name = "button_login_KF";
-            this.button_login_KF.Size = new System.Drawing.Size(75, 23);
+            this.button_login_KF.Size = new System.Drawing.Size(75, 20);
             this.button_login_KF.TabIndex = 0;
             this.button_login_KF.Text = "해외로그인";
             this.button_login_KF.UseVisualStyleBackColor = true;
@@ -63,20 +62,72 @@
             // 
             // textBox2
             // 
-            this.textBox2.Location = new System.Drawing.Point(187, 64);
+            this.textBox2.Location = new System.Drawing.Point(443, 51);
+            this.textBox2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(114, 23);
+            this.textBox2.Size = new System.Drawing.Size(114, 21);
             this.textBox2.TabIndex = 1;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(15, 71);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(53, 12);
+            this.label1.TabIndex = 2;
+            this.label1.Text = "종목코드";
+            // 
+            // textBox_KH_code
+            // 
+            this.textBox_KH_code.Location = new System.Drawing.Point(70, 65);
+            this.textBox_KH_code.Name = "textBox_KH_code";
+            this.textBox_KH_code.Size = new System.Drawing.Size(100, 21);
+            this.textBox_KH_code.TabIndex = 3;
+            this.textBox_KH_code.Text = "005930";
+            // 
+            // button_KH_info
+            // 
+            this.button_KH_info.Location = new System.Drawing.Point(17, 98);
+            this.button_KH_info.Name = "button_KH_info";
+            this.button_KH_info.Size = new System.Drawing.Size(89, 23);
+            this.button_KH_info.TabIndex = 4;
+            this.button_KH_info.Text = "종목정보요청";
+            this.button_KH_info.UseVisualStyleBackColor = true;
+            this.button_KH_info.Click += new System.EventHandler(this.button_KH_info_Click);
+            // 
+            // listBox_result
+            // 
+            this.listBox_result.FormattingEnabled = true;
+            this.listBox_result.ItemHeight = 12;
+            this.listBox_result.Location = new System.Drawing.Point(12, 163);
+            this.listBox_result.Name = "listBox_result";
+            this.listBox_result.Size = new System.Drawing.Size(658, 208);
+            this.listBox_result.TabIndex = 5;
+            // 
+            // button_KH_chart
+            // 
+            this.button_KH_chart.Location = new System.Drawing.Point(122, 98);
+            this.button_KH_chart.Name = "button_KH_chart";
+            this.button_KH_chart.Size = new System.Drawing.Size(89, 23);
+            this.button_KH_chart.TabIndex = 4;
+            this.button_KH_chart.Text = "일봉차트요청";
+            this.button_KH_chart.UseVisualStyleBackColor = true;
+            this.button_KH_chart.Click += new System.EventHandler(this.button_KH_chart_Click);
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(344, 137);
+            this.ClientSize = new System.Drawing.Size(682, 386);
+            this.Controls.Add(this.listBox_result);
+            this.Controls.Add(this.button_KH_chart);
+            this.Controls.Add(this.button_KH_info);
+            this.Controls.Add(this.textBox_KH_code);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.textBox2);
             this.Controls.Add(this.button_login_KF);
-            this.Controls.Add(this.textBox1);
             this.Controls.Add(this.button_login_KH);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "Form1";
             this.Text = "Form1";
             this.ResumeLayout(false);
@@ -87,8 +138,12 @@
         #endregion
 
         private Button button_login_KH;
-        private TextBox textBox1;
         private Button button_login_KF;
         private TextBox textBox2;
+        private Label label1;
+        private TextBox textBox_KH_code;
+        private Button button_KH_info;
+        private ListBox listBox_result;
+        private Button button_KH_chart;
     }
 }
