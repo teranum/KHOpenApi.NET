@@ -178,8 +178,8 @@ namespace KFOpenApi.NET
 
     /// <summary>
     /// 요청했던 조회데이터를 수신했을때 발생됩니다.
-    /// 수신된 데이터는 이 이벤트내부에서 GetCommData()함수를 이용해서 얻어올 수 있습니다.
     /// </summary>
+    /// <remarks>수신된 데이터는 이 이벤트내부에서 <see cref="AxKFOpenAPI.GetCommData"/>함수를 이용해서 얻어올 수 있습니다.</remarks>
     public class _DKFOpenAPIEvents_OnReceiveTrDataEvent(string sScrNo, string sRQName, string sTrCode, string sRecordName, string sPreNext) : EventArgs
     {
         /// <summary>화면번호</summary>
@@ -194,7 +194,13 @@ namespace KFOpenApi.NET
         public string sPreNext = sPreNext;
     }
 
-    /// <summary>주문전송 또는 데이터 조회요청 후 서버 메시지가 수신됩니다.※ 메시지에 포함된 6자리 코드번호는 변경될 수 있으니, 여기에 수신된 코드번호를 특정 용도로 사용하지 마시기 바랍니다.</summary>
+    /// <summary>데이터 요청 또는 주문전송 후에 서버가 보낸 메시지를 수신합니다.<br/>
+    /// 예) "조회가 완료되었습니다"<br/>
+    /// 예) "계좌번호 입력을 확인해주세요"<br/>
+    /// 예) "조회할 자료가 없습니다."<br/>
+    /// 예) "증거금 부족으로 주문이 거부되었습니다."
+    /// </summary>
+    /// <remarks>※ 메시지에 포함된 6자리 코드번호는 변경될 수 있으니, 여기에 수신된 코드번호를 특정 용도로 사용하지 마시기 바랍니다.</remarks>
     public class _DKFOpenAPIEvents_OnReceiveMsgEvent(string sScrNo, string sRQName, string sTrCode, string sMsg) : EventArgs
     {
         /// <summary>화면번호</summary>
@@ -207,7 +213,8 @@ namespace KFOpenApi.NET
         public string sMsg = sMsg;
     }
 
-    /// <summary>실시간시세 데이터가 수신될때마다 종목단위로 발생됩니다. SetRealReg()함수로 등록한 실시간 데이터도 이 이벤트로 전달됩니다. GetCommRealData()함수를 이용해서 수신된 데이터를 얻을수 있습니다.</summary>
+    /// <summary>실시간시세 데이터가 수신될때마다 종목단위로 발생됩니다.
+    /// <see cref="AxKFOpenAPI.GetCommRealData"/>GetCommRealData()함수를 이용해서 수신된 데이터를 얻을수 있습니다.</summary>
     public class _DKFOpenAPIEvents_OnReceiveRealDataEvent(string sJongmokCode, string sRealType, string sRealData) : EventArgs
     {
         /// <summary>종목코드</summary>
@@ -229,22 +236,28 @@ namespace KFOpenApi.NET
         public string sFIdList = sFIdList;
     }
 
-    /// <summary>로그인 처리 이벤트입니다. 성공이면 인자값 nErrCode가 0이며 에러는 다음과 같은 값이 전달됩니다.</summary>
+    /// <summary>
+    /// 로그인 처리 이벤트입니다. 성공이면 인자값 nErrCode가 0이며 에러는 다음과 같은 값이 전달됩니다.
+    /// <para>nErrCode별 상세내용</para>
+    /// -100 사용자 정보교환 실패<br/>
+    /// -101 서버접속 실패<br/>
+    /// -102 버전처리 실패
+    /// </summary>
     public class _DKFOpenAPIEvents_OnEventConnectEvent(int nErrCode) : EventArgs
     {
-        /// <summary>로그인 처리 이벤트입니다. 성공이면 인자값 nErrCode가 0이며, 그 외 에러값이 전달됩니다.</summary>
+        /// <summary>로그인 상태를 전달하는데 자세한 내용은 아래 상세내용 참고</summary>
         public int nErrCode = nErrCode;
     }
 
-    /// 요청했던 조회데이터를 수신했을때 발생됩니다.
+    /// <inheritdoc cref="_DKFOpenAPIEvents_OnReceiveTrDataEvent"/>
     public delegate void _DKFOpenAPIEvents_OnReceiveTrDataEventHandler(object sender, _DKFOpenAPIEvents_OnReceiveTrDataEvent e);
-    /// <summary>실시간시세 데이터가 수신될때마다 종목단위로 발생됩니다. SetRealReg()함수로 등록한 실시간 데이터도 이 이벤트로 전달됩니다. GetCommRealData()함수를 이용해서 수신된 데이터를 얻을수 있습니다.</summary>
+    /// <inheritdoc cref="_DKFOpenAPIEvents_OnReceiveRealDataEvent"/>
     public delegate void _DKFOpenAPIEvents_OnReceiveRealDataEventHandler(object sender, _DKFOpenAPIEvents_OnReceiveRealDataEvent e);
-    /// <summary>주문전송 또는 데이터 조회요청 후 서버 메시지가 수신됩니다.※ 메시지에 포함된 6자리 코드번호는 변경될 수 있으니, 여기에 수신된 코드번호를 특정 용도로 사용하지 마시기 바랍니다.</summary>
+    /// <inheritdoc cref="_DKFOpenAPIEvents_OnReceiveMsgEvent"/>
     public delegate void _DKFOpenAPIEvents_OnReceiveMsgEventHandler(object sender, _DKFOpenAPIEvents_OnReceiveMsgEvent e);
-    /// <summary>주문전송 후 주문접수, 체결통보, 잔고통보를 수신할 때 마다 발생됩니다. GetChejanData()함수를 이용해서 FID항목별 값을 얻을수 있습니다.</summary>
+    /// <inheritdoc cref="_DKFOpenAPIEvents_OnReceiveChejanDataEvent"/>
     public delegate void _DKFOpenAPIEvents_OnReceiveChejanDataEventHandler(object sender, _DKFOpenAPIEvents_OnReceiveChejanDataEvent e);
-    /// <summary>로그인 처리 이벤트입니다. 성공이면 인자값 nErrCode가 0이며 에러는 다음과 같은 값이 전달됩니다.</summary>
+    /// <inheritdoc cref="_DKFOpenAPIEvents_OnEventConnectEvent"/>
     public delegate void _DKFOpenAPIEvents_OnEventConnectEventHandler(object sender, _DKFOpenAPIEvents_OnEventConnectEvent e);
 
 
@@ -269,19 +282,19 @@ namespace KFOpenApi.NET
     /// </summary>
     public class AxKFOpenAPI
     {
-        /// 요청했던 조회데이터를 수신했을때 발생됩니다.
+        /// <inheritdoc cref="_DKFOpenAPIEvents_OnReceiveTrDataEvent"/>
         public event _DKFOpenAPIEvents_OnReceiveTrDataEventHandler OnReceiveTrData;
 
-        /// <summary>실시간시세 데이터가 수신될때마다 종목단위로 발생됩니다. SetRealReg()함수로 등록한 실시간 데이터도 이 이벤트로 전달됩니다. GetCommRealData()함수를 이용해서 수신된 데이터를 얻을수 있습니다.</summary>
+        /// <inheritdoc cref="_DKFOpenAPIEvents_OnReceiveRealDataEvent"/>
         public event _DKFOpenAPIEvents_OnReceiveRealDataEventHandler OnReceiveRealData;
 
-        /// <summary>실시간시세 데이터가 수신될때마다 종목단위로 발생됩니다. SetRealReg()함수로 등록한 실시간 데이터도 이 이벤트로 전달됩니다. GetCommRealData()함수를 이용해서 수신된 데이터를 얻을수 있습니다.</summary>
+        /// <inheritdoc cref="_DKFOpenAPIEvents_OnReceiveMsgEvent"/>
         public event _DKFOpenAPIEvents_OnReceiveMsgEventHandler OnReceiveMsg;
 
-        /// <summary>주문전송 후 주문접수, 체결통보, 잔고통보를 수신할 때 마다 발생됩니다. GetChejanData()함수를 이용해서 FID항목별 값을 얻을수 있습니다.</summary>
+        /// <inheritdoc cref="_DKFOpenAPIEvents_OnReceiveChejanDataEvent"/>
         public event _DKFOpenAPIEvents_OnReceiveChejanDataEventHandler OnReceiveChejanData;
 
-        /// <summary>로그인 처리 이벤트입니다. 성공이면 인자값 nErrCode가 0이며 에러는 다음과 같은 값이 전달됩니다.</summary>
+        /// <inheritdoc cref="_DKFOpenAPIEvents_OnEventConnectEvent"/>
         public event _DKFOpenAPIEvents_OnEventConnectEventHandler OnEventConnect;
 
         internal void RaiseOnOnReceiveTrData(object sender, _DKFOpenAPIEvents_OnReceiveTrDataEvent e)
@@ -315,6 +328,15 @@ namespace KFOpenApi.NET
 
         internal void RaiseOnOnEventConnect(object sender, _DKFOpenAPIEvents_OnEventConnectEvent e)
         {
+            int async_ident_id = AsyncNode.GetIdentId(["CommConnectAsync"]);
+            var async_node = _async_list.Find(x => x._ident_id == async_ident_id);
+            if (async_node is not null)
+            {
+                _async_Connect_nErrCode = e.nErrCode;
+                _async_list.Remove(async_node);
+                async_node._async_wait.Set();
+                return;
+            }
             OnEventConnect?.Invoke(this, e);
         }
 
@@ -332,7 +354,29 @@ namespace KFOpenApi.NET
         /// 로그인 윈도우를 실행한다.
         /// </summary>
         /// <param name="nAutoUpgrade">버전처리시, 수동 또는 자동 설정을 위한 구분값(0 : 수동진행, 1 : 자동진행)</param>
-        /// <returns></returns>
+        /// <returns>
+        /// 0	: 정상처리<br/>
+        /// -1	: 미접속상태<br/>
+        /// -100	: 로그인시 접속 실패(아이피오류 또는 접속정보 오류<br/>
+        /// -101	: 서버 접속 실패<br/>
+        /// -102	: 버전처리가 실패하였습니다.
+        /// </returns>
+        /// <remarks>
+        /// nAutoUpgrade = 0 : 수동진행<br/>
+        /// 로그인창 -> 버전처리진행 -> 메시지박스(OCX포함한 프로그램을 종료 후, 버전처리 요망...)<br/>
+        /// -> 프로그램(OCX포함된) 수동으로 직접 종료 -> 메시지박스 확인 수동클릭 -> 버전처리진행/완료<br/>
+        /// -> 고객이 직접 프로그램 재실행<br/>
+        /// <br/>nAutoUpgrade = 1 : 자동진행<br/>
+        /// 로그인창 -> 버전처리진행 -> 프로그램(OCX포함된) 자동종료 -> 버전처리진행/완료<br/>
+        /// -> 자동으로 프로그램(OCX포함된) 재실행<br/>
+        /// <br/>[비고]<br/>
+        /// 수동/자동 여부는 고객 프로그램(OCX포함)이 단독으로 사용되어지는 경우에는 자동으로 선택하시고,<br/>
+        /// 프로그램(OCX포함)이 다른 프로그램과 연동되어져 서로 데이타교환이 있는 경우에는 수동으로 선택해서 사용 바랍니다.<br/>
+        /// 엑셀에서 OCX사용시, 수동으로 선택해서 사용 바랍니다.<br/>
+        /// <br/>Ex)<br/>
+        /// openApi.CommConnect(0); //수동<br/>
+        /// openApi.CommConnect(1); //자동<br/>
+        /// </remarks>
         /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int CommConnect(int nAutoUpgrade)
         {
@@ -351,7 +395,18 @@ namespace KFOpenApi.NET
         /// <param name="sTrCode">Tr목록의 TrCode 입력 (예 : opt10001)</param>
         /// <param name="sPrevNext">서버에서 내려준 Next키 값  입력</param>
         /// <param name="sScreenNo">4자리의 화면번호 입력 (1 ~ 9999 : 숫자형식으로만 가능)</param>
-        /// <returns></returns>
+        /// <returns>
+        /// -103 	: TrCode가 존재하지 않습니다.<br/>
+        /// -200 	: 조회과부하<br/>
+        /// -201 	: 주문과부하<br/>
+        /// -202 	: 조회입력값(명칭/누락) 오류<br/>
+        /// -203 	: 종목코드 미존재<br/>
+        /// -300 	: 주문입력값 오류<br/>
+        /// -301 	: 계좌비밀번호를 입력하십시오.<br/>
+        /// -302 	: 타인 계좌를 사용할 수 없습니다.
+        /// </returns>
+        /// <remarks>
+        /// </remarks>
         /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int CommRqData(string sRQName, string sTrCode, string sPrevNext, string sScreenNo)
         {
@@ -401,6 +456,9 @@ namespace KFOpenApi.NET
         /// <summary>
         /// OpenAPI의 서버 접속을 해제한다.
         /// </summary>
+        /// <remarks>
+        /// 프로그램 종료시 적용시키는 함수이며, 미적용되어도 OpenAPI 내부에서 처리하게 되어 있음.
+        /// </remarks>
         /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual void CommTerminate()
         {
@@ -451,6 +509,7 @@ namespace KFOpenApi.NET
         /// <param name="sRealType">"해외선물시세", "해외옵션시세", "해외선물호가", "해외옵션호가" 입력 (미입력해도 가능) </param>
         /// <param name="nFid">실시간목록의 필드값을 참조</param>
         /// <returns>실시간 데이타 반환</returns>
+        /// <remarks>입력부에 strRealType 값을 셋팅 안해도 리턴값 가능</remarks>
         /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetCommRealData(string sRealType, int nFid)
         {
@@ -491,7 +550,16 @@ namespace KFOpenApi.NET
         /// <param name="sStopPrice">Stop단가</param>
         /// <param name="sHogaGb">거래구분 (1:시장가, 2:지정가, 3:STOP, 4:STOP LIMIT)</param>
         /// <param name="sOrgOrderNo">원주문번호</param>
-        /// <returns></returns>
+        /// <returns>
+        /// 0    : 정상처리<br/>
+        /// -201 	: 주문과부하<br/>
+        /// -203 	: 종목코드 미존재<br/>
+        /// -300 	: 주문입력값 오류<br/>
+        /// -301 	: 계좌비밀번호를 입력하십시오.<br/>
+        /// -302 	: 타인 계좌를 사용할 수 없습니다.<br/>
+        /// -303 	: 경고-주문수량 200개 초과<br/>
+        /// -304 	: 제한-주문수량 400개 초과
+        /// </returns>
         /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual int SendOrder(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, string sPrice, string sStopPrice, string sHogaGb, string sOrgOrderNo)
         {
@@ -508,6 +576,15 @@ namespace KFOpenApi.NET
         /// </summary>
         /// <param name="sTag">사용자정보 구분값</param>
         /// <returns>로그인정보 데이타 반환</returns>
+        /// <remarks>
+        /// [sTag]<br/>
+        /// ACCOUNT_CNT	- 전체 계좌 개수를 반환한다.<br/>
+        /// ACCNO		- 전체 계좌를 반환한다. 계좌별 구분은 ‘;’이다.<br/>
+        /// USER_ID		- 사용자 ID를 반환한다.<br/>
+        /// USER_NAME	- 사용자명을 반환한다.<br/>
+        /// KEY_BSECGB	- 키보드보안 해지여부. 0:정상, 1:해지<br/>
+        /// FIREW_SECGB	- 방화벽 설정 여부. 0:미설정, 1:설정, 2:해지
+        /// </remarks>
         /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetLoginInfo(string sTag)
         {
@@ -785,6 +862,9 @@ namespace KFOpenApi.NET
         /// <param name="sRecordName">사용자구분명 입력</param>
         /// <param name="nGubun">수신데이타 구분 입력 (0 : 전체(싱글+멀티),  1 : 싱글데이타, 2 : 멀티데이타)</param>
         /// <returns>수신 전체데이터를 문자값으로 반환한다(TR목록에서 필드 사이즈 참조(필드명 옆 가로안의 숫자))</returns>
+        /// <remarks>
+        /// 모든 시세/원장/차트 조회가 가능하며, 특히 차트데이타 같은 대용량 데이타를 한 번에 수신해서 처리가능.
+        /// </remarks>
         /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetCommFullData(string sTrCode, string sRecordName, int nGubun)
         {
@@ -796,10 +876,6 @@ namespace KFOpenApi.NET
             return ocx.GetCommFullData(sTrCode, sRecordName, nGubun);
         }
 
-        interface MyInterface
-        {
-            
-        }
         enum ActiveXInvokeKind
         {
             MethodInvoke,
@@ -864,7 +940,8 @@ namespace KFOpenApi.NET
         /// <summary>
         /// OCX를 생성합니다.
         /// </summary>
-        /// <param name="hWndParent"></param>
+        /// <param name="hWndParent">윈도우 핸들</param>
+        /// <remarks>GUI모드에서 메인 윈도우 핸들을 설정해준다</remarks>
         public AxKFOpenAPI(nint hWndParent = 0)
         {
             if (hWndParent == IntPtr.Zero)
@@ -941,14 +1018,15 @@ namespace KFOpenApi.NET
         readonly List<AsyncNode> _async_list = [];
 
         /// <summary>
-        /// 조회를 서버로 송신한다. 비동기 방식으로 수신합니다.
+        /// 비동기 요청을 수행합니다.<br/>
+        /// <inheritdoc cref="CommRqData"/>
         /// </summary>
-        /// <param name="sRQName">사용자구분명 입력</param>
-        /// <param name="sTrCode">Tr목록의 TrCode 입력 (예 : opt10001)</param>
-        /// <param name="sPrevNext">서버에서 내려준 Next키 값  입력</param>
-        /// <param name="sScreenNo">4자리의 화면번호 입력 (1 ~ 9999 : 숫자형식으로만 가능)</param>
+        /// <param name="sRQName"><inheritdoc cref="CommRqData"/></param>
+        /// <param name="sTrCode"><inheritdoc cref="CommRqData"/></param>
+        /// <param name="sPrevNext"><inheritdoc cref="CommRqData"/></param>
+        /// <param name="sScreenNo"><inheritdoc cref="CommRqData"/></param>
         /// <param name="action">이벤트 콜백 함수</param>
-        /// <returns></returns>
+        /// <returns><inheritdoc cref="CommRqData"/><br/>-902: TimeOut</returns>
         public virtual async Task<int> CommRqDataAsync(string sRQName, string sTrCode, string sPrevNext, string sScreenNo, Action<_DKFOpenAPIEvents_OnReceiveTrDataEvent> action)
         {
             var newAsync = new AsyncNode([sRQName, sTrCode, int.Parse(sScreenNo)])
@@ -975,6 +1053,39 @@ namespace KFOpenApi.NET
                 }
             }
             _async_list.Remove(newAsync);
+            return nRet;
+        }
+
+        private int _async_Connect_nErrCode = 0;
+        /// <summary>
+        /// 비동기 요청을 수행합니다.<br/>
+        /// <inheritdoc cref="CommConnect"/>
+        /// </summary>
+        /// <param name="nAutoUpgrade"><inheritdoc cref="CommConnect"/></param>
+        /// <returns><inheritdoc cref="CommConnect"/><br/>-901: 이미 요청 작동중</returns>
+        public virtual async Task<int> CommConnectAsync(int nAutoUpgrade)
+        {
+            if (_async_Connect_nErrCode == -1)
+            {
+                return -901; // 이미 요청 작동중
+            }
+            _async_Connect_nErrCode = -1;
+            var newAsync = new AsyncNode(["CommConnectAsync"])
+            {
+            };
+            _async_list.Add(newAsync);
+
+            int nRet = CommConnect(nAutoUpgrade);
+            if (nRet == 0)
+            {
+                await Task.Run(() =>
+                {
+                    newAsync._async_wait.WaitOne();
+                });
+                nRet = _async_Connect_nErrCode;
+            }
+            _async_list.Remove(newAsync);
+            _async_Connect_nErrCode = 0;
             return nRet;
         }
         #endregion
