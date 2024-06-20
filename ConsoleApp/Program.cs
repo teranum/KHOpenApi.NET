@@ -7,16 +7,25 @@ class Program
     [STAThread]
     static void Main(string[] args)
     {
-        new Sample().Run();
-        NativeLoop.LoopForever(); // if need for break, press CTRL+C
+        Application.EnableVisualStyles();
+        Form form = new()
+        {
+            FormBorderStyle = FormBorderStyle.FixedToolWindow,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-2000, -2000),
+            Size = new Size(1, 1),
+        };
+        form.Shown += (s, e) => { new Sample(form.Handle).Run(); };
+        Application.Run(form);
     }
 }
 
-class Sample
+class Sample(nint handle)
 {
-    readonly AxKHOpenAPI api = new();
+    readonly AxKHOpenAPI api = new(handle);
     private static void OutLog(string msg = "") => Console.WriteLine(msg);
-    public void Run()
+    public async void Run()
     {
         if (!api.Created)
         {
@@ -24,27 +33,11 @@ class Sample
             return;
         }
 
-        // 이벤트 핸들러 추가
-        api.OnEventConnect += Api_OnEventConnect;
-        api.OnReceiveConditionVer += Api_OnReceiveConditionVer;
-        api.OnReceiveMsg += (s, e) => OutLog($"OnReceiveMsg: {e.sRQName} {e.sTrCode} {e.sMsg}");
-        api.OnReceiveRealData += (s, e) => OutLog($"OnReceiveRealData: {e.sRealKey} {e.sRealType} {e.sRealData}");
-        api.OnReceiveTrData += (s, e) => OutLog($"OnReceiveTrData: {e.sRQName} {e.sTrCode} {e.sPrevNext}");
-
         // 로그인
         OutLog("로그인 요청...");
-        if (0 != api.CommConnect())
+        if (0 != await api.CommConnectAsync())
         {
             OutLog("로그인 요청(CommConnect): 실패");
-            return;
-        }
-    }
-
-    private void Api_OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
-    {
-        if (e.nErrCode != 0)
-        {
-            OutLog($"로그인 실패({e.nErrCode})");
             return;
         }
         OutLog("로그인 성공");
@@ -62,28 +55,43 @@ class Sample
         // 사용자 조건검색리스트요청
         OutLog();
         OutLog("사용자 조건검색리스트요청...");
-        if (1 != api.GetConditionLoad())
+        if (1 != await api.GetConditionLoadAsync())
         {
             OutLog("사용자 조건검색리스트요청: 실패");
             return;
         }
-    }
 
-    private void Api_OnReceiveConditionVer(object sender, _DKHOpenAPIEvents_OnReceiveConditionVerEvent e)
-    {
-        if (1 != e.lRet)
-        {
-            OutLog($"사용자 조건검색리스트요청: 실패{e.lRet}");
-        }
-        else
-        {
-            var cond_list = api.GetConditionNameList().Split(';', StringSplitOptions.RemoveEmptyEntries).ToList();
-            OutLog($"조건검색식 개수: {cond_list.Count}");
-            cond_list.ForEach(OutLog);
+        var cond_list = api.GetConditionNameList().Split(';', StringSplitOptions.RemoveEmptyEntries).ToList();
+        OutLog($"조건검색식 개수: {cond_list.Count}");
+        cond_list.ForEach(OutLog);
 
+        // 조건리스트중 처음 조건식 요청
+        if (cond_list.Count > 0)
+        {
+            var cond_codeName = cond_list[0].Split('^');
+            var cond_code = cond_codeName[0];
+            var cond_name = cond_codeName[1];
             OutLog();
-            DoOtherWork();
+            OutLog($"조건검색식 요청: {cond_name}");
+            List<string> list = [];
+            if (1 == await api.SendConditionAsync("9876", cond_name, int.Parse(cond_code), 0,
+                (e) =>
+                {
+                    var codes = e.strCodeList.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(x=>api.GetMasterCodeName(x));
+                    list.AddRange(codes);
+                }))
+            {
+                OutLog($"조건검색식 요청: 성공, 검색종목수 = {list.Count}");
+                list.ForEach(OutLog);
+            }
+            else
+                OutLog($"조건검색식 요청: 실패");
         }
+
+        OutLog();
+        DoOtherWork();
+
+
     }
 
     private async void DoOtherWork()
