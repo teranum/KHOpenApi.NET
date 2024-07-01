@@ -20,15 +20,14 @@ public interface IOpenApi
     /// <summary>모의투자 여부</summary>
     bool IsSimulation { get; }
 
+    /// <summary>로그인 된 유저 아이디</summary>
+    string UserID { get; }
+
     /// <summary>
     /// 비동기 연결 요청
     /// </summary>
-    /// <param name="userId">유저 아이디</param>
-    /// <param name="password">HTS 패스워드</param>
-    /// <param name="certPassword">공인인증 패스워드</param>
     /// <returns>true: 연결성공, false: 연결실패</returns>
-    /// <remarks>공인인증 패스워드 없는 경우, 모의서버로 로그인</remarks>
-    Task<bool> ConnectAsync(string userId, string password, string certPassword = "");
+    Task<bool> ConnectAsync();
 
     /// <summary>연결 해제</summary>
     bool Close();

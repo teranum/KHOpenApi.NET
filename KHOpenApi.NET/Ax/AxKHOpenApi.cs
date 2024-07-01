@@ -922,7 +922,7 @@ public class AxKHOpenAPI
     }
 
     /// <summary>
-    /// ocx 모듈경로를 반환합니다.
+    /// ocx 모듈 폴더경로를 반환합니다.
     /// </summary>
     /// <returns>경로</returns>
     /// <exception cref="InvalidActiveXStateException"></exception>

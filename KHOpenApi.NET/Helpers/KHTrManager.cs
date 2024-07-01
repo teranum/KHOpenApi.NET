@@ -36,158 +36,149 @@ namespace KHOpenApi.NET.Helpers
             return null;
         }
 
-        private static void ParsingTRData(ref TrProp trData, string ansiText)
+        private static void ParsingTRData(ref TrProp trProp, string ansiText)
         {
-            // [TRINFO]
-            char[] separator = ['\r', '\n'];
-            var lines = ansiText.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-
-            TRSECTION trSection = TRSECTION.NONE;
-            string key = string.Empty;
-            string value = string.Empty;
-            foreach (string line in lines)
+            if (_trDescDatas.TryGetValue(trProp.TRCode, out var input_infos))
             {
-                if (line.IndexOf("[TRINFO]") == 0)
-                    trSection = TRSECTION.TRINFO;
-                else if (line.IndexOf("[INPUT]") == 0)
-                    trSection = TRSECTION.INPUT;
-                else if (line.IndexOf("[OUTPUT]") == 0)
-                    trSection = TRSECTION.OUTPUT;
-                else if (line.IndexOf("@START_OutRec1") == 0)
+                if (input_infos.Count >= 2 && input_infos[1].Key.Equals("주의"))
                 {
-                    trSection = TRSECTION.OUTREC1;
-                    if (SplitKeyValue(line, ref key, ref value))
-                    {
-                        var vals = value.Split(',');
-                        if (vals.Length > 1 && int.TryParse(vals[1], out int digit))
-                            trData.OutRec1RowCountDigit = digit;
-                    }
-                }
-                else if (line.IndexOf("@END_OutRec1") == 0)
-                    trSection = TRSECTION.END1;
-                else if (line.IndexOf("@START_OutRec2") == 0)
-                {
-                    trSection = TRSECTION.OUTREC2;
-                    if (SplitKeyValue(line, ref key, ref value))
-                    {
-                        var vals = value.Split(',');
-                        if (vals.Length > 1 && int.TryParse(vals[1], out int digit))
-                            trData.OutRec2RowCountDigit = digit;
-                    }
-                }
-                else if (line.IndexOf("@END_OutRec2") == 0)
-                    trSection = TRSECTION.END2;
-                else
-                {
-                    if (line[0] != ';' && SplitKeyValue(line, ref key, ref value, trSection == TRSECTION.INPUT || trSection == TRSECTION.OUTREC1 || trSection == TRSECTION.OUTREC2))
-                    {
-                        if (trSection == TRSECTION.TRINFO)
-                        {
-                            if (string.Equals(key, "TRName")) trData.TRName = value;
-                            else if (string.Equals(key, "OutputCnt")) trData.OutputCnt = Convert.ToInt32(value);
-                            else if (string.Equals(key, "DataHeader")) trData.DataHeader = Convert.ToInt32(value);
-                        }
-                        else if (trSection == TRSECTION.INPUT)
-                        {
-                            var vals = value.Split(',');
-                            int size = Convert.ToInt32(vals[1]);
-                            string desc = string.Empty;
-                            var val_desc = value.Split(';');
-                            if (val_desc.Length >= 2)
-                            {
-                                desc = val_desc[1].Trim();
-                            }
-
-                            trData.INPUTs.Add(new(key, size, desc));
-                        }
-                        else if (trSection == TRSECTION.OUTPUT)
-                        {
-                            var vals = value.Split(',');
-                            int size = Convert.ToInt32(vals[1]);
-                            string desc = string.Empty;
-                            var val_desc = value.Split(';');
-                            if (val_desc.Length >= 2)
-                            {
-                                desc = val_desc[1].Trim();
-                            }
-
-                            trData.OUTPUTs.Add(new(key, size, desc));
-                            trData.OutputTotalSize += size;
-                        }
-                        else if (trSection == TRSECTION.OUTREC1)
-                        {
-                            var vals = value.Split(',');
-                            int size = Convert.ToInt32(vals[1]);
-                            string desc = string.Empty;
-                            var val_desc = value.Split(';');
-                            if (val_desc.Length >= 2)
-                            {
-                                desc = val_desc[1].Trim();
-                            }
-
-                            trData.OutRec1s.Add(new(key, size, desc));
-                            trData.OutRec1TotalSize += size;
-                        }
-                        else if (trSection == TRSECTION.OUTREC2)
-                        {
-                            var vals = value.Split(',');
-                            int size = Convert.ToInt32(vals[1]);
-
-                            trData.OutRec2s.Add(new(key, size, string.Empty));
-                            trData.OutRec2TotalSize += size;
-                        }
-                    }
+                    trProp.Caution = input_infos[1].Value;
                 }
             }
 
-            var Code = trData.TRCode;
-            trData.DefReqData = PreDefineReqs.FirstOrDefault(x => x.Code.Equals(Code));
+            int nLen = ansiText.Length;
+            // [INPUT]
+            int nPos = 0;
+            int nPosEnd = 0;
+            nPos = ansiText.IndexOf("[INPUT]", nPos);
+            nPos = ansiText.IndexOf("@START_", nPos);
+            nPos += "@START_".Length;
+            nPosEnd = ansiText.IndexOf("\r\n", nPos);
+            string TRName = ansiText[nPos..nPosEnd];
+            trProp.TRName = TRName;
+            nPos = nPosEnd + "\r\n".Length;
+            nPosEnd = ansiText.IndexOf("@END_", nPos);
+            string InputBody = ansiText[nPos..nPosEnd];
+            var inputKeySizes = GetKeySizes(InputBody);
 
-            if (trData.DefReqData == null)
+            foreach (var keySize in inputKeySizes)
             {
-                // 디폴트 목록에 없는 TR경우
-
-                if (int.TryParse(trData.TRCode, out int realtype))
+                var desc = string.Empty;
+                if (input_infos != null)
                 {
-                    trData.DefReqData = new REQKindClass(trData.TRCode, REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.공통, REQKIND_SUB.시세, false);
+                    var info = input_infos.FirstOrDefault(x => x.Key.Equals(keySize.Item1));
+                    if (info.Key != null)
+                        desc = info.Value;
                 }
-                //else if (trData.TRCode.Length > 0 && trData.TRCode[0] == 'g')
-                //{
-                //    trData.DefReqData = new(trData.TRCode, REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.공통, REQKIND_SUB.TR, false);
-                //}
+                trProp.Inputs.Add(new(keySize.Item1, keySize.Item2, desc));
             }
-
-            bool SplitKeyValue(string text, ref string key, ref string value, bool bFullValue = false)
+            // [OUTPUT]
+            nPos = nPosEnd;
+            nPos = ansiText.IndexOf("[OUTPUT]", nPos);
+            nPos = ansiText.IndexOf("@START_", nPos);
+            nPosEnd = ansiText.IndexOf('=', nPos);
+            string OutName, OutIdent;
+            OutName = ansiText.Substring(nPos + 7, nPosEnd - nPos - 7);
+            nPos = nPosEnd + 1;
+            nPosEnd = ansiText.IndexOf("\r\n", nPos);
+            OutIdent = ansiText[nPos..nPosEnd];
+            nPos = nPosEnd + "\r\n".Length;
+            nPosEnd = ansiText.IndexOf("@END_", nPos);
+            string namebody = ansiText[nPos..nPosEnd];
+            if (OutIdent.Equals("*,*,*"))
             {
-                // ex DataHeader=5; 2:해외주문, 3:해외조회, 4:국내주문, 5:국내조회
-                // out: (DataHeader, 5)
-                char[] separator = bFullValue ? ['=',] : ['=', ';'];
-                var key_value = text.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-                if (key_value.Length < 2) return false;
-                key = key_value[0].Trim();
-                value = key_value[1].Trim();
-                return true;
+                var singleKeySizes = GetKeySizes(namebody);
+                foreach (var keySize in singleKeySizes)
+                {
+                    trProp.OutputSingle.Add(new(keySize.Item1, keySize.Item2, string.Empty));
+                }
+                nPos = nPosEnd + "\r\n".Length;
+                nPos = ansiText.IndexOf("@START_", nPos);
+                if (nPos != -1)
+                {
+                    nPosEnd = ansiText.IndexOf("\r\n", nPos);
+                    nPos = nPosEnd + "\r\n".Length;
+                    nPosEnd = ansiText.IndexOf("@END_", nPos);
+                    string ortherbody = ansiText[nPos..nPosEnd];
+                    var multiKeySizes = GetKeySizes(ortherbody);
+                    foreach (var keySize in multiKeySizes)
+                    {
+                        trProp.OutputMuti.Add(new(keySize.Item1, keySize.Item2, string.Empty));
+                    }
+                }
+            }
+            else
+            {
+                var multiKeySizes = GetKeySizes(namebody);
+                foreach (var keySize in multiKeySizes)
+                {
+                    trProp.OutputMuti.Add(new(keySize.Item1, keySize.Item2, string.Empty));
+                }
+            }
+            // Caution and InputDescs
+            string section = trProp.TRCode + " : " + trProp.TRName;
+
+            //trProp.Caution = GetProfileString(section, "주의", szIniFilePath);
+            //trProp.InputDescs = trProp.Inputs.Select(x => GetProfileString(section, x, szIniFilePath)).ToList();
+
+            static List<(string, int)> GetKeySizes(string s)
+            {
+                List<(string, int)> sections = [];
+                string[] lines = s.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in lines)
+                {
+                    int pos = line.IndexOf('=');
+                    if (pos != -1)
+                    {
+                        var key = line[..pos].Trim();
+                        var values = line[(pos + 1)..].Split(',').ToList();
+                        int fieldSize = 0;
+                        if (values.Count > 1)
+                        {
+                            if (int.TryParse(values[1], out int size))
+                                fieldSize = size;
+                        }
+                        sections.Add((key, fieldSize));
+                    }
+                }
+                return sections;
             }
         }
-        private static TrProp LoadTRData(string filepath, IList<string> Errors)
-        {
-            TrProp trData = new(filepath);
-            try
-            {
-                byte[] fileData = File.ReadAllBytes(filepath);
-                string ansiText = _krEncoder.GetString(fileData, 0, fileData.Length);
+        //private static TrProp? LoadTRData(string filepath, IList<string> Errors)
+        //{
+        //    string fileTitle = Path.GetFileNameWithoutExtension(filepath).ToUpper();
+        //    try
+        //    {
+        //        using var file = File.OpenRead(filepath);
+        //        using var zip = new ZipArchive(file, ZipArchiveMode.Read);
+        //        foreach (var entry in zip.Entries)
+        //        {
+        //            string entruTitle = entry.Name[..^4];
+        //            if (entruTitle.Equals(fileTitle))
+        //            {
+        //                using var stream = entry.Open();
+        //                byte[] buffer = new byte[entry.Length];
+        //                _ = stream.Read(buffer, 0, buffer.Length);
+        //                stream.Close();
+        //                string ansiText = _krEncoder.GetString(buffer);
+        //                TrProp trData = new(filepath, ansiText);
+        //                ParsingTRData(ref trData, ansiText);
+        //                return trData;
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        /*
+        //        0195 : 매도평균가      = 083, 20, 0, A ; "004" -> 매수평균가      = 083, 20, 0, A ; "004"
+        //         */
+        //        Errors.Add($"Error: {filepath} : {ex.Message}");
+        //    }
 
-                ParsingTRData(ref trData, ansiText);
-            }
-            catch (Exception ex)
-            {
-                /*
-                0195 : 매도평균가      = 083, 20, 0, A ; "004" -> 매수평균가      = 083, 20, 0, A ; "004"
-                 */
-                Errors.Add($"Error: {filepath} : {ex.Message}");
-            }
-            return trData;
-        }
+        //    return null;
+        //}
+
+        private static Dictionary<string, IList<KeyValuePair<string, string>>> _trDescDatas = [];
 
         /// <summary>모든 TR리스트 불러오기</summary>
         public static void LoadAllTRLists(string apiFolderPath)
@@ -195,42 +186,112 @@ namespace KHOpenApi.NET.Helpers
             _errors.Clear();
             if (_allTrInfos.Count > 0) return;
 
-            var defReqs = PreDefineReqs;
+            _trDescDatas.Clear();
+            var koatrinputlegend_path = apiFolderPath + "\\koatrinputlegend.ini";
+            if (File.Exists(koatrinputlegend_path))
+            {
+                var lines = File.ReadAllLines(koatrinputlegend_path, _krEncoder);
+                string section = "";
+                List<KeyValuePair<string, string>>? infos = null;
+                foreach (var line in lines)
+                {
+                    if (line.StartsWith("[") && line.EndsWith("]"))
+                    {
+                        if (infos != null)
+                        {
+                            _trDescDatas[section] = infos;
+                        }
+                        infos = null;
+                        var section_names = line[1..^1].Split(':');
+                        if (section_names.Length == 2)
+                        {
+                            section = section_names[0].Trim();
+                            var name = section_names[1].Trim();
+                            infos = [new("TRName", name)];
+                        }
+                    }
+                    else
+                    {
+                        if (infos != null)
+                        {
+                            var keyValues = line.Split('=');
+                            if (keyValues.Length == 2)
+                            {
+                                var key = keyValues[0].Trim();
+                                var value = keyValues[1].Trim();
+                                if (key.Equals("주의"))
+                                {
+                                    infos.Insert(1, new(key, value));
+                                }
+                                else
+                                    infos.Add(new(key, value));
+                            }
+                        }
+                    }
+                }
+
+                if (infos != null)
+                {
+                    _trDescDatas[section] = infos;
+                }
+            }
 
             try
             {
+                /// ENC파일 읽기
+                /// 폴더에서 ENC파일 검색후
+                /// 압축해제
+                /// 파일네임과 동일한 압축파일에서 읽기
+
                 // api폴더 설정
-                string path = apiFolderPath + "\\TrData";
+                string path = apiFolderPath + "\\data";
+                if (!Directory.Exists(path)) return;
 
-                // 폴더내의 전체 dat파일 불러온다
-                string[] filepaths = Directory.GetFiles(path, "*.dat");
-                if (filepaths.Length == 0)
-                {
-                    _errors.Add("TR dat files Not Found");
-                    return;
-                }
+                //// 폴더내의 전체 enc파일 불러온다
+                //string[] filepaths = Directory.GetFiles(path, "*.enc");
+                //if (filepaths.Length == 0)
+                //{
+                //    _errors.Add("TR dat files Not Found");
+                //    return;
+                //}
 
-                foreach (var filepath in filepaths)
+                foreach (var trDesc in _trDescDatas)
                 {
-                    var trData = LoadTRData(filepath, _errors);
+                    var trCode = trDesc.Key;
+                    var input_infos = trDesc.Value;
+
+                    var trName = input_infos[0].Value;
+                    var trData = new TrProp($"{apiFolderPath}\\{trCode}.enc", trCode, trName);
+                    if (trData == null) continue;
 
                     _allTrInfos.Add(trData);
                     if (_codeToTrData.TryGetValue(trData.TRCode, out var existTrData))
                     {
-                        _errors.Add($"Exist aleady : {existTrData.TRCode} : {existTrData.FilePath}, {filepath} ");
+                        _errors.Add($"Exist aleady : {existTrData.TRCode} : {existTrData.FilePath} ");
                     }
                     else
                         _codeToTrData.Add(trData.TRCode, trData);
-                    int.TryParse(trData.TRCode, out var realType);
-                    if (realType != 0)
-                    {
-                        if (_realtypeToTrData.TryGetValue(realType, out var existRealTr))
-                        {
-                            _errors.Add($"Exist RealType aleady : {existRealTr.TRCode} : {existRealTr.FilePath}, {filepath} ");
-                        }
-                        else
-                            _realtypeToTrData.Add(realType, trData);
-                    }
+
+                    //var trData = LoadTRData(filepath, _errors);
+                    //if (trData == null) continue;
+
+                    //_allTrInfos.Add(trData);
+                    //if (_codeToTrData.TryGetValue(trData.TRCode, out var existTrData))
+                    //{
+                    //    _errors.Add($"Exist aleady : {existTrData.TRCode} : {existTrData.FilePath}, {filepath} ");
+                    //}
+                    //else
+                    //    _codeToTrData.Add(trData.TRCode, trData);
+                    //int.TryParse(trData.TRCode, out var realType);
+                    //if (realType != 0)
+                    //{
+                    //    if (_realtypeToTrData.TryGetValue(realType, out var existRealTr))
+                    //    {
+                    //        _errors.Add($"Exist RealType aleady : {existRealTr.TRCode} : {existRealTr.FilePath}, {filepath} ");
+                    //    }
+                    //    else
+                    //        _realtypeToTrData.Add(realType, trData);
+                    //}
                 }
             }
             catch (Exception ex)
