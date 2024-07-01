@@ -2,10 +2,12 @@
 
 	<PropertyGroup>
 		<LangVersion>default</LangVersion>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFrameworks>net8.0-windows</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<Description>Common wrapper for Kiwoom OpenApi</Description>
-		<Version>1.5.2</Version>
+		<Version>2.0.0</Version>
 		<Title>KHOpenAPI.NET</Title>
 		<PackageTags>kiwoom, KOA</PackageTags>
 		<Authors>teranum</Authors>

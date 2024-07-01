@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace KFOpenApi.NET
 {
@@ -283,19 +279,19 @@ namespace KFOpenApi.NET
     public class AxKFOpenAPI
     {
         /// <inheritdoc cref="_DKFOpenAPIEvents_OnReceiveTrDataEvent"/>
-        public event _DKFOpenAPIEvents_OnReceiveTrDataEventHandler OnReceiveTrData;
+        public event _DKFOpenAPIEvents_OnReceiveTrDataEventHandler? OnReceiveTrData;
 
         /// <inheritdoc cref="_DKFOpenAPIEvents_OnReceiveRealDataEvent"/>
-        public event _DKFOpenAPIEvents_OnReceiveRealDataEventHandler OnReceiveRealData;
+        public event _DKFOpenAPIEvents_OnReceiveRealDataEventHandler? OnReceiveRealData;
 
         /// <inheritdoc cref="_DKFOpenAPIEvents_OnReceiveMsgEvent"/>
-        public event _DKFOpenAPIEvents_OnReceiveMsgEventHandler OnReceiveMsg;
+        public event _DKFOpenAPIEvents_OnReceiveMsgEventHandler? OnReceiveMsg;
 
         /// <inheritdoc cref="_DKFOpenAPIEvents_OnReceiveChejanDataEvent"/>
-        public event _DKFOpenAPIEvents_OnReceiveChejanDataEventHandler OnReceiveChejanData;
+        public event _DKFOpenAPIEvents_OnReceiveChejanDataEventHandler? OnReceiveChejanData;
 
         /// <inheritdoc cref="_DKFOpenAPIEvents_OnEventConnectEvent"/>
-        public event _DKFOpenAPIEvents_OnEventConnectEventHandler OnEventConnect;
+        public event _DKFOpenAPIEvents_OnEventConnectEventHandler? OnEventConnect;
 
         internal void RaiseOnOnReceiveTrData(object sender, _DKFOpenAPIEvents_OnReceiveTrDataEvent e)
         {
@@ -916,8 +912,8 @@ namespace KFOpenApi.NET
 
         private readonly IntPtr hWndContainer = IntPtr.Zero;
 
-        private readonly _DKFOpenAPI ocx;
-        private readonly System.Runtime.InteropServices.ComTypes.IConnectionPoint _pConnectionPoint;
+        private readonly _DKFOpenAPI? ocx;
+        private readonly System.Runtime.InteropServices.ComTypes.IConnectionPoint? _pConnectionPoint;
         private readonly bool bInitialized = false;
         private int _async_TimeOut = 5000;
         /// <summary>
@@ -1012,7 +1008,7 @@ namespace KFOpenApi.NET
             }
 
             public readonly ManualResetEvent _async_wait = new(initialState: false);
-            public Action<_DKFOpenAPIEvents_OnReceiveTrDataEvent> _async_tr_action = null;
+            public Action<_DKFOpenAPIEvents_OnReceiveTrDataEvent>? _async_tr_action = null;
         }
 
         readonly List<AsyncNode> _async_list = [];

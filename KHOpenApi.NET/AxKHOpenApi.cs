@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace KHOpenApi.NET;
 
@@ -533,31 +529,31 @@ internal class AxKHOpenAPIEventMulticaster(AxKHOpenAPI parent) : _DKHOpenAPIEven
 public class AxKHOpenAPI
 {
     /// <inheritdoc cref="_DKHOpenAPIEvents_OnReceiveTrDataEvent"/>
-    public event _DKHOpenAPIEvents_OnReceiveTrDataEventHandler OnReceiveTrData;
+    public event _DKHOpenAPIEvents_OnReceiveTrDataEventHandler? OnReceiveTrData;
 
     /// <inheritdoc cref="_DKHOpenAPIEvents_OnReceiveRealDataEvent"/>
-    public event _DKHOpenAPIEvents_OnReceiveRealDataEventHandler OnReceiveRealData;
+    public event _DKHOpenAPIEvents_OnReceiveRealDataEventHandler? OnReceiveRealData;
 
     /// <inheritdoc cref="_DKHOpenAPIEvents_OnReceiveMsgEvent"/>
-    public event _DKHOpenAPIEvents_OnReceiveMsgEventHandler OnReceiveMsg;
+    public event _DKHOpenAPIEvents_OnReceiveMsgEventHandler? OnReceiveMsg;
 
     /// <inheritdoc cref="_DKHOpenAPIEvents_OnReceiveChejanDataEvent"/>
-    public event _DKHOpenAPIEvents_OnReceiveChejanDataEventHandler OnReceiveChejanData;
+    public event _DKHOpenAPIEvents_OnReceiveChejanDataEventHandler? OnReceiveChejanData;
 
     /// <inheritdoc cref="_DKHOpenAPIEvents_OnEventConnectEvent"/>
-    public event _DKHOpenAPIEvents_OnEventConnectEventHandler OnEventConnect;
+    public event _DKHOpenAPIEvents_OnEventConnectEventHandler? OnEventConnect;
 
     /// <inheritdoc cref="_DKHOpenAPIEvents_OnReceiveInvestRealDataEvent"/>
-    public event _DKHOpenAPIEvents_OnReceiveInvestRealDataEventHandler OnReceiveInvestRealData;
+    public event _DKHOpenAPIEvents_OnReceiveInvestRealDataEventHandler? OnReceiveInvestRealData;
 
     /// <inheritdoc cref="_DKHOpenAPIEvents_OnReceiveRealConditionEvent"/>
-    public event _DKHOpenAPIEvents_OnReceiveRealConditionEventHandler OnReceiveRealCondition;
+    public event _DKHOpenAPIEvents_OnReceiveRealConditionEventHandler? OnReceiveRealCondition;
 
     /// <inheritdoc cref="_DKHOpenAPIEvents_OnReceiveTrConditionEvent"/>
-    public event _DKHOpenAPIEvents_OnReceiveTrConditionEventHandler OnReceiveTrCondition;
+    public event _DKHOpenAPIEvents_OnReceiveTrConditionEventHandler? OnReceiveTrCondition;
 
     /// <inheritdoc cref="_DKHOpenAPIEvents_OnReceiveConditionVerEvent"/>
-    public event _DKHOpenAPIEvents_OnReceiveConditionVerEventHandler OnReceiveConditionVer;
+    public event _DKHOpenAPIEvents_OnReceiveConditionVerEventHandler? OnReceiveConditionVer;
     internal void RaiseOnOnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
     {
         int async_ident_id = AsyncNode.GetIdentId([e.sRQName, e.sTrCode, int.Parse(e.sScrNo)]);
@@ -1661,8 +1657,8 @@ public class AxKHOpenAPI
 
     private readonly IntPtr hWndContainer = IntPtr.Zero;
 
-    private readonly _DKHOpenAPI ocx;
-    private readonly System.Runtime.InteropServices.ComTypes.IConnectionPoint _pConnectionPoint;
+    private readonly _DKHOpenAPI? ocx;
+    private readonly System.Runtime.InteropServices.ComTypes.IConnectionPoint? _pConnectionPoint;
     private readonly bool bInitialized = false;
     private int _async_TimeOut = 5000;
     /// <summary>
@@ -1760,8 +1756,8 @@ public class AxKHOpenAPI
         }
 
         public readonly ManualResetEvent _async_wait = new(initialState: false);
-        public Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> _async_tr_action = null;
-        public Action<_DKHOpenAPIEvents_OnReceiveTrConditionEvent> _async_tr_cond_action = null;
+        public Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent>? _async_tr_action = null;
+        public Action<_DKHOpenAPIEvents_OnReceiveTrConditionEvent>? _async_tr_cond_action = null;
     }
 
     readonly List<AsyncNode> _async_list = [];
