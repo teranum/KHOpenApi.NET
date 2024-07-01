@@ -97,16 +97,6 @@ namespace KHOpenApi.NET
         {
             LastErrorMessage = string.Empty;
             AxApi = new AxKHOpenAPI(windowHandle);
-
-            if (AxApi.Created)
-            {
-                var ocx_folder = AxApi.GetAPIModulePath();
-                KHTrManager.LoadAllTRLists(ocx_folder);
-                //AxApi.OnEventConnect += AxApi_OnEventConnect;
-                //AxApi.OnReceiveTrData += AxApi_OnReceiveTrData;
-                //AxApi.OnReceiveRealData += AxApi_OnReceiveRealData;
-                //AxApi.OnReceiveMsg += AxApi_OnReceiveMsg;
-            }
         }
     }
 }

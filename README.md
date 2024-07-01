@@ -1,9 +1,10 @@
 # [![NuGet version](https://badge.fury.io/nu/KHOpenApi.NET.png)](https://badge.fury.io/nu/KHOpenApi.NET)  KHOpenApi.NET (영웅문-Hero, 영웅문-Global)
 - 32비트/64비트 공용, 키움증권 OpenApi C# wrapper class
-- 개발환경: Visual Studio 2022, netstandard2.0
+- 개발환경: Visual Studio 2022, net8.0-windows (버젼2.0부터 지원, 이전버젼은 netstandard2.0 지원)
 - WinUI3, WPF, Winforms 지원
 - 비동기 TR 요청 지원 (CommRqDataAsync, CommKwRqDataAsync, SendConditionAsync)
 - 64비트사용시, 추가 설치 필요 https://github.com/teranum/64bit-kiwoom-openapi
+- 버젼2.0부터 KHOpenApi, KFOpenApi 클래스 추가, 기존 AxKHOpenAPI, AxKFOpenAPI 클래스는 그대로 유지
 
 ---------------
 KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio

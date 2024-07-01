@@ -23,13 +23,9 @@ public class TrProp
     public string TRName { get; set; }
     /// <summary>Caution</summary>
     public string Caution { get; set; } = string.Empty;
-    /// <summary>출력 블록 갯수</summary>
-    public int OutputCnt;
-    /// <summary>히더</summary>
-    public int DataHeader;
 
-    /// <summary>FID요청인 경우 필드 데이터</summary>
-    public string RefFids { get; set; } = string.Empty;
+    /// <summary>실시간 TR여부</summary>
+    public bool IsRealtype { get; set; }
 
     ///// <summary>입력 데이터</summary>
     //public IList<(string, string)> InputDatas { get; } = new List<(string, string)>();

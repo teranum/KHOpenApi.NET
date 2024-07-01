@@ -1,4 +1,5 @@
 ﻿using KHOpenApi.NET.Models;
+using System.IO.Compression;
 using System.Text;
 
 namespace KHOpenApi.NET.Helpers
@@ -8,32 +9,76 @@ namespace KHOpenApi.NET.Helpers
     {
         private static readonly Encoding _krEncoder = Encoding.GetEncoding("EUC-KR");
         private static readonly Dictionary<string, TrProp> _codeToTrData = [];
-        private static readonly Dictionary<int, TrProp> _realtypeToTrData = [];
+        private static readonly Dictionary<string, TrProp> _realtypeToTrData = [];
         private static readonly List<TrProp> _allTrInfos = [];
+        private static readonly List<TrProp> _allRInfos = [];
         private static readonly List<string> _errors = [];
+
+        private static readonly Dictionary<string, string> _map_FidToName = [];
+        static KHTrManager()
+        {
+            char[] separator = ['\r', '\n'];
+            var filecontent = Properties.Resources.FID_KORNAME;
+            string[] FIDLines = filecontent.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+            int nFIDLines = FIDLines.Length;
+            foreach (string line in FIDLines)
+            {
+                int nPos = line.IndexOf('=');
+                if (nPos > 0)
+                {
+                    string key = line[..nPos];
+                    string name = line[(nPos + 1)..];
+                    _map_FidToName.Add(key, name);
+                }
+            }
+
+            var apiPath = OcxPathHelper.GetOcxPathFromClassID(OcxPathHelper.GetClassIDFromProgID("KHOPENAPI.KHOpenAPICtrl.1"));
+            if (apiPath != null)
+            {
+                var apiFolderPath = Path.GetDirectoryName(apiPath);
+                if (apiFolderPath != null)
+                {
+                    LoadAllTRLists(apiFolderPath);
+                }
+            }
+        }
         /// <summary>오류 리스트</summary>
         public static IReadOnlyList<string> Errors => _errors;
 
-        /// <summary>TR정보 리스트</summary>
+        /// <summary>TR 요청 리스트</summary>
         public static IReadOnlyList<TrProp> AllTrInfos => _allTrInfos;
+
+        /// <summary>실시간 요청 리스트</summary>
+        public static IReadOnlyList<TrProp> AllRtInfos => _allRInfos;
         /// <summary>코드에 해당되는 TR가져오기</summary>
         public static TrProp? GetTrProp(string Code)
         {
             if (_codeToTrData.TryGetValue(Code, out var trData))
             {
+                trData.LoadDetailData();
                 return trData;
             }
             return null;
         }
 
         /// <summary>실시간타입에 해당되는 TR가져오기</summary>
-        public static TrProp? GetTrProp(int realtype)
+        public static TrProp? GetRtProp(string realtype)
         {
             if (_realtypeToTrData.TryGetValue(realtype, out var trData))
             {
                 return trData;
             }
             return null;
+        }
+        /// <summary>
+        /// FID번호에 해당되는 이름 가져오기
+        /// </summary>
+        /// <param name="fid">FID번호</param>
+        public static string GetFidName(string fid)
+        {
+            if (_map_FidToName.TryGetValue(fid, out var name))
+                return name;
+            return fid;
         }
 
         private static void ParsingTRData(ref TrProp trProp, string ansiText)
@@ -115,11 +160,6 @@ namespace KHOpenApi.NET.Helpers
                     trProp.OutputMuti.Add(new(keySize.Item1, keySize.Item2, string.Empty));
                 }
             }
-            // Caution and InputDescs
-            string section = trProp.TRCode + " : " + trProp.TRName;
-
-            //trProp.Caution = GetProfileString(section, "주의", szIniFilePath);
-            //trProp.InputDescs = trProp.Inputs.Select(x => GetProfileString(section, x, szIniFilePath)).ToList();
 
             static List<(string, int)> GetKeySizes(string s)
             {
@@ -144,45 +184,50 @@ namespace KHOpenApi.NET.Helpers
                 return sections;
             }
         }
-        //private static TrProp? LoadTRData(string filepath, IList<string> Errors)
-        //{
-        //    string fileTitle = Path.GetFileNameWithoutExtension(filepath).ToUpper();
-        //    try
-        //    {
-        //        using var file = File.OpenRead(filepath);
-        //        using var zip = new ZipArchive(file, ZipArchiveMode.Read);
-        //        foreach (var entry in zip.Entries)
-        //        {
-        //            string entruTitle = entry.Name[..^4];
-        //            if (entruTitle.Equals(fileTitle))
-        //            {
-        //                using var stream = entry.Open();
-        //                byte[] buffer = new byte[entry.Length];
-        //                _ = stream.Read(buffer, 0, buffer.Length);
-        //                stream.Close();
-        //                string ansiText = _krEncoder.GetString(buffer);
-        //                TrProp trData = new(filepath, ansiText);
-        //                ParsingTRData(ref trData, ansiText);
-        //                return trData;
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        /*
-        //        0195 : 매도평균가      = 083, 20, 0, A ; "004" -> 매수평균가      = 083, 20, 0, A ; "004"
-        //         */
-        //        Errors.Add($"Error: {filepath} : {ex.Message}");
-        //    }
 
-        //    return null;
-        //}
+        /// <summary>TR데이터 로드</summary>
+        public static bool LoadDetailData(this TrProp trData)
+        {
+            if (trData.FileText.Length > 0)
+            {
+                return true;
+            }
+            try
+            {
+                using var file = File.OpenRead(trData.FilePath);
+                using var zip = new ZipArchive(file, ZipArchiveMode.Read);
+                foreach (var entry in zip.Entries)
+                {
+                    string entruTitle = entry.Name[..^4];
+                    if (entruTitle.Equals(trData.TRCode))
+                    {
+                        using var stream = entry.Open();
+                        byte[] buffer = new byte[entry.Length];
+                        _ = stream.Read(buffer, 0, buffer.Length);
+                        stream.Close();
+                        string ansiText = _krEncoder.GetString(buffer);
+                        trData.FileText = ansiText;
+                        ParsingTRData(ref trData, ansiText);
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                /*
+                0195 : 매도평균가      = 083, 20, 0, A ; "004" -> 매수평균가      = 083, 20, 0, A ; "004"
+                 */
+                _errors.Add($"Error: {trData.FilePath} : {ex.Message}");
+            }
+
+            return false;
+        }
 
         private static Dictionary<string, IList<KeyValuePair<string, string>>> _trDescDatas = [];
 
-        /// <summary>모든 TR리스트 불러오기</summary>
-        public static void LoadAllTRLists(string apiFolderPath)
+        private static void LoadAllTRLists(string apiFolderPath)
         {
+
             _errors.Clear();
             if (_allTrInfos.Count > 0) return;
 
@@ -236,250 +281,80 @@ namespace KHOpenApi.NET.Helpers
                 }
             }
 
+            foreach (var trDesc in _trDescDatas)
+            {
+                var trCode = trDesc.Key;
+                var input_infos = trDesc.Value;
+
+                var trName = input_infos[0].Value;
+                var trData = new TrProp($"{apiFolderPath}\\data\\{trCode}.enc", trCode, trName);
+                if (trData == null) continue;
+
+                _allTrInfos.Add(trData);
+                if (_codeToTrData.TryGetValue(trData.TRCode, out var existTrData))
+                {
+                    _errors.Add($"Exist aleady : {existTrData.TRCode} : {existTrData.FilePath} ");
+                }
+                else
+                    _codeToTrData.Add(trData.TRCode, trData);
+            }
+
+            // 실시간 TR
+            _allRInfos.Clear();
+            _realtypeToTrData.Clear();
+            string filepath = apiFolderPath + "\\system\\koarealtime.dat";
+            List<byte[]> rtlines = [];
             try
             {
-                /// ENC파일 읽기
-                /// 폴더에서 ENC파일 검색후
-                /// 압축해제
-                /// 파일네임과 동일한 압축파일에서 읽기
-
-                // api폴더 설정
-                string path = apiFolderPath + "\\data";
-                if (!Directory.Exists(path)) return;
-
-                //// 폴더내의 전체 enc파일 불러온다
-                //string[] filepaths = Directory.GetFiles(path, "*.enc");
-                //if (filepaths.Length == 0)
-                //{
-                //    _errors.Add("TR dat files Not Found");
-                //    return;
-                //}
-
-                foreach (var trDesc in _trDescDatas)
+                var fileDatas = File.ReadAllBytes(filepath);
+                int filelength = fileDatas.Length;
+                int nBytePos = 0;
+                int nLineStartPos = 0;
+                while (nBytePos < filelength)
                 {
-                    var trCode = trDesc.Key;
-                    var input_infos = trDesc.Value;
-
-                    var trName = input_infos[0].Value;
-                    var trData = new TrProp($"{apiFolderPath}\\{trCode}.enc", trCode, trName);
-                    if (trData == null) continue;
-
-                    _allTrInfos.Add(trData);
-                    if (_codeToTrData.TryGetValue(trData.TRCode, out var existTrData))
+                    if (fileDatas[nBytePos] == '\n')
                     {
-                        _errors.Add($"Exist aleady : {existTrData.TRCode} : {existTrData.FilePath} ");
+                        rtlines.Add(fileDatas.Skip(nLineStartPos).Take(nBytePos - nLineStartPos - 1).ToArray());
+                        nLineStartPos = nBytePos + 1;
                     }
-                    else
-                        _codeToTrData.Add(trData.TRCode, trData);
-
-                    //var trData = LoadTRData(filepath, _errors);
-                    //if (trData == null) continue;
-
-                    //_allTrInfos.Add(trData);
-                    //if (_codeToTrData.TryGetValue(trData.TRCode, out var existTrData))
-                    //{
-                    //    _errors.Add($"Exist aleady : {existTrData.TRCode} : {existTrData.FilePath}, {filepath} ");
-                    //}
-                    //else
-                    //    _codeToTrData.Add(trData.TRCode, trData);
-                    //int.TryParse(trData.TRCode, out var realType);
-                    //if (realType != 0)
-                    //{
-                    //    if (_realtypeToTrData.TryGetValue(realType, out var existRealTr))
-                    //    {
-                    //        _errors.Add($"Exist RealType aleady : {existRealTr.TRCode} : {existRealTr.FilePath}, {filepath} ");
-                    //    }
-                    //    else
-                    //        _realtypeToTrData.Add(realType, trData);
-                    //}
+                    nBytePos++;
+                }
+                if (filelength > nLineStartPos)
+                {
+                    rtlines.Add(fileDatas.Skip(nLineStartPos).Take(filelength - nLineStartPos).ToArray());
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _errors.Add(ex.Message);
+                //throw;
+            }
+            foreach (var line in rtlines)
+            {
+                // 형식 = GIDC(1) + DESC(19) + NFID(3) + FID1(5) + ... + FIDn(5)'\r\n'
+                if (line.Length < 23) continue;
+                byte[] GIDC = line.Skip(0).Take(1).ToArray();
+                byte[] DESC = line.Skip(1).Take(19).ToArray();
+                byte[] NFID = line.Skip(20).Take(3).ToArray();
+                if (GIDC[0] == ';') continue;
+                int FidCount = Convert.ToInt32(_krEncoder.GetString(NFID));
+                string name = _krEncoder.GetString(DESC).Trim();
+                if (FidCount == 0 || line.Length < FidCount * 5 + 23)
+                    continue;
+
+                var trProp = new TrProp("", name, name) { FileText = name, IsRealtype = true, };
+                _allRInfos.Add(trProp);
+                _realtypeToTrData[name] = trProp;
+
+                for (int i = 0; i < FidCount; i++)
+                {
+                    string fid = _krEncoder.GetString(line.Skip(23 + 5 * i).Take(5).ToArray()).Trim();
+                    if (_map_FidToName.TryGetValue(fid, out var fid_name))
+                        trProp.OutputSingle.Add(new(fid, 0, fid_name));
+                    else
+                        trProp.OutputSingle.Add(new(fid, 0, "'Extra Item"));
+                }
             }
             return;
         }
-
-        /// <summary>미리 정의된 TR요청 종류</summary>
-        public static readonly REQKindClass[] PreDefineReqs =
-            [
-                // 주문
-                // 국내
-                new("g12001.DO1601&", REQKIND_FUNC.CommJumunSvr, REQKIND_MASTER.주문, REQKIND_MAIN.국내, REQKIND_SUB.None, true),
-                new("g12001.DO1901&", REQKIND_FUNC.CommJumunSvr, REQKIND_MASTER.주문, REQKIND_MAIN.국내, REQKIND_SUB.None, true),
-                new("g12001.DO1701&", REQKIND_FUNC.CommJumunSvr, REQKIND_MASTER.주문, REQKIND_MAIN.국내, REQKIND_SUB.None, true),
-                new("g12001.DO2201&", REQKIND_FUNC.CommJumunSvr, REQKIND_MASTER.주문, REQKIND_MAIN.국내, REQKIND_SUB.None, true),
-                new("g12001.DO2101&", REQKIND_FUNC.CommJumunSvr, REQKIND_MASTER.주문, REQKIND_MAIN.국내, REQKIND_SUB.None, true),
-                new("g12001.DO2001&", REQKIND_FUNC.CommJumunSvr, REQKIND_MASTER.주문, REQKIND_MAIN.국내, REQKIND_SUB.None, true),
-                // 해외
-                new("g12003.AO0401%", REQKIND_FUNC.CommJumunSvr, REQKIND_MASTER.주문, REQKIND_MAIN.해외, REQKIND_SUB.None, true),
-                new("g12003.AO0402%", REQKIND_FUNC.CommJumunSvr, REQKIND_MASTER.주문, REQKIND_MAIN.해외, REQKIND_SUB.None, true),
-                new("g12003.AO0403%", REQKIND_FUNC.CommJumunSvr, REQKIND_MASTER.주문, REQKIND_MAIN.해외, REQKIND_SUB.None, true),
-                // FX
-                new("g12003.AO0501%", REQKIND_FUNC.CommJumunSvr, REQKIND_MASTER.주문, REQKIND_MAIN.FX, REQKIND_SUB.None, true),
-                new("g12003.AO0502%", REQKIND_FUNC.CommJumunSvr, REQKIND_MASTER.주문, REQKIND_MAIN.FX, REQKIND_SUB.None, true),
-                new("g12003.AO0503%", REQKIND_FUNC.CommJumunSvr, REQKIND_MASTER.주문, REQKIND_MAIN.FX, REQKIND_SUB.None, true),
-
-                // 조회
-                // 국내
-                new("g11002.DQ0104&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ0107&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ0110&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ1305&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ0116&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ0119&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ0122&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ1306&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ0125&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ1303&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ0217&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ0242&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ0502&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ0509&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ0521&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR, true),
-                new("g11002.DQ0622&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR),
-                new("g11002.DQ1211&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR),
-                new("g11002.DQ1302&", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR),
-                new("v90003", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.TR),
-                new("l41600", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.FID),
-                new("l41601", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.FID),
-                new("l41602", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.FID),
-                new("l41603", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.FID),
-                new("l41619", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.FID),
-                new("s20001", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.FID),
-                new("s31001", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.FID),
-                new("s10001", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.FID),
-                new("l41700", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.국내, REQKIND_SUB.FID),
-
-                // 해외
-                new("g11004.AQ0128%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR),
-                new("g11004.AQ0301%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0302%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0401%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0402%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0403%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0404%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0405%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0408%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0409%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0415%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0450%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                //new("g11004.AQ0495%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR), // 공통에 들어가 있음
-                new("g11004.AQ0602%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0605%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0607%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0636%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR),
-                new("g11004.AQ0712%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0715%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR),
-                new("g11004.AQ0725%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR),
-                new("g11004.AQ0805%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0824%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0807%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0451%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("o44005", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR),
-                new("o51000", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.FID),
-                new("o51010", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.FID),
-                new("o51200", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.FID),
-                new("o51210", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.FID),
-                // 추가
-                new("o44010", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR),
-                // FX
-                new("g11004.AQ0901%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0904%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0906%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0908%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0910%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0911%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0914%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0920%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("g11004.AQ0923%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.TR, true),
-                new("x00001", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.FID),
-                new("x00002", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.FID),
-                new("x00003", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.FID),
-                new("x00004", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.FID),
-                new("x00005", REQKIND_FUNC.CommFIDRqData, REQKIND_MASTER.조회, REQKIND_MAIN.해외, REQKIND_SUB.FID),
-                // 공통
-                new("g11004.AQ0495%", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.공통, REQKIND_SUB.None, true),
-                new("n51000", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.공통, REQKIND_SUB.None),
-                new("n51001", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.공통, REQKIND_SUB.None),
-                new("n51003", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.공통, REQKIND_SUB.None),
-                new("n51006", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.공통, REQKIND_SUB.None),
-                new("o44011", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.공통, REQKIND_SUB.None),
-                new("v90001", REQKIND_FUNC.CommRqData, REQKIND_MASTER.조회, REQKIND_MAIN.공통, REQKIND_SUB.None),
-
-                // 실시간
-                // 국내
-                new("0051", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0052", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0058", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0059", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0065", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0066", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0071", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0073", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0075", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0077", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0078", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0079", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0056", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0068", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0101", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0310", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0120", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.시세),
-                new("0181", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.주문),
-                new("0182", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.주문),
-                new("0183", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.주문),
-                new("0184", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.주문),
-                new("0185", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.주문),
-                new("0211", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.주문),
-                new("0212", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.주문),
-                new("0213", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.주문),
-                new("0261", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.주문),
-                new("0262", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.주문),
-                new("0265", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.주문),
-                new("0271", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.주문),
-                new("0273", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.국내, REQKIND_SUB.주문),
-                // 해외
-                new("0076", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.해외, REQKIND_SUB.시세),
-                new("0082", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.해외, REQKIND_SUB.시세),
-                new("0241", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.해외, REQKIND_SUB.시세),
-                new("0242", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.해외, REQKIND_SUB.시세),
-                new("0196", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.해외, REQKIND_SUB.주문),
-                new("0186", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.해외, REQKIND_SUB.주문),
-                new("0188", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.해외, REQKIND_SUB.주문),
-                new("0189", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.해외, REQKIND_SUB.주문),
-                new("0190", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.해외, REQKIND_SUB.주문),
-                new("0296", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.해외, REQKIND_SUB.주문),
-                new("0286", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.해외, REQKIND_SUB.주문),
-                new("0289", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.해외, REQKIND_SUB.주문),
-                // FX
-                new("0171", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.FX, REQKIND_SUB.시세),
-                new("0197", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.FX, REQKIND_SUB.주문),
-                new("0191", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.FX, REQKIND_SUB.주문),
-                new("0192", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.FX, REQKIND_SUB.주문),
-                new("0193", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.FX, REQKIND_SUB.주문),
-                new("0194", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.FX, REQKIND_SUB.주문),
-                new("0195", REQKIND_FUNC.CommSetJumunChe, REQKIND_MASTER.실시간, REQKIND_MAIN.FX, REQKIND_SUB.주문),
-                // 공통
-                new("-144", REQKIND_FUNC.None, REQKIND_MASTER.실시간, REQKIND_MAIN.공통, REQKIND_SUB.None),
-                new("0161", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.공통, REQKIND_SUB.None),
-                new("0208", REQKIND_FUNC.CommSetBroad, REQKIND_MASTER.실시간, REQKIND_MAIN.공통, REQKIND_SUB.None),
-            ];
-
-        private static REQKindClass? GetPreDefineReq(string Code) => PreDefineReqs.FirstOrDefault(x => x.Code.Equals(Code));
     }
-
-    enum TRSECTION
-    {
-        NONE,
-        TRINFO,
-        INPUT,
-        OUTPUT,
-        OUTREC1,
-        END1,
-        OUTREC2,
-        END2,
-    }
-
 }
