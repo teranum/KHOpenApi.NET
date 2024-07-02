@@ -1,4 +1,6 @@
-﻿namespace KHOpenApi.NET
+﻿using KFOpenApi.NET;
+
+namespace KHOpenApi.NET
 {
     /// <summary>해외 OpenApi 클래스</summary>
     public class KFOpenApi : IOpenApi
@@ -39,15 +41,27 @@
         }
 
         /// <inheritdoc cref="IOpenApi.RequestAsync"/>
-        public Task<ResponseTrData?> RequestAsync(string tr_cd, string indatas, string cont_key = "", string reqfids = "")
+        public Task<ResponseTrData?> RequestAsync(string tr_cd, IEnumerable<KeyValuePair<string, object>> indatas, string cont_key = "")
         {
             throw new NotImplementedException();
         }
 
         /// <inheritdoc cref="IOpenApi.RequestRealtime"/>
-        public bool RequestRealtime(string tr_cd, string tr_key, bool bAdd)
+        public bool RequestRealtime(string scr_num, string tr_cd, string tr_key, bool bAdd)
         {
             throw new NotImplementedException();
+        }
+
+
+        /// <summary>AxKHOpenAPI COM 객체</summary>
+        public AxKFOpenAPI AxApi { get; }
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="windowHandle">메인 윈도우 핸들</param>
+        public KFOpenApi(nint windowHandle)
+        {
+                
         }
     }
 }

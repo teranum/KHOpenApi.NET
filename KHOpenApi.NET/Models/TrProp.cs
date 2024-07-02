@@ -37,12 +37,12 @@ public class TrProp
     /// <summary>OUTPUT 리스트</summary>
     public IList<KeySizeDesc> OutputSingle { get; } = [];
 
-    /// <summary>OutputMuti 자릿수</summary>
-    public int OutputMutiCountDigit;
-    /// <summary>OutputMuti 총 사이즈</summary>
-    public int OutputMutiTotalSize;
+    /// <summary>OutputMulti 자릿수</summary>
+    public int OutputMultiCountDigit;
+    /// <summary>OutputMulti 총 사이즈</summary>
+    public int OutputMultiTotalSize;
     /// <summary>OutRec1 리스트</summary>
-    public IList<KeySizeDesc> OutputMuti { get; } = [];
+    public IList<KeySizeDesc> OutputMulti { get; } = [];
 
     /// <summary>키, 사이즈, 설명</summary>
     public record KeySizeDesc(string Key, int Size, string Desc);

@@ -40,21 +40,22 @@ public interface IOpenApi
     /// <summary>
     /// 실시간 시세 등록/해제 (계좌 실시간등록 시: (로그인아이디, 계좌번호) 또는 (tr_cd, 계좌번호) 형태로 등록)
     /// </summary>
-    /// <param name="tr_cd">증권 거래코드</param>
-    /// <param name="tr_key">단축코드 6자리 또는 8자리 (단건, 연속)</param>
+    /// <param name="scr_num">화면번호</param>
+    /// <param name="code_list">코드 리스트, ';' 로 구분</param>
+    /// <param name="fid_list">FID 리스트, ';' 로 구분</param>
     /// <param name="bAdd">시세등록: true, 시세해제: false</param>
     /// <returns>true: 요청성공, false: 요청실패</returns>
-    bool RequestRealtime(string tr_cd, string tr_key, bool bAdd);
+    bool RequestRealtime(string scr_num, string code_list, string fid_list, bool bAdd);
 
     /// <summary>
     /// 비동기 TR 요청
     /// </summary>
     /// <param name="tr_cd">증권 거래코드</param>
-    /// <param name="indatas">입력 문자 데이터</param>
+    /// <param name="indatas">입력 데이터</param>
     /// <param name="cont_key">연속일 경우 그전에 내려온 연속키 값 올림</param>
     /// <param name="reqfids">요청 FID 리스트 (3자리 숫자연속)</param>
     /// <returns></returns>
-    Task<ResponseTrData?> RequestAsync(string tr_cd, string indatas, string cont_key = "", string reqfids = "");
+    Task<ResponseTrData?> RequestAsync(string tr_cd, IEnumerable<KeyValuePair<string, object>> indatas, string cont_key = "");
 
     /// <summary>계좌정보 리스트. (로그인 시 자동 등록 됩니다)</summary>
     IReadOnlyList<AccountInfo> AccountInfos { get; }
