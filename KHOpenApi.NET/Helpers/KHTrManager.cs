@@ -13,6 +13,7 @@ namespace KHOpenApi.NET.Helpers
         private static readonly List<TrProp> _allTrInfos = [];
         private static readonly List<TrProp> _allRInfos = [];
         private static readonly List<string> _errors = [];
+        private static readonly string _apiFolderPath = "";
 
         private static readonly Dictionary<string, string> _map_FidToName = [];
         static KHTrManager()
@@ -38,10 +39,15 @@ namespace KHOpenApi.NET.Helpers
                 var apiFolderPath = Path.GetDirectoryName(apiPath);
                 if (apiFolderPath != null)
                 {
+                    _apiFolderPath = apiFolderPath;
                     LoadAllTRLists(apiFolderPath);
                 }
             }
         }
+
+        /// <summary>API폴더 경로</summary>
+        public static string ApiFolderPath => _apiFolderPath;
+
         /// <summary>오류 리스트</summary>
         public static IReadOnlyList<string> Errors => _errors;
 
