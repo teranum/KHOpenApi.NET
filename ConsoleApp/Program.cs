@@ -77,7 +77,7 @@ class Sample(nint handle)
             if (1 == await api.SendConditionAsync("9876", cond_name, int.Parse(cond_code), 0,
                 (e) =>
                 {
-                    var codes = e.strCodeList.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(x=>api.GetMasterCodeName(x));
+                    var codes = e.strCodeList.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(x => api.GetMasterCodeName(x));
                     list.AddRange(codes);
                 }))
             {
@@ -120,9 +120,33 @@ class Sample(nint handle)
                     OutLog($"{일자}{시가}{고가}{저가}{종가}{거래량}");
                 }
             });
-        if (reqResult < 0)
+
+        if (reqResult != 0)
         {
-            OutLog($"주식일봉차트조회요청: 실패({reqResult})");
+            OutLog($"주식일봉차트조회요청 (CommRqDataAsync): 실패({reqResult})");
+            return;
+        }
+
+        await Task.Delay(1000); // 1초 대기
+
+        // 같은 데이터를 간편요청 (RequestTrAsync) 으로 불러오기
+        var indatas = new Dictionary<string, string>
+        {
+            ["종목코드"] = "005930",
+            ["기준일자"] = "",
+            ["수정주가구분"] = "1",
+        };
+        var respose = await api.RequestTrAsync("opt10081", indatas, [], ["일자", "시가", "고가", "저가", "현재가", "거래량"]);
+
+        if (respose.ret < 0)
+        {
+            OutLog($"주식일봉차트조회요청 (RequestTrAsync): 실패({respose.rsp_msg})");
+            return;
+        }
+
+        foreach (var item in respose.multiDatas)
+        {
+            OutLog($"{item[0]}, {item[1]}, {item[2]}, {item[3]}, {item[4]}, {item[5]}");
         }
         OutLog();
 

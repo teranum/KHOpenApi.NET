@@ -26,7 +26,7 @@ namespace WpfApp1
             System.IntPtr Handle = new WindowInteropHelper(Application.Current.MainWindow).EnsureHandle();
 
             axKHOpenAPI = new AxKHOpenAPI(Handle);
-            axKHOpenAPI.OnEventConnect += axKHOpenAPI_OnEventConnect;
+            axKHOpenAPI.OnEventConnect += (s, e) => log_list.Items.Add(e.nErrCode == 0 ? "국내 로그인 성공" : "국내 로그인 실패");
             button_login_KH.IsEnabled = axKHOpenAPI.Created;
 
             axKFOpenAPI = new AxKFOpenAPI(Handle);
