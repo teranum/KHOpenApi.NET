@@ -55,18 +55,18 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
         // 비동기 로그인, 조건식 로딩 (nuget 버전 1.5.0 이상 지원)
         async Task TestLoginAsync()
         {
-            if (0 != await api.CommConnectAsync())
+            if (0 != await axKHOpenAPI.CommConnectAsync())
             {
                 OutLog("로그인 요청(CommConnect): 실패");
                 return;
             }
-            if (1 != await api.GetConditionLoadAsync())
+            if (1 != await axKHOpenAPI.GetConditionLoadAsync())
             {
                 OutLog("사용자 조건검색리스트요청: 실패");
                 return;
             }
 
-            var cond_list = api.GetConditionNameList().Split(';', StringSplitOptions.RemoveEmptyEntries).ToList();
+            var cond_list = axKHOpenAPI.GetConditionNameList().Split(';', StringSplitOptions.RemoveEmptyEntries).ToList();
             OutLog($"조건검색식 개수: {cond_list.Count}");
 
             // DoWork...
@@ -98,7 +98,7 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
             {
                 { "종목코드", "005930" },
             };
-            var response = await RequestTrAsync("OPT10001", indatas, ["종목명", "액면가", "신용비율", "외인소진율"], []);
+            var response = await axKHOpenAPI.RequestTrAsync("OPT10001", indatas, ["종목명", "액면가", "신용비율", "외인소진율"], []);
             
             // 샘플 2: 주식일봉차트조회요청
             var indatas = new Dictionary&lt;string, string&gt; 
@@ -107,14 +107,14 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
                 { "기준일자", "20240704" },
                 { "수정주가구분", "1" }
             };
-            var response = await RequestTrAsync("OPT10081", indatas, ["종목코드"], ["일자", "현재가", "거래량"]);
+            var response = await axKHOpenAPI.RequestTrAsync("OPT10081", indatas, ["종목코드"], ["일자", "현재가", "거래량"]);
             
             // 샘플 3: 관심종목정보요청
             var indatas = new Dictionary&lt;string, string&gt; 
             {
                 { "종목코드", "005930;039490" }, // 삼성전자, 키움증권 (종목코드는 세미콜론으로 구분)
             };
-            var response = await RequestTrAsync("OPTKWFID", indatas, [], ["종목명", "현재가", "기준가", "시가", "고가", "저가"]);
+            var response = await axKHOpenAPI.RequestTrAsync("OPTKWFID", indatas, [], ["종목명", "현재가", "기준가", "시가", "고가", "저가"]);
             
             // 샘플 4: 관심종목정보요청(선물옵션)
             var indatas = new Dictionary&lt;string, string&gt; 
@@ -122,7 +122,7 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
                 { "종목코드", "101V9000;101VC000" }, // (종목코드는 세미콜론으로 구분)
                 { "타입구분", "3" }, // 0:주식 종목, 3:선물옵션 종목 (기본값은 0)
             };
-            var response = await RequestTrAsync("OPTKWFID", indatas, [], ["종목명", "현재가", "기준가", "시가", "고가", "저가"]);
+            var response = await axKHOpenAPI.RequestTrAsync("OPTKWFID", indatas, [], ["종목명", "현재가", "기준가", "시가", "고가", "저가"]);
             
             // 결과처리
             if (response.nErrCode == 0)
