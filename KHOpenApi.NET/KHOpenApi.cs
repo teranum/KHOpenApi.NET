@@ -571,7 +571,6 @@ public class AxKHOpenAPI
             if (async_node is not null)
             {
                 _async_list.Remove(async_node);
-                e.sErrorCode = async_node._async_code;
                 e.sMessage = async_node._async_msg;
                 async_node._async_tr_action?.Invoke(e);
                 async_node._async_wait.Set();
@@ -601,19 +600,7 @@ public class AxKHOpenAPI
             }
             if (async_node is not null)
             {
-                if (e.sMsg.Length > 0)
-                {
-                    if (e.sMsg[0] == '[')
-                    {
-                        var code_msg = e.sMsg.Split(']');
-                        if (code_msg.Length >= 2)
-                        {
-                            async_node._async_code = code_msg[0].Substring(1);
-                            async_node._async_msg = e.sMsg.Substring(code_msg[0].Length + 1).Trim();
-                        }
-                    }
-                    if (async_node._async_msg.Length == 0) async_node._async_msg = e.sMsg;
-                }
+                async_node._async_msg = e.sMsg;
                 return;
             }
         }
@@ -1799,7 +1786,6 @@ public class AxKHOpenAPI
         public Action<_DKHOpenAPIEvents_OnReceiveTrConditionEvent> _async_tr_cond_action = null;
 
         // OnReceivedMessage 이벤트로 들어오는 데이터
-        public string _async_code = string.Empty;
         public string _async_msg = string.Empty;
     }
 
@@ -2046,7 +2032,7 @@ public class AxKHOpenAPI
     /// }
     /// else
     /// {
-    ///     // 요청실패, response.rsp_cd, response.rsp_msg 에 오류코드, 오류메시지가 있음
+    ///     // 요청실패, response.rsp_msg 에 오류메시지가 있음
     /// }
     /// </code>
     /// </remarks>
@@ -2085,13 +2071,11 @@ public class AxKHOpenAPI
                         responseTrData.multiDatas.Add(datas);
                     }
                     responseTrData.cont_key = string.Empty;
-                    responseTrData.rsp_cd = e.sErrorCode;
                     responseTrData.rsp_msg = e.sMessage;
                 }
                 );
             if (responseTrData.rsp_msg.Length == 0)
             {
-                responseTrData.rsp_cd = nKwanRet.ToString();
                 responseTrData.rsp_msg = GetErrorMessage(nKwanRet);
             }
             responseTrData.tr_cd = tr_cd;
@@ -2123,13 +2107,11 @@ public class AxKHOpenAPI
                 }
 
                 responseTrData.cont_key = e.sPrevNext.Equals("2") ? "2" : string.Empty;
-                responseTrData.rsp_cd = e.sErrorCode;
                 responseTrData.rsp_msg = e.sMessage;
             }
             );
         if (responseTrData.rsp_msg.Length == 0)
         {
-            responseTrData.rsp_cd = nRet.ToString();
             responseTrData.rsp_msg = GetErrorMessage(nRet);
         }
         responseTrData.tr_cd = tr_cd;
@@ -2143,7 +2125,7 @@ public class AxKHOpenAPI
     /// 비동기로 <inheritdoc cref="SendOrder"/><br/>
     /// 결과는 <see cref="ResponseTrData"/> 로 반환합니다.<br/>
     /// <see cref="ResponseTrData.ret"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
-    /// 주문실패 사유로 <see cref="ResponseTrData.rsp_cd"/>, <see cref="ResponseTrData.rsp_msg"/> 에 오류코드, 오류메시지가 있습니다.<br/><br/>
+    /// 주문실패 사유로 <see cref="ResponseTrData.rsp_msg"/> 에 오류메시지가 있습니다.<br/><br/>
     /// <code language="csharp">
     /// // 샘플: 주식주문
     /// var response = await SendOrderAsync(...);
@@ -2154,7 +2136,7 @@ public class AxKHOpenAPI
     /// }
     /// else
     /// {
-    ///     // 주문실패, response.rsp_cd, response.rsp_msg 에 오류코드, 오류메시지가 있음
+    ///     // 주문실패, response.rsp_msg 에 오류메시지가 있음
     /// }
     /// </code>
     /// </summary>
@@ -2197,13 +2179,11 @@ public class AxKHOpenAPI
         _async_list.Remove(newAsync);
         if (newAsync._async_msg.Length == 0)
         {
-            newAsync._async_code = nRet.ToString();
             newAsync._async_msg = GetErrorMessage(nRet);
         }
         return new()
         {
             ret = nRet,
-            rsp_cd = newAsync._async_code,
             rsp_msg = newAsync._async_msg,
         };
     }
@@ -2212,7 +2192,7 @@ public class AxKHOpenAPI
     /// 비동기로 <inheritdoc cref="SendOrderFO"/><br/>
     /// 결과는 <see cref="ResponseTrData"/> 로 반환합니다.<br/>
     /// <see cref="ResponseTrData.ret"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
-    /// 주문실패 사유로 <see cref="ResponseTrData.rsp_cd"/>, <see cref="ResponseTrData.rsp_msg"/> 에 오류코드, 오류메시지가 있습니다.<br/><br/>
+    /// 주문실패 사유로 <see cref="ResponseTrData.rsp_msg"/> 에 오류메시지가 있습니다.<br/><br/>
     /// <code language="csharp">
     /// // 샘플: 선물옵션주문
     /// var response = await SendOrderFOAsync(...);
@@ -2223,7 +2203,7 @@ public class AxKHOpenAPI
     /// }
     /// else
     /// {
-    ///     // 주문실패, response.rsp_cd, response.rsp_msg 에 오류코드, 오류메시지가 있음
+    ///     // 주문실패, response.rsp_msg 에 오류메시지가 있음
     /// }
     /// </code>
     /// </summary>
@@ -2266,13 +2246,11 @@ public class AxKHOpenAPI
         _async_list.Remove(newAsync);
         if (newAsync._async_msg.Length == 0)
         {
-            newAsync._async_code = nRet.ToString();
             newAsync._async_msg = GetErrorMessage(nRet);
         }
         return new()
         {
             ret = nRet,
-            rsp_cd = newAsync._async_code,
             rsp_msg = newAsync._async_msg,
         };
     }
@@ -2281,7 +2259,7 @@ public class AxKHOpenAPI
     /// 비동기로 <inheritdoc cref="SendOrderCredit"/><br/>
     /// 결과는 <see cref="ResponseTrData"/> 로 반환합니다.<br/>
     /// <see cref="ResponseTrData.ret"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
-    /// 주문실패 사유로 <see cref="ResponseTrData.rsp_cd"/>, <see cref="ResponseTrData.rsp_msg"/> 에 오류코드, 오류메시지가 있습니다.<br/><br/>
+    /// 주문실패 사유로 <see cref="ResponseTrData.rsp_msg"/> 에 오류메시지가 있습니다.<br/><br/>
     /// <code language="csharp">
     /// // 샘플: 신용주문
     /// var response = await SendOrderCreditAsync(...);
@@ -2292,7 +2270,7 @@ public class AxKHOpenAPI
     /// }
     /// else
     /// {
-    ///     // 주문실패, response.rsp_cd, response.rsp_msg 에 오류코드, 오류메시지가 있음
+    ///     // 주문실패, response.rsp_msg 에 오류메시지가 있음
     /// }
     /// </code>
     /// </summary>
@@ -2335,13 +2313,11 @@ public class AxKHOpenAPI
         _async_list.Remove(newAsync);
         if (newAsync._async_msg.Length == 0)
         {
-            newAsync._async_code = nRet.ToString();
             newAsync._async_msg = GetErrorMessage(nRet);
         }
         return new()
         {
             ret = nRet,
-            rsp_cd = newAsync._async_code,
             rsp_msg = newAsync._async_msg,
         };
     }
@@ -2398,7 +2374,7 @@ public class AxKHOpenAPI
             -901 => "비동기요청: 이미 작동중 입니다",
             -902 => "비동기요청: 타임아웃",
             -903 => "비동기요청: 주문번호가 없습니다.",
-            _ => $"unknown{code}",
+            _ => "unknown",
         };
     }
 

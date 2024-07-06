@@ -131,7 +131,7 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
             }
             else
             {
-                // 요청실패, response.rsp_cd, response.rsp_msg 에 오류코드, 오류메시지가 있음
+                // 요청실패, response.rsp_msg 에 오류메시지가 있음
             }
         }
 
@@ -151,7 +151,7 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
             }
             else
             {
-                // 주문실패, response.rsp_cd, response.rsp_msg 에 오류코드, 오류메시지가 있음
+                // 주문실패, response.rsp_msg 에 오류메시지가 있음
             }
         }
     }

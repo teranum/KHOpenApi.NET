@@ -342,19 +342,7 @@ namespace KFOpenApi.NET
                 }
                 if (async_node is not null)
                 {
-                    if (e.sMsg.Length > 0)
-                    {
-                        if (e.sMsg[0] == '[')
-                        {
-                            var code_msg = e.sMsg.Split(']');
-                            if (code_msg.Length >= 2)
-                            {
-                                async_node._async_code = code_msg[0].Substring(1);
-                                async_node._async_msg = e.sMsg.Substring(code_msg[0].Length + 1).Trim();
-                            }
-                        }
-                        if (async_node._async_msg.Length == 0) async_node._async_msg = e.sMsg;
-                    }
+                    async_node._async_msg = e.sMsg;
                     return;
                 }
             }
@@ -1056,7 +1044,6 @@ namespace KFOpenApi.NET
             public Action<_DKFOpenAPIEvents_OnReceiveTrDataEvent> _async_tr_action = null;
 
             // OnReceivedMessage 이벤트로 들어오는 데이터
-            public string _async_code = string.Empty;
             public string _async_msg = string.Empty;
         }
 
@@ -1198,7 +1185,7 @@ namespace KFOpenApi.NET
         /// }
         /// else
         /// {
-        ///     // 요청실패, response.rsp_cd, response.rsp_msg 에 오류코드, 오류메시지가 있음
+        ///     // 요청실패, response.rsp_msg 에 오류메시지가 있음
         /// }
         /// </code>
         /// </remarks>
@@ -1255,11 +1242,9 @@ namespace KFOpenApi.NET
 
             if (newAsync._async_msg.Length == 0)
             {
-                newAsync._async_code = nRet.ToString();
                 newAsync._async_msg = GetErrorMessage(nRet);
             }
 
-            responseTrData.rsp_cd = newAsync._async_code;
             responseTrData.rsp_msg = newAsync._async_msg;
             responseTrData.tr_cd = tr_cd;
             responseTrData.ret = nRet;
@@ -1272,7 +1257,7 @@ namespace KFOpenApi.NET
         /// 비동기로 <inheritdoc cref="SendOrder"/><br/>
         /// 결과는 <see cref="ResponseTrData"/> 로 반환합니다.<br/>
         /// <see cref="ResponseTrData.ret"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
-        /// 주문실패 사유로 <see cref="ResponseTrData.rsp_cd"/>, <see cref="ResponseTrData.rsp_msg"/> 에 오류코드, 오류메시지가 있습니다.<br/><br/>
+        /// 주문실패 사유로 <see cref="ResponseTrData.rsp_msg"/> 에 오류메시지가 있습니다.<br/><br/>
         /// <code language="csharp">
         /// // 샘플: 해외선옵주문
         /// var response = await SendOrderAsync(...);
@@ -1283,7 +1268,7 @@ namespace KFOpenApi.NET
         /// }
         /// else
         /// {
-        ///     // 주문실패, response.rsp_cd, response.rsp_msg 에 오류코드, 오류메시지가 있음
+        ///     // 주문실패, response.rsp_msg 에 오류메시지가 있음
         /// }
         /// </code>
         /// </summary>
@@ -1326,13 +1311,11 @@ namespace KFOpenApi.NET
             _async_list.Remove(newAsync);
             if (newAsync._async_msg.Length == 0)
             {
-                newAsync._async_code = nRet.ToString();
                 newAsync._async_msg = GetErrorMessage(nRet);
             }
             return new()
             {
                 ret = nRet,
-                rsp_cd = newAsync._async_code,
                 rsp_msg = newAsync._async_msg,
             };
         }
@@ -1368,7 +1351,7 @@ namespace KFOpenApi.NET
                 -901 => "비동기요청: 이미 작동중 입니다",
                 -902 => "비동기요청: 타임아웃",
                 -903 => "비동기요청: 주문번호가 없습니다.",
-                _ => $"unknown{code}",
+                _ => $"unknown",
             };
         }
 
