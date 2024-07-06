@@ -604,7 +604,7 @@ public class AxKHOpenAPI
                 return;
             }
         }
-       
+
         OnReceiveMsg?.Invoke(this, e);
     }
 
@@ -669,6 +669,7 @@ public class AxKHOpenAPI
     /// 수동 로그인설정인 경우 로그인창을 출력.<br/> 자동로그인 설정인 경우 로그인창에서 자동으로 로그인을 시도합니다.
     /// </summary>
     /// <returns>0: 성공, other: 실패</returns>
+    /// <remarks>요청이 성공하면 <see cref="OnEventConnect"/> 이벤트가 발생합니다.</remarks>
     /// <exception cref="InvalidActiveXStateException"></exception>
     public virtual int CommConnect()
     {
@@ -1793,7 +1794,21 @@ public class AxKHOpenAPI
 
     /// <summary>
     /// 비동기 요청을 수행합니다.<br/>
-    /// action 콜백함수에서 <see cref="OnReceiveTrData"/> 이벤트를 수신처리 합니다.<br/>
+    /// action 콜백함수에서 <see cref="OnReceiveTrData"/> 이벤트를 서술해 줍니다.<br/>
+    /// 서버응답없을 경우 -902(타임아웃)을 리턴합니다.
+    /// <code language="csharp" >
+    /// // 샘플코드: OPT10001: 주식기본정보요청
+    /// string 종목명 = string.Empty;
+    /// axKHOpenApi.SetInputValue("종목코드", "005930"); // 삼성전자
+    /// int nRet = await axKHOpenApi.CommRqDataAsync("주식기본정보요청", "OPT10001", 0, "0001", (e) =>
+    /// {
+    ///     종목명 = axKHOpenApi.GetCommData(e.sTrCode, e.sRQName, 0, "종목명");
+    /// });
+    /// if (nRet == 0) // 요청성공
+    ///     Console.WriteLine("종목명: " + 종목명);
+    /// else
+    ///     Console.WriteLine("요청실패: " + nRet);
+    /// </code>
     /// </summary>
     /// <inheritdoc cref="CommRqData"/>
     public virtual async Task<int> CommRqDataAsync(string sRQName, string sTrCode, int nPrevNext, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
@@ -1828,6 +1843,22 @@ public class AxKHOpenAPI
     /// <summary>
     /// 비동기 요청을 수행합니다.<br/>
     /// action 콜백함수에서 <see cref="OnReceiveTrData"/> 이벤트를 수신처리 합니다.<br/>
+    /// 서버응답없을 경우 -902(타임아웃)을 리턴합니다.
+    /// <code language="csharp" >
+    /// // 샘플코드: 관심종목정보요청
+    /// // 삼성전자, 키움증권 현재가 요청
+    /// List&lt;string> rcv_datas = [];
+    /// int nRet = await axKHOpenApi.CommKwRqDataAsync("005930;039490", 0, 2, 0, "관심종목정보요청", "0001", (e) =>
+    /// {
+    ///     int nRepeatCnt = axKHOpenApi.GetRepeatCnt(e.sTrCode, e.sRQName);
+    ///     for (int i = 0; i &lt; nRepeatCnt; i++)
+    ///         rcv_datas.Add(axKHOpenApi.GetCommData(e.sTrCode, e.sRQName, i, "현재가"));
+    /// });
+    /// if (nRet == 0) // 요청성공
+    ///     rcv_datas.ForEach((s) => Console.WriteLine("현재가: " + s));
+    /// else
+    ///     Console.WriteLine("요청실패: " + nRet);
+    /// </code>
     /// </summary>
     /// <inheritdoc cref="CommKwRqData"/>
     public virtual async Task<int> CommKwRqDataAsync(string sArrCode, int bNext, int nCodeCount, int nTypeFlag, string sRQName, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
@@ -1862,6 +1893,7 @@ public class AxKHOpenAPI
     /// <summary>
     /// 비동기 요청을 수행합니다.<br/>
     /// action 콜백함수에서 <see cref="OnReceiveTrCondition"/> 이벤트를 수신처리 합니다.<br/>
+    /// 서버응답없을 경우 -902(타임아웃)을 리턴합니다.
     /// </summary>
     /// <inheritdoc cref="SendCondition"/>
     public virtual async Task<int> SendConditionAsync(string strScrNo, string strConditionName, int nIndex, int nSearch, Action<_DKHOpenAPIEvents_OnReceiveTrConditionEvent> action)
@@ -1899,6 +1931,7 @@ public class AxKHOpenAPI
     /// <inheritdoc cref="CommConnect"/>
     /// </summary>
     /// <returns><inheritdoc cref="CommConnect"/><br/>-901: 이미 요청 작동중</returns>
+    /// <remarks>함수 내부에서  <see cref="OnEventConnect"/> 이벤트 처리가 자동으로 진횅되며 서버연결 성공/실패 결과를 반환합니다.</remarks>
     public virtual async Task<int> CommConnectAsync()
     {
         if (_async_Connect_nErrCode == -1)
@@ -2026,7 +2059,7 @@ public class AxKHOpenAPI
     /// var response = await RequestTrAsync("OPTKWFID", indatas, [], ["종목명", "현재가", "기준가", "시가", "고가", "저가"]);
     /// 
     /// // 결과처리
-    /// if (response.ret == 0)
+    /// if (response.nErrCode == 0)
     /// {
     ///     // 요청성공, response.singleDatas, response.multiDatas 에 결과가 있음
     /// }
@@ -2064,10 +2097,10 @@ public class AxKHOpenAPI
                     DisconnectRealData(e.sScrNo);
                     responseTrData.singleDatas = [];
                     responseTrData.multiDatas = [];
-                    var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRecordName);
+                    var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRQName);
                     for (int i = 0; i < nRepeateCnt; i++)
                     {
-                        var datas = multiFields.Select(x => GetCommData(e.sTrCode, e.sRecordName, i, x).Trim()).ToArray();
+                        var datas = multiFields.Select(x => GetCommData(e.sTrCode, e.sRQName, i, x).Trim()).ToArray();
                         responseTrData.multiDatas.Add(datas);
                     }
                     responseTrData.cont_key = string.Empty;
@@ -2079,7 +2112,7 @@ public class AxKHOpenAPI
                 responseTrData.rsp_msg = GetErrorMessage(nKwanRet);
             }
             responseTrData.tr_cd = tr_cd;
-            responseTrData.ret = nKwanRet;
+            responseTrData.nErrCode = nKwanRet;
             return responseTrData;
         }
 
@@ -2096,13 +2129,13 @@ public class AxKHOpenAPI
                 DisconnectRealData(e.sScrNo);
                 if (e.sPrevNext.Equals("2")) out_prevNext = "2";
 
-                responseTrData.singleDatas = singleFields.Select(x => GetCommData(e.sTrCode, e.sRecordName, 0, x).Trim()).ToArray();
+                responseTrData.singleDatas = singleFields.Select(x => GetCommData(e.sTrCode, e.sRQName, 0, x).Trim()).ToArray();
 
                 responseTrData.multiDatas = [];
-                var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRecordName);
+                var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRQName);
                 for (int i = 0; i < nRepeateCnt; i++)
                 {
-                    var datas = multiFields.Select(x => GetCommData(e.sTrCode, e.sRecordName, i, x).Trim()).ToArray();
+                    var datas = multiFields.Select(x => GetCommData(e.sTrCode, e.sRQName, i, x).Trim()).ToArray();
                     responseTrData.multiDatas.Add(datas);
                 }
 
@@ -2115,7 +2148,7 @@ public class AxKHOpenAPI
             responseTrData.rsp_msg = GetErrorMessage(nRet);
         }
         responseTrData.tr_cd = tr_cd;
-        responseTrData.ret = nRet;
+        responseTrData.nErrCode = nRet;
         return responseTrData;
     }
 
@@ -2124,13 +2157,13 @@ public class AxKHOpenAPI
     /// <summary>
     /// 비동기로 <inheritdoc cref="SendOrder"/><br/>
     /// 결과는 <see cref="ResponseTrData"/> 로 반환합니다.<br/>
-    /// <see cref="ResponseTrData.ret"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
+    /// <see cref="ResponseTrData.nErrCode"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
     /// 주문실패 사유로 <see cref="ResponseTrData.rsp_msg"/> 에 오류메시지가 있습니다.<br/><br/>
     /// <code language="csharp">
     /// // 샘플: 주식주문
     /// var response = await SendOrderAsync(...);
     /// // 결과처리
-    /// if (response.ret == 0)
+    /// if (response.nErrCode == 0)
     /// {
     ///     // 주문성공 (서버까지 주문이 확실히 접수됨)
     /// }
@@ -2183,7 +2216,7 @@ public class AxKHOpenAPI
         }
         return new()
         {
-            ret = nRet,
+            nErrCode = nRet,
             rsp_msg = newAsync._async_msg,
         };
     }
@@ -2191,13 +2224,13 @@ public class AxKHOpenAPI
     /// <summary>
     /// 비동기로 <inheritdoc cref="SendOrderFO"/><br/>
     /// 결과는 <see cref="ResponseTrData"/> 로 반환합니다.<br/>
-    /// <see cref="ResponseTrData.ret"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
+    /// <see cref="ResponseTrData.nErrCode"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
     /// 주문실패 사유로 <see cref="ResponseTrData.rsp_msg"/> 에 오류메시지가 있습니다.<br/><br/>
     /// <code language="csharp">
     /// // 샘플: 선물옵션주문
     /// var response = await SendOrderFOAsync(...);
     /// // 결과처리
-    /// if (response.ret == 0)
+    /// if (response.nErrCode == 0)
     /// {
     ///     // 주문성공 (서버까지 주문이 확실히 접수됨)
     /// }
@@ -2250,7 +2283,7 @@ public class AxKHOpenAPI
         }
         return new()
         {
-            ret = nRet,
+            nErrCode = nRet,
             rsp_msg = newAsync._async_msg,
         };
     }
@@ -2258,13 +2291,13 @@ public class AxKHOpenAPI
     /// <summary>
     /// 비동기로 <inheritdoc cref="SendOrderCredit"/><br/>
     /// 결과는 <see cref="ResponseTrData"/> 로 반환합니다.<br/>
-    /// <see cref="ResponseTrData.ret"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
+    /// <see cref="ResponseTrData.nErrCode"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
     /// 주문실패 사유로 <see cref="ResponseTrData.rsp_msg"/> 에 오류메시지가 있습니다.<br/><br/>
     /// <code language="csharp">
     /// // 샘플: 신용주문
     /// var response = await SendOrderCreditAsync(...);
     /// // 결과처리
-    /// if (response.ret == 0)
+    /// if (response.nErrCode == 0)
     /// {
     ///     // 주문성공 (서버까지 주문이 확실히 접수됨)
     /// }
@@ -2317,7 +2350,7 @@ public class AxKHOpenAPI
         }
         return new()
         {
-            ret = nRet,
+            nErrCode = nRet,
             rsp_msg = newAsync._async_msg,
         };
     }

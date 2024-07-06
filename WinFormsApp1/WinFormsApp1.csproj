@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+		<LangVersion>default</LangVersion>
 		<OutputType>WinExe</OutputType>
 		<TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
 		<Nullable>enable</Nullable>
@@ -10,7 +11,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="KHOpenApi.NET" Version="1.5.1" />
+		<PackageReference Include="KHOpenApi.NET" Version="1.5.3" />
 	</ItemGroup>
 
 

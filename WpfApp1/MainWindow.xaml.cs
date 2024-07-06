@@ -30,34 +30,8 @@ namespace WpfApp1
             button_login_KH.IsEnabled = axKHOpenAPI.Created;
 
             axKFOpenAPI = new AxKFOpenAPI(Handle);
-            axKFOpenAPI.OnEventConnect += axKFOpenAPI_OnEventConnect;
+            axKFOpenAPI.OnEventConnect += (s, e) => log_list.Items.Add(e.nErrCode == 0 ? "해외 로그인 성공" : "해외 로그인 실패");
             button_login_KF.IsEnabled = axKFOpenAPI.Created;
-        }
-
-        // 국내로그인 이벤트 핸들러
-        private void axKHOpenAPI_OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
-        {
-            if (e.nErrCode == 0)
-            {
-                log_list.Items.Add("국내 로그인 성공");
-            }
-            else
-            {
-                log_list.Items.Add("국내 로그인 실패");
-            }
-        }
-
-        // 해외로그인 이벤트 핸들러
-        private void axKFOpenAPI_OnEventConnect(object sender, _DKFOpenAPIEvents_OnEventConnectEvent e)
-        {
-            if (e.nErrCode == 0)
-            {
-                log_list.Items.Add("해외 로그인 성공");
-            }
-            else
-            {
-                log_list.Items.Add("해외 로그인 실패");
-            }
         }
 
         private void button_login_KH_Click(object sender, RoutedEventArgs e)

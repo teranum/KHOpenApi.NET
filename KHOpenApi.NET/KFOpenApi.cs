@@ -1179,7 +1179,7 @@ namespace KFOpenApi.NET
         /// var response = await RequestTrAsync("opc10003", indatas, [], ["일자", "현재가", "시가", "고가", "저가", "누적거래량"]);
         /// 
         /// // 결과처리
-        /// if (response.ret == 0)
+        /// if (response.nErrCode == 0)
         /// {
         ///     // 요청성공, response.singleDatas, response.multiDatas 에 결과가 있음
         /// }
@@ -1230,7 +1230,7 @@ namespace KFOpenApi.NET
                 responseTrData.singleDatas = singleFields.Select(x => GetCommData(e.sTrCode, e.sRQName, 0, x).Trim()).ToArray();
 
                 responseTrData.multiDatas = [];
-                var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRecordName);
+                var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRQName);
                 for (int i = 0; i < nRepeateCnt; i++)
                 {
                     var datas = multiFields.Select(x => GetCommData(e.sTrCode, e.sRQName, i, x).Trim()).ToArray();
@@ -1247,7 +1247,7 @@ namespace KFOpenApi.NET
 
             responseTrData.rsp_msg = newAsync._async_msg;
             responseTrData.tr_cd = tr_cd;
-            responseTrData.ret = nRet;
+            responseTrData.nErrCode = nRet;
             return responseTrData;
         }
 
@@ -1256,13 +1256,13 @@ namespace KFOpenApi.NET
         /// <summary>
         /// 비동기로 <inheritdoc cref="SendOrder"/><br/>
         /// 결과는 <see cref="ResponseTrData"/> 로 반환합니다.<br/>
-        /// <see cref="ResponseTrData.ret"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
+        /// <see cref="ResponseTrData.nErrCode"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
         /// 주문실패 사유로 <see cref="ResponseTrData.rsp_msg"/> 에 오류메시지가 있습니다.<br/><br/>
         /// <code language="csharp">
         /// // 샘플: 해외선옵주문
         /// var response = await SendOrderAsync(...);
         /// // 결과처리
-        /// if (response.ret == 0)
+        /// if (response.nErrCode == 0)
         /// {
         ///     // 주문성공 (서버까지 주문이 확실히 접수됨)
         /// }
@@ -1315,7 +1315,7 @@ namespace KFOpenApi.NET
             }
             return new()
             {
-                ret = nRet,
+                nErrCode = nRet,
                 rsp_msg = newAsync._async_msg,
             };
         }

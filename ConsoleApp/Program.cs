@@ -34,10 +34,10 @@ class Sample(nint handle)
         }
 
         // 로그인
-        OutLog("로그인 요청...");
+        OutLog("로그인 요청 (CommConnectAsync)...");
         if (0 != await api.CommConnectAsync())
         {
-            OutLog("로그인 요청(CommConnect): 실패");
+            OutLog("로그인 요청 (CommConnectAsync): 실패");
             return;
         }
         OutLog("로그인 성공");
@@ -54,7 +54,7 @@ class Sample(nint handle)
 
         // 사용자 조건검색리스트요청
         OutLog();
-        OutLog("사용자 조건검색리스트요청...");
+        OutLog("사용자 조건검색리스트요청 (GetConditionLoadAsync)...");
         if (1 != await api.GetConditionLoadAsync())
         {
             OutLog("사용자 조건검색리스트요청: 실패");
@@ -72,7 +72,7 @@ class Sample(nint handle)
             var cond_code = cond_codeName[0];
             var cond_name = cond_codeName[1];
             OutLog();
-            OutLog($"조건검색식 요청: {cond_name}");
+            OutLog($"조건검색식 요청 (SendConditionAsync): {cond_name}");
             List<string> list = [];
             if (1 == await api.SendConditionAsync("9876", cond_name, int.Parse(cond_code), 0,
                 (e) =>
@@ -89,14 +89,26 @@ class Sample(nint handle)
         }
 
         OutLog();
+        OutLog("삼성전자, 키움증권 현재가 출력 (CommKwRqDataAsync)");
+        // 관심종목정보요청
+        List<string> rcv_datas = [];
+        int nRet = await api.CommKwRqDataAsync("005930;039490", 0, 2, 0, "관심종목정보요청", "0001", (e) =>
+        {
+            int nRepeatCnt = api.GetRepeatCnt(e.sTrCode, e.sRQName);
+            for (int i = 0; i < nRepeatCnt; i++)
+                rcv_datas.Add(api.GetCommData(e.sTrCode, e.sRQName, i, "현재가"));
+        });
+        if (nRet == 0) // 요청성공
+            rcv_datas.ForEach((s) => Console.WriteLine("현재가: " + s));
+        else
+            Console.WriteLine("요청실패: " + nRet);
+
         DoOtherWork();
-
-
     }
 
     private async void DoOtherWork()
     {
-        OutLog("10초후 삼성전자의 일봉데이터를 불러옵니다.");
+        OutLog("10초후 삼성전자의 일봉데이터를 불러옵니다. (CommRqDataAsync)");
         await Task.Delay(10000); // 10초 대기
 
         // 삼성전자의 일봉데이터를 가져오기
@@ -107,16 +119,16 @@ class Sample(nint handle)
             (e) =>
             {
                 api.DisconnectRealData("9001");
-                int nRepeateCount = api.GetRepeatCnt(e.sTrCode, e.sRecordName);
+                int nRepeateCount = api.GetRepeatCnt(e.sTrCode, e.sRQName);
                 OutLog($"주식일봉차트조회요청: {nRepeateCount}건 [일자 시가 고가 저가 종가 거래량]");
                 for (int i = 0; i < nRepeateCount; i++)
                 {
-                    var 일자 = api.GetCommData(e.sTrCode, e.sRecordName, i, "일자");
-                    var 시가 = api.GetCommData(e.sTrCode, e.sRecordName, i, "시가");
-                    var 고가 = api.GetCommData(e.sTrCode, e.sRecordName, i, "고가");
-                    var 저가 = api.GetCommData(e.sTrCode, e.sRecordName, i, "저가");
-                    var 종가 = api.GetCommData(e.sTrCode, e.sRecordName, i, "현재가");
-                    var 거래량 = api.GetCommData(e.sTrCode, e.sRecordName, i, "거래량");
+                    var 일자 = api.GetCommData(e.sTrCode, e.sRQName, i, "일자");
+                    var 시가 = api.GetCommData(e.sTrCode, e.sRQName, i, "시가");
+                    var 고가 = api.GetCommData(e.sTrCode, e.sRQName, i, "고가");
+                    var 저가 = api.GetCommData(e.sTrCode, e.sRQName, i, "저가");
+                    var 종가 = api.GetCommData(e.sTrCode, e.sRQName, i, "현재가");
+                    var 거래량 = api.GetCommData(e.sTrCode, e.sRQName, i, "거래량");
                     OutLog($"{일자}{시가}{고가}{저가}{종가}{거래량}");
                 }
             });
@@ -129,7 +141,7 @@ class Sample(nint handle)
 
         await Task.Delay(1000); // 1초 대기
 
-        // 같은 데이터를 간편요청 (RequestTrAsync) 으로 불러오기
+        OutLog("같은 데이터를 간편요청 (RequestTrAsync) 으로 불러오기");
         var indatas = new Dictionary<string, string>
         {
             ["종목코드"] = "005930",
@@ -138,7 +150,7 @@ class Sample(nint handle)
         };
         var respose = await api.RequestTrAsync("opt10081", indatas, [], ["일자", "시가", "고가", "저가", "현재가", "거래량"]);
 
-        if (respose.ret < 0)
+        if (respose.nErrCode < 0)
         {
             OutLog($"주식일봉차트조회요청 (RequestTrAsync): 실패({respose.rsp_msg})");
             return;

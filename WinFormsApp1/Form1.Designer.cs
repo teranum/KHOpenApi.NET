@@ -34,7 +34,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.textBox_KH_code = new System.Windows.Forms.TextBox();
             this.button_KH_info = new System.Windows.Forms.Button();
-            this.listBox_result = new System.Windows.Forms.ListBox();
+            this.log_list = new System.Windows.Forms.ListBox();
             this.button_KH_chart = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -95,14 +95,14 @@
             this.button_KH_info.UseVisualStyleBackColor = true;
             this.button_KH_info.Click += new System.EventHandler(this.button_KH_info_Click);
             // 
-            // listBox_result
+            // log_list
             // 
-            this.listBox_result.FormattingEnabled = true;
-            this.listBox_result.ItemHeight = 12;
-            this.listBox_result.Location = new System.Drawing.Point(12, 163);
-            this.listBox_result.Name = "listBox_result";
-            this.listBox_result.Size = new System.Drawing.Size(658, 208);
-            this.listBox_result.TabIndex = 5;
+            this.log_list.FormattingEnabled = true;
+            this.log_list.ItemHeight = 12;
+            this.log_list.Location = new System.Drawing.Point(12, 163);
+            this.log_list.Name = "log_list";
+            this.log_list.Size = new System.Drawing.Size(658, 208);
+            this.log_list.TabIndex = 5;
             // 
             // button_KH_chart
             // 
@@ -119,7 +119,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(682, 386);
-            this.Controls.Add(this.listBox_result);
+            this.Controls.Add(this.log_list);
             this.Controls.Add(this.button_KH_chart);
             this.Controls.Add(this.button_KH_info);
             this.Controls.Add(this.textBox_KH_code);
@@ -143,7 +143,7 @@
         private Label label1;
         private TextBox textBox_KH_code;
         private Button button_KH_info;
-        private ListBox listBox_result;
+        private ListBox log_list;
         private Button button_KH_chart;
     }
 }

@@ -125,7 +125,7 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
             var response = await RequestTrAsync("OPTKWFID", indatas, [], ["종목명", "현재가", "기준가", "시가", "고가", "저가"]);
             
             // 결과처리
-            if (response.ret == 0)
+            if (response.nErrCode == 0)
             {
                 // 요청성공, response.singleDatas, response.multiDatas 에 결과가 있음
             }
@@ -145,7 +145,7 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
             var response = await axKHOpenAPI.SendOrderAsync("매수주문", "0101", 계좌번호, 1, itemCode, qty, price, "00", string.Empty);
 
             // 결과처리
-            if (response.ret == 0)
+            if (response.nErrCode == 0)
             {
                 // 주문성공 (서버까지 주문이 확실히 접수됨)
             }
