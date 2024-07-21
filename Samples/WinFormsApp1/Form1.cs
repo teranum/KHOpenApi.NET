@@ -1,4 +1,3 @@
-using KFOpenApi.NET;
 using KHOpenApi.NET;
 
 namespace WinFormsApp1
@@ -117,8 +116,8 @@ namespace WinFormsApp1
             var resposeTrData = await axKHOpenAPI.RequestTrAsync("OPT10081", indatas, [], reqName);
             if (resposeTrData.nErrCode == 0)
             {
-                log_list.Items.Add($"[{resposeTrData.tr_cd}] : {resposeTrData.multiDatas.Count}°³");
-                resposeTrData.multiDatas.Select(x => string.Join(" ", x)).ToList().ForEach(x => log_list.Items.Add(x));
+                log_list.Items.Add($"[{resposeTrData.tr_cd}] : {resposeTrData.OutputMultiDatas.Count}°³");
+                resposeTrData.OutputMultiDatas.Select(x => string.Join(" ", x)).ToList().ForEach(x => log_list.Items.Add(x));
             }
             else
             {

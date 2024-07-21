@@ -1,5 +1,4 @@
-﻿using KFOpenApi.NET;
-using KHOpenApi.NET;
+﻿using KHOpenApi.NET;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
