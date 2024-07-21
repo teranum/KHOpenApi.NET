@@ -11,10 +11,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="ConsoleTables" Version="2.6.1" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <ProjectReference Include="..\KHOpenApi.NET\KHOpenApi.NET.csproj" />
+		<PackageReference Include="KHOpenApi.NET" Version="1.5.3" />
 	</ItemGroup>
 
 </Project>

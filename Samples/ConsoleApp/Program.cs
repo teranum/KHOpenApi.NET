@@ -74,13 +74,11 @@ class Sample(nint handle)
             OutLog();
             OutLog($"조건검색식 요청 (SendConditionAsync): {cond_name}");
             List<string> list = [];
-            if (1 == await api.SendConditionAsync("9876", cond_name, int.Parse(cond_code), 0,
-                (e) =>
-                {
-                    var codes = e.strCodeList.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(x => api.GetMasterCodeName(x));
-                    list.AddRange(codes);
-                }))
+            var (nCondRet, strCodeList) = await api.SendConditionAsync("9876", cond_name, int.Parse(cond_code), 0);
+            if (nCondRet == 1)
             {
+                var codes = strCodeList.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(x => api.GetMasterCodeName(x));
+                list.AddRange(codes);
                 OutLog($"조건검색식 요청: 성공, 검색종목수 = {list.Count}");
                 list.ForEach(OutLog);
             }
@@ -88,9 +86,9 @@ class Sample(nint handle)
                 OutLog($"조건검색식 요청: 실패");
         }
 
-        OutLog();
-        OutLog("삼성전자, 키움증권 현재가 출력 (CommKwRqDataAsync)");
         // 관심종목정보요청
+        OutLog();
+        OutLog("관심종목정보요청: 삼성전자, 키움증권 현재가 출력 (CommKwRqDataAsync)");
         List<string> rcv_datas = [];
         int nRet = await api.CommKwRqDataAsync("005930;039490", 0, 2, 0, "관심종목정보요청", "0001", (e) =>
         {
@@ -102,6 +100,20 @@ class Sample(nint handle)
             rcv_datas.ForEach((s) => Console.WriteLine("현재가: " + s));
         else
             Console.WriteLine("요청실패: " + nRet);
+
+        // 관심종목정보요청을 간편요청 (RequestTrAsync) 으로 불러오기
+        OutLog();
+        OutLog("관심종목정보요청: 삼성전자, 키움증권 현재가 출력 (RequestTrAsync)");
+        var indatas = new Dictionary<string, string>
+        {
+            ["종목코드"] = "005930;039490", // 종목코드 리스트
+            ["타입구분"] = "0", // 0: 주식종목, 3: 선물옵션
+        };
+        var respose = await api.RequestTrAsync("OPTKWFID", indatas, [], ["현재가"]);
+        if (respose.nErrCode < 0)
+            OutLog($"요청실패: {respose.rsp_msg}");
+        else
+            respose.OutputMultiDatas.ToList().ForEach((coldatas) => OutLog($"현재가: {coldatas[0]}"));
 
         DoOtherWork();
     }
@@ -156,7 +168,7 @@ class Sample(nint handle)
             return;
         }
 
-        foreach (var item in respose.multiDatas)
+        foreach (var item in respose.OutputMultiDatas)
         {
             OutLog($"{item[0]}, {item[1]}, {item[2]}, {item[3]}, {item[4]}, {item[5]}");
         }

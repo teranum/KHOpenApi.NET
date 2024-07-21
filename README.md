@@ -102,7 +102,7 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
                 );
             
             // 샘플 2: 주식일봉차트조회요청
-            var indatas = new Dictionary&lt;string, string&gt; 
+            var indatas = new Dictionary<string, string> 
             {
                 { "종목코드", "005930" },
                 { "기준일자", "20240704" },
@@ -114,7 +114,7 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
             var response = await axKHOpenAPI.RequestTrAsync("OPTKWFID", [("종목코드", "005930")], [], ["종목명", "현재가", "기준가", "시가", "고가", "저가"]);
             
             // 샘플 4: 관심종목정보요청(선물옵션)
-            var indatas = new Dictionary&lt;string, string&gt; 
+            var indatas = new Dictionary<string, string> 
             {
                 { "종목코드", "101V9000;101VC000" }, // (종목코드는 세미콜론으로 구분)
                 { "타입구분", "3" }, // 0:주식 종목, 3:선물옵션 종목 (기본값은 0)
