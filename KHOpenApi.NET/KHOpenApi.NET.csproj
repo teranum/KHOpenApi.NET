@@ -5,7 +5,7 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<Description>Common wrapper for Kiwoom OpenApi</Description>
-		<Version>1.5.2</Version>
+		<Version>1.5.3</Version>
 		<Title>KHOpenAPI.NET</Title>
 		<PackageTags>kiwoom, KOA</PackageTags>
 		<Authors>teranum</Authors>

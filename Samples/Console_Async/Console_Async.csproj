@@ -2,15 +2,16 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net8.0-windows</TargetFramework>
-		<UseWindowsForms>true</UseWindowsForms>
+		<TargetFramework>net8.0-Windows</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<UseWindowsForms>true</UseWindowsForms>
 		<PlatformTarget>x86</PlatformTarget>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="KHOpenApi.NET" Version="1.5.2" />
+		<PackageReference Include="ConsoleTables" Version="2.6.1" />
+		<PackageReference Include="KHOpenApi.NET" Version="1.5.3" />
 	</ItemGroup>
 
 </Project>

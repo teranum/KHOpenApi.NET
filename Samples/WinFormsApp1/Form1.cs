@@ -17,38 +17,12 @@ namespace WinFormsApp1
 
             // ActiveX 세팅
             axKHOpenAPI = new AxKHOpenAPI(Handle);
-            axKHOpenAPI.OnEventConnect += axKHOpenAPI_OnEventConnect;
+            axKHOpenAPI.OnEventConnect += (s, e) => log_list.Items.Add(e.nErrCode == 0 ? "국내 로그인 성공" : "국내 로그인 실패");
             button_login_KH.Enabled = axKHOpenAPI.Created;
 
             axKFOpenAPI = new AxKFOpenAPI(Handle);
-            axKFOpenAPI.OnEventConnect += axKFOpenAPI_OnEventConnect;
+            axKFOpenAPI.OnEventConnect += (s, e) => log_list.Items.Add(e.nErrCode == 0 ? "해외 로그인 성공" : "해외 로그인 실패");
             button_login_KF.Enabled = axKFOpenAPI.Created;
-        }
-
-        // 국내로그인 이벤트 핸들러
-        private void axKHOpenAPI_OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
-        {
-            if (e.nErrCode == 0)
-            {
-                listBox_result.Items.Add("국내 로그인 성공");
-            }
-            else
-            {
-                listBox_result.Items.Add("국내 로그인 실패");
-            }
-        }
-
-        // 해외로그인 이벤트 핸들러
-        private void axKFOpenAPI_OnEventConnect(object sender, _DKFOpenAPIEvents_OnEventConnectEvent e)
-        {
-            if (e.nErrCode == 0)
-            {
-                listBox_result.Items.Add("해외 로그인 성공");
-            }
-            else
-            {
-                listBox_result.Items.Add("해외 로그인 실패");
-            }
         }
 
         private void button_login_KH_Click(object sender, EventArgs e)
@@ -56,7 +30,7 @@ namespace WinFormsApp1
             // 국내 로그인 요청
             if (axKHOpenAPI.GetConnectState() == 0)
             {
-                listBox_result.Items.Add("국내 로그인 요청");
+                log_list.Items.Add("국내 로그인 요청");
                 axKHOpenAPI.CommConnect();
             }
         }
@@ -66,26 +40,16 @@ namespace WinFormsApp1
             // 해외 로그인 요청
             if (axKFOpenAPI.GetConnectState() == 0)
             {
-                listBox_result.Items.Add("해외 로그인 요청");
+                log_list.Items.Add("해외 로그인 요청");
                 axKFOpenAPI.CommConnect(1);
             }
         }
 
-        private void button_KH_info_Click(object sender, EventArgs e)
-        {
-            _ = 국내_종목정보_요청Async();
-        }
-
-        private void button_KH_chart_Click(object sender, EventArgs e)
-        {
-            _ = 국내_일봉차트_요청Async();
-        }
-
-        async Task 국내_종목정보_요청Async()
+        private async void button_KH_info_Click(object sender, EventArgs e)
         {
             if (axKHOpenAPI.GetConnectState() == 0)
             {
-                listBox_result.Items.Add("로그인을 먼저 해주세요.");
+                log_list.Items.Add("로그인을 먼저 해주세요.");
                 return;
             }
 
@@ -103,7 +67,7 @@ namespace WinFormsApp1
 
             string result = string.Empty;
             axKHOpenAPI.SetInputValue("종목코드", textBox_KH_code.Text);
-            int nRet = await axKHOpenAPI.CommRqDataAsync("종목정보요청", "OPT10001", 0, "0101", (e) => 
+            int nRet = await axKHOpenAPI.CommRqDataAsync("종목정보요청", "OPT10001", 0, "0101", (e) =>
             {
                 result = $"[{e.sTrCode}], {e.sRQName} : ";
                 for (int i = 0; i < reqName.Length; i++)
@@ -114,20 +78,22 @@ namespace WinFormsApp1
 
             if (nRet == 0)
             {
-                listBox_result.Items.Add(result);
-            } else
+                log_list.Items.Add(result);
+            }
+            else
             {
-                listBox_result.Items.Add("종목정보요청 실패");
+                log_list.Items.Add("종목정보요청 실패");
             }
         }
 
-        async Task 국내_일봉차트_요청Async()
+        private async void button_KH_chart_Click(object sender, EventArgs e)
         {
             if (axKHOpenAPI.GetConnectState() == 0)
             {
-                listBox_result.Items.Add("로그인을 먼저 해주세요.");
+                log_list.Items.Add("로그인을 먼저 해주세요.");
                 return;
             }
+            log_list.Items.Clear();
 
             // 국내 차트 요청
             string[] reqName =
@@ -141,6 +107,26 @@ namespace WinFormsApp1
                 // ...
                 ];
 
+            Dictionary<string, string> indatas = new()
+            {
+                { "종목코드", textBox_KH_code.Text },
+                { "기준일자", string.Empty },
+                { "수정주가구분", "1" },
+            };
+
+            var resposeTrData = await axKHOpenAPI.RequestTrAsync("OPT10081", indatas, [], reqName);
+            if (resposeTrData.nErrCode == 0)
+            {
+                log_list.Items.Add($"[{resposeTrData.tr_cd}] : {resposeTrData.multiDatas.Count}개");
+                resposeTrData.multiDatas.Select(x => string.Join(" ", x)).ToList().ForEach(x => log_list.Items.Add(x));
+            }
+            else
+            {
+                log_list.Items.Add("종목차트요청 실패");
+            }
+
+
+            /* 같은 요청을 CommRqDataAsync 이용할 경우
             string result = string.Empty;
             List<string> listChart = [];
             axKHOpenAPI.SetInputValue("종목코드", textBox_KH_code.Text);
@@ -176,6 +162,8 @@ namespace WinFormsApp1
             {
                 listBox_result.Items.Add("종목차트요청 실패");
             }
+
+             */
         }
     }
 }

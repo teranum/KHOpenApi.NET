@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<LangVersion>default</LangVersion>
+		<OutputType>WinExe</OutputType>
+		<TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+		<Nullable>enable</Nullable>
+		<UseWindowsForms>True</UseWindowsForms>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<PlatformTargets>x86;x64</PlatformTargets>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="KHOpenApi.NET" Version="1.5.3" />
+	</ItemGroup>
+
+
+</Project>
