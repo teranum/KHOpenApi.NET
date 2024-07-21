@@ -94,11 +94,12 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
         async Task TestSimpleRequestAsync()
         {
             // 샘플 1: 주식기본정보요청
-            var indatas = new Dictionary&lt;string, string&gt; 
-            {
-                { "종목코드", "005930" },
-            };
-            var response = await axKHOpenAPI.RequestTrAsync("OPT10001", indatas, ["종목명", "액면가", "신용비율", "외인소진율"], []);
+            var response = await api.RequestTrAsync(
+                "OPT10001" // TR코드
+                , [("종목코드", "005930")] // 입력데이터, 또는 Dictionary<string, string> 형태로 입력
+                , ["종목명", "액면가", "영업이익", "시가", "고가", "저가", "현재가", "거래량"] // 가져올 싱글데이터
+                , [] // 가져올 멀티데이터
+                );
             
             // 샘플 2: 주식일봉차트조회요청
             var indatas = new Dictionary&lt;string, string&gt; 
@@ -110,11 +111,7 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
             var response = await axKHOpenAPI.RequestTrAsync("OPT10081", indatas, ["종목코드"], ["일자", "현재가", "거래량"]);
             
             // 샘플 3: 관심종목정보요청
-            var indatas = new Dictionary&lt;string, string&gt; 
-            {
-                { "종목코드", "005930;039490" }, // 삼성전자, 키움증권 (종목코드는 세미콜론으로 구분)
-            };
-            var response = await axKHOpenAPI.RequestTrAsync("OPTKWFID", indatas, [], ["종목명", "현재가", "기준가", "시가", "고가", "저가"]);
+            var response = await axKHOpenAPI.RequestTrAsync("OPTKWFID", [("종목코드", "005930")], [], ["종목명", "현재가", "기준가", "시가", "고가", "저가"]);
             
             // 샘플 4: 관심종목정보요청(선물옵션)
             var indatas = new Dictionary&lt;string, string&gt; 
@@ -124,15 +121,38 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
             };
             var response = await axKHOpenAPI.RequestTrAsync("OPTKWFID", indatas, [], ["종목명", "현재가", "기준가", "시가", "고가", "저가"]);
             
+            // 샘플 4: 거래대금상위요청
+            var response = await api.RequestTrAsync(
+                "OPT10032" // 거래대금상위요청
+                , [
+                    ("시장구분", "000"), // 000:전체, 001:코스피, 101:코스닥
+                    ("관리종목포함", "0"), // 0:관리종목 미포함, 1:관리종목 포함
+                    ]
+                , [] // 가져올 싱글데이터
+                , ["종목코드", "종목명", "현재순위", "전일순위", "현재가", "전일대비", "등락률", "현재거래량", "전일거래량", "거래대금"] // 가져올 멀티데이터
+                );
+            
             // 결과처리
             if (response.nErrCode == 0)
             {
-                // 요청성공, response.singleDatas, response.multiDatas 에 결과가 있음
+                // 요청성공, response.OutputSingleDatas, response.OutputMultiDatas 에 결과가 있음
             }
             else
             {
                 // 요청실패, response.rsp_msg 에 오류메시지가 있음
             }
+        }
+
+        // 비동기 조건검색 (nuget 버전 1.5.3 이상 지원)
+        async Task TestConditionAsync()
+        {
+            var (nRet, sCodeList) = await api.SendConditionAsync("8001", conditionInfo.Name, conditionInfo.Code, 0);
+            if (nRet != 1)
+            {
+                print($"검색식 요청실패: {api.GetErrorMessage(nRet)}");
+                return;
+            }
+            // sCodeList 에 검색된 종목코드가 있음 (세미콜론으로 구분 종목코드1;종목코드2..., 또는 현재가 포함 설정시 종목코드1^현재가1;종목코드2^현재가2 ...로 구분))
         }
 
         // 비동기 주문 (nuget 버전 1.5.3 이상 지원)
@@ -142,17 +162,16 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
             string itemCode = "005930";
             int qty = 1;
             int price = 80000;
-            var response = await axKHOpenAPI.SendOrderAsync("매수주문", "0101", 계좌번호, 1, itemCode, qty, price, "00", string.Empty);
+            var (nRet, msg) = await axKHOpenAPI.SendOrderAsync("매수주문", "0101", 계좌번호, 1, itemCode, qty, price, "00", string.Empty);
 
             // 결과처리
-            if (response.nErrCode == 0)
+            if (nRet != 0)
             {
-                // 주문성공 (서버까지 주문이 확실히 접수됨)
+                print($"주문 요청실패: {msg}"); // 실패사유 출력
+                return;
             }
-            else
-            {
-                // 주문실패, response.rsp_msg 에 오류메시지가 있음
-            }
+
+            // 주문성공, 서버까지 주문 전달이 확실히 성공 되었음
         }
     }
 

@@ -1811,7 +1811,7 @@ public class AxKHOpenAPI
     /// </code>
     /// </summary>
     /// <inheritdoc cref="CommRqData"/>
-    public virtual async Task<int> CommRqDataAsync(string sRQName, string sTrCode, int nPrevNext, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
+    public async Task<int> CommRqDataAsync(string sRQName, string sTrCode, int nPrevNext, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
     {
         var newAsync = new AsyncNode([sRQName, sTrCode, int.Parse(sScreenNo)])
         {
@@ -1861,7 +1861,7 @@ public class AxKHOpenAPI
     /// </code>
     /// </summary>
     /// <inheritdoc cref="CommKwRqData"/>
-    public virtual async Task<int> CommKwRqDataAsync(string sArrCode, int bNext, int nCodeCount, int nTypeFlag, string sRQName, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
+    public async Task<int> CommKwRqDataAsync(string sArrCode, int bNext, int nCodeCount, int nTypeFlag, string sRQName, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
     {
         var newAsync = new AsyncNode([sRQName, "OPTKWFID", int.Parse(sScreenNo)])
         {
@@ -1896,7 +1896,7 @@ public class AxKHOpenAPI
     /// 서버응답없을 경우 -902(타임아웃)을 리턴합니다.
     /// </summary>
     /// <inheritdoc cref="SendCondition"/>
-    public virtual async Task<(int nRet, string sCodeList)> SendConditionAsync(string strScrNo, string strConditionName, int nIndex, int nSearch)
+    public async Task<(int nRet, string sCodeList)> SendConditionAsync(string strScrNo, string strConditionName, int nIndex, int nSearch)
     {
         string sCodeList = string.Empty;
         var newAsync = new AsyncNode([strScrNo, strConditionName])
@@ -1933,7 +1933,7 @@ public class AxKHOpenAPI
     /// </summary>
     /// <returns><inheritdoc cref="CommConnect"/><br/>-901: 이미 요청 작동중</returns>
     /// <remarks>함수 내부에서  <see cref="OnEventConnect"/> 이벤트 처리가 자동으로 진횅되며 서버연결 성공/실패 결과를 반환합니다.</remarks>
-    public virtual async Task<int> CommConnectAsync()
+    public async Task<int> CommConnectAsync()
     {
         if (_async_Connect_nErrCode == -1)
         {
@@ -1965,7 +1965,7 @@ public class AxKHOpenAPI
     /// <inheritdoc cref="GetConditionLoad"/>
     /// </summary>
     /// <returns><inheritdoc cref="GetConditionLoad"/><br/>-901: 이미 요청 작동중</returns>
-    public virtual async Task<int> GetConditionLoadAsync()
+    public async Task<int> GetConditionLoadAsync()
     {
         if (_async_ConditionVer_nRet == -1)
         {
@@ -2182,7 +2182,7 @@ public class AxKHOpenAPI
     /// </code>
     /// </summary>
     /// <inheritdoc cref="SendOrder"/>
-    public virtual async Task<(int nRet, string msg)> SendOrderAsync(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, int nPrice, string sHogaGb, string sOrgOrderNo)
+    public async Task<(int nRet, string msg)> SendOrderAsync(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, int nPrice, string sHogaGb, string sOrgOrderNo)
     {
         bool bExistOrderNumber = false;
         void action(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
@@ -2245,7 +2245,7 @@ public class AxKHOpenAPI
     /// </code>
     /// </summary>
     /// <inheritdoc cref="SendOrderFO"/>
-    public virtual async Task<(int nRet, string msg)> SendOrderFOAsync(string sRQName, string sScreenNo, string sAccNo, string sCode, int lOrdKind, string sSlbyTp, string sOrdTp, int lQty, string sPrice, string sOrgOrdNo)
+    public async Task<(int nRet, string msg)> SendOrderFOAsync(string sRQName, string sScreenNo, string sAccNo, string sCode, int lOrdKind, string sSlbyTp, string sOrdTp, int lQty, string sPrice, string sOrgOrdNo)
     {
         bool bExistOrderNumber = false;
         void action(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
@@ -2308,7 +2308,7 @@ public class AxKHOpenAPI
     /// </code>
     /// </summary>
     /// <inheritdoc cref="SendOrderCredit"/>
-    public virtual async Task<(int nRet, string msg)> SendOrderCreditAsync(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, int nPrice, string sHogaGb, string sCreditGb, string sLoanDate, string sOrgOrderNo)
+    public async Task<(int nRet, string msg)> SendOrderCreditAsync(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, int nPrice, string sHogaGb, string sCreditGb, string sLoanDate, string sOrgOrderNo)
     {
         bool bExistOrderNumber = false;
         void action(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
