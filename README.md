@@ -45,8 +45,12 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
             // 해외 로그인 요청
             axKFOpenAPI.CommConnect(1);
         }
+```
 
-        // 비동기 함수 지원
+---------------
+#### 비동기 함수 지원
+
+```c#
         // 로그인, 조건식 로딩 (CommConnectAsync, GetConditionLoadAsync)
         // TR 요청 (CommRqDataAsync, CommKwRqDataAsync, SendConditionAsync)
         // 간편요청 (RequestTrAsync)
