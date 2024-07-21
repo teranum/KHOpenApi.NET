@@ -1,4 +1,5 @@
 ﻿using ConsoleTables;
+using KHOpenApi.NET;
 using System.Collections;
 using System.Diagnostics;
 
@@ -7,7 +8,7 @@ namespace CSharp
     internal class SampleBase
     {
         // Api 객체선언
-        public static KHOpenApi.NET.KHOpenApi api = null!;
+        public static KHOpenApi.NET.AxKHOpenAPI api = null!;
         protected SampleBase()
         {
             Debug.Assert(api != null);
@@ -16,23 +17,41 @@ namespace CSharp
         public SampleBase(nint Handle)
         {
             api = new(Handle);
+            api.OnReceiveMsg += (s, e) =>
+            {
+                Console.WriteLine($"OnMessageEvent: sScrNo = {e.sScrNo}, sRQName = {e.sRQName}, sTrCode = {e.sTrCode}, sMsg = {e.sMsg}");
+            };
+            api.OnReceiveRealData += (s, e) =>
+            {
+                Console.WriteLine($"OnRealtimeEvent: sRealKey = {e.sRealKey}, sRealType = {e.sRealType}, sRealData = {e.sRealData}");
+            };
         }
 
         // Main: 로그인 및 구현부 호출
         public async Task Main()
         {
             // 로그인
-            int nRet = await api.ConnectAsync();
+            int nRet = await api.CommConnectAsync();
             if (nRet != 0)
             {
-                print($"연결실패: {api.GetErrorMessge(nRet)}");
+                print($"연결실패: {api.GetErrorMessage(nRet)}");
                 return;
             }
-            print($"연결성공");
-            print($"접속서버: {(api.IsSimulation ? "모의투자" : "실투자")}");
 
-            var apipath = api.AxApi.GetAPIModulePath();
-            print($"API 경로: {apipath}");
+            // 조건검색식 목록 로딩
+            nRet = await api.GetConditionLoadAsync();
+            if (nRet != 1)
+            {
+                print($"조건검색식 로딩실패: {api.GetErrorMessage(nRet)}");
+                return;
+            }
+
+            // 추가로 조건검색식 요청시 현재가 포함되게 설정해준다.
+            api.KOA_Functions("SetConditionSearchFlag", "AddPrice");
+
+            print($"연결성공");
+            var isSimulation = string.Equals(api.GetLoginInfo("GetServerGubun"), "1");
+            print($"접속서버: {(isSimulation ? "모의투자" : "실투자")}");
         }
 
         // 구현부: 파생 클래스에서 구현
@@ -54,11 +73,19 @@ namespace CSharp
             Console.ForegroundColor = ConsoleColor.DarkYellow;
             if (type is null || type.IsValueType || type == typeof(string))
             {
-                Console.WriteLine($"array, Data Count = {array.Count()}");
-                Console.ForegroundColor = ConsoleColor.Gray;
-                int n = 0;
-                var IdArray = array.Select(x => new KeyValuePair<int, T>(++n, x));
-                ConsoleTable.From(IdArray).Configure(o => o.NumberAlignment = Alignment.Right).Write(Format.MarkDown);
+                if (type == typeof(KeyValuePair<string, string>))
+                {
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    ConsoleTable.From(array).Write(Format.MarkDown);
+                }
+                else
+                {
+                    Console.WriteLine($"array, Data Count = {array.Count()}");
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    int n = 0;
+                    var IdArray = array.Select(x => new KeyValuePair<int, T>(++n, x));
+                    ConsoleTable.From(IdArray).Configure(o => o.NumberAlignment = Alignment.Right).Write(Format.MarkDown);
+                }
             }
             else
             {
@@ -120,7 +147,8 @@ namespace CSharp
             }
             foreach (var row in data)
             {
-                table.AddRow(row);
+                if (row.Length > 0)
+                    table.AddRow(row);
             }
 
             table.Write(Format.MarkDown);
@@ -138,5 +166,30 @@ namespace CSharp
             return Console.ReadKey().Key;
         });
 
+        public static void print(ResponseData responseTrData)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine($"tr_cd: {responseTrData.tr_cd}");
+            Console.WriteLine("입력데이터");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            print(responseTrData.InputDatas);
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine("출력데이터");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine($"nErrCode: {responseTrData.nErrCode}");
+            Console.WriteLine($"rsp_msg: {responseTrData.rsp_msg}");
+            Console.WriteLine($"cont_key: {responseTrData.cont_key}");
+            Console.WriteLine();
+
+            if (responseTrData.RequestSingleFields.Length > 0)
+            {
+                print("싱글데이터", responseTrData.RequestSingleFields, [responseTrData.OutputSingleDatas]);
+            }
+
+            if (responseTrData.RequestMultiFields.Length > 0)
+            {
+                print("멀티데이터", responseTrData.RequestMultiFields, [.. responseTrData.OutputMultiDatas]);
+            }
+        }
     }
 }

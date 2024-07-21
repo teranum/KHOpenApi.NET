@@ -1,6 +1,4 @@
 ﻿using CSharp;
-using System.Drawing;
-using System.Windows.Forms;
 
 namespace ConsoleApp;
 

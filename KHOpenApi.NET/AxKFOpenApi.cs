@@ -1,5 +1,4 @@
-﻿using KHOpenApi.NET;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -8,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace KFOpenApi.NET
+namespace KHOpenApi.NET
 {
     [ComImport]
     [Guid("85B07632-4F84-4CEF-991D-C79DE781363D")]
@@ -182,7 +181,7 @@ namespace KFOpenApi.NET
     /// 요청했던 조회데이터를 수신했을때 발생됩니다.
     /// </summary>
     /// <remarks>수신된 데이터는 이 이벤트내부에서 <see cref="AxKFOpenAPI.GetCommData"/>함수를 이용해서 얻어올 수 있습니다.</remarks>
-    public class _DKFOpenAPIEvents_OnReceiveTrDataEvent(string sScrNo, string sRQName, string sTrCode, string sRecordName, string sPreNext) : EventArgs
+    public class _DKFOpenAPIEvents_OnReceiveTrDataEvent(string sScrNo, string sRQName, string sTrCode, string sRecordName, string sPreNext, string sMessage) : EventArgs
     {
         /// <summary>화면번호</summary>
         public string sScrNo = sScrNo;
@@ -194,6 +193,8 @@ namespace KFOpenApi.NET
         public string sRecordName = sRecordName;
         /// <summary>연속조회 유무를 판단하는 값 0: 연속(추가조회)데이터 없음, 2:연속(추가조회) 데이터 있음</summary>
         public string sPreNext = sPreNext;
+        /// <summary>사용안함, 단 비동기 요청시 응답 메시지</summary>
+        public string sMessage = sMessage;
     }
 
     /// <summary>데이터 요청 또는 주문전송 후에 서버가 보낸 메시지를 수신합니다.<br/>
@@ -268,7 +269,7 @@ namespace KFOpenApi.NET
     {
         private readonly AxKFOpenAPI parent = parent;
 
-        public virtual void OnReceiveTrData(string sScrNo, string sRQName, string sTrCode, string sRecordName, string sPreNext) => parent.RaiseOnOnReceiveTrData(parent, new(sScrNo, sRQName, sTrCode, sRecordName, sPreNext));
+        public virtual void OnReceiveTrData(string sScrNo, string sRQName, string sTrCode, string sRecordName, string sPreNext) => parent.RaiseOnOnReceiveTrData(parent, new(sScrNo, sRQName, sTrCode, sRecordName, sPreNext, string.Empty));
 
         public virtual void OnReceiveMsg(string sScrNo, string sRQName, string sTrCode, string sMsg) => parent.RaiseOnOnReceiveMsg(parent, new(sScrNo, sRQName, sTrCode, sMsg));
 
@@ -314,6 +315,7 @@ namespace KFOpenApi.NET
                 if (async_node is not null)
                 {
                     _async_list.Remove(async_node);
+                    e.sMessage = async_node._async_msg;
                     async_node._async_tr_action?.Invoke(e);
                     async_node._async_wait.Set();
                     return;
@@ -1026,6 +1028,7 @@ namespace KFOpenApi.NET
         }
 
         #region 비동기요청 (버젼 1.5.0 추가)
+
         class AsyncNode(object[] objs)
         {
             public readonly int _ident_id = GetIdentId(objs);
@@ -1123,6 +1126,7 @@ namespace KFOpenApi.NET
         #endregion
 
         #region 비동기 간편요청, 주문 (버젼 1.5.3 추가)
+
         class ScrNumManager
         {
             private const int _requreMinIndex = 9950;
@@ -1145,15 +1149,15 @@ namespace KFOpenApi.NET
         /// 입력파라미터로 TR코드, 입력데이터, 싱글필드 리스트, 멀티필드 리스트를 전달하면 비동기로 요청하고 결과를 반환합니다.<br/>
         /// 싱글데이터, 멀티데이터는 Trim된 결과를 반환합니다.<br/>
         /// 함수 내 RQName, ScreenNumber가 자동으로(9950~9999) 생성되며 실시간 시세는 자동으로 해제됩니다.<br/>
-        /// 실시간 시세 필요 할 경우, <see cref="CommRqDataAsync"/>를 이용하며, 이때 화면번호는 9950~9999를 제외한 값으로 이용해 주세요.<br/>
-        /// 결과는 <see cref="ResponseTrData"/> 로 반환합니다.<br/>
+        /// 실시간 시세 필요 할 경우, <see cref="AxKFOpenAPI.CommRqDataAsync"/>를 이용하며, 이때 화면번호는 9950~9999를 제외한 값으로 이용해 주세요.<br/>
+        /// 결과는 <see cref="ResponseData"/> 로 반환합니다.<br/>
         /// </summary>
         /// <param name="tr_cd">TR코드</param>
         /// <param name="indatas">입력데이터 리스트</param>
         /// <param name="singleFields">싱글 필드리스트</param>
         /// <param name="multiFields">멀티 필드 리스트</param>
         /// <param name="cont_key">연속조회 키</param>
-        /// <returns><inheritdoc cref="ResponseTrData"/></returns>
+        /// <returns><inheritdoc cref="ResponseData"/></returns>
         /// <remarks>
         /// <code language="csharp">
         /// // 샘플 1: 종목정보조회
@@ -1181,7 +1185,7 @@ namespace KFOpenApi.NET
         /// // 결과처리
         /// if (response.nErrCode == 0)
         /// {
-        ///     // 요청성공, response.singleDatas, response.multiDatas 에 결과가 있음
+        ///     // 요청성공, response.OutputSingleDatas, response.OutputMultiDatas 에 결과가 있음
         /// }
         /// else
         /// {
@@ -1189,91 +1193,70 @@ namespace KFOpenApi.NET
         /// }
         /// </code>
         /// </remarks>
-        public virtual async Task<ResponseTrData> RequestTrAsync(string tr_cd, IEnumerable<KeyValuePair<string, string>> indatas, IEnumerable<string> singleFields, IEnumerable<string> multiFields, string cont_key = "")
+        public virtual async Task<ResponseData> RequestTrAsync(string tr_cd, IEnumerable<KeyValuePair<string, string>> indatas, IEnumerable<string> singleFields, IEnumerable<string> multiFields, string cont_key = "")
         {
             var scr_num = _scrNumManager.GetRequestScrNum();
-            ResponseTrData responseTrData = new();
+            ResponseData responseTrData = new();
 
             // 일반 TR 요청
 
             foreach (var indata in indatas) SetInputValue(indata.Key, indata.Value);
 
-            var newAsync = new AsyncNode([tr_cd, tr_cd, int.Parse(scr_num)])
-            {
-                _async_tr_action = action,
-            };
-            _async_list.Add(newAsync);
-
-            int nRet = CommRqData(tr_cd, tr_cd, cont_key, scr_num);
-            if (nRet == 0)
-            {
-                bool bTimeOut = false;
-                Task taskAsync = Task.Run(() =>
-                {
-                    if (!newAsync._async_wait.WaitOne(AsyncTimeOut))
-                    {
-                        bTimeOut = true;
-                    }
-                });
-                await taskAsync.ConfigureAwait(true);
-                if (bTimeOut && _async_list.IndexOf(newAsync) >= 0)
-                {
-                    nRet = -902;
-                }
-            }
-            _async_list.Remove(newAsync);
+            int nRet = await CommRqDataAsync(tr_cd, tr_cd, cont_key, scr_num, action);
 
             void action(_DKFOpenAPIEvents_OnReceiveTrDataEvent e)
             {
                 DisconnectRealData(e.sScrNo);
 
-                responseTrData.singleDatas = singleFields.Select(x => GetCommData(e.sTrCode, e.sRQName, 0, x).Trim()).ToArray();
+                responseTrData.OutputSingleDatas = singleFields.Select(x => GetCommData(e.sTrCode, e.sRQName, 0, x).Trim()).ToArray();
 
-                responseTrData.multiDatas = [];
+                responseTrData.OutputMultiDatas = [];
                 var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRQName);
                 for (int i = 0; i < nRepeateCnt; i++)
                 {
                     var datas = multiFields.Select(x => GetCommData(e.sTrCode, e.sRQName, i, x).Trim()).ToArray();
-                    responseTrData.multiDatas.Add(datas);
+                    responseTrData.OutputMultiDatas.Add(datas);
                 }
 
                 responseTrData.cont_key = e.sPreNext;
+                responseTrData.rsp_msg = e.sMessage;
             }
 
-            if (newAsync._async_msg.Length == 0)
+            if (responseTrData.rsp_msg.Length == 0)
             {
-                newAsync._async_msg = GetErrorMessage(nRet);
+                responseTrData.rsp_msg = GetErrorMessage(nRet);
             }
-
-            responseTrData.rsp_msg = newAsync._async_msg;
             responseTrData.tr_cd = tr_cd;
             responseTrData.nErrCode = nRet;
             return responseTrData;
         }
 
+        /// <inheritdoc cref="RequestTrAsync(string, IEnumerable{KeyValuePair{string, string}}, IEnumerable{string}, IEnumerable{string}, string)"/>
+        public Task<ResponseData> RequestTrAsync(string tr_cd, IEnumerable<KeyValue<string, string>> indatas, IEnumerable<string> singleFields, IEnumerable<string> multiFields, string cont_key = "")
+            => RequestTrAsync(tr_cd, indatas.Select(x => new KeyValuePair<string, string>(x.Key, x.Value)), singleFields, multiFields, cont_key);
 
         private const string _async_SendOrder = "SendOrderAsync";
         /// <summary>
         /// 비동기로 <inheritdoc cref="SendOrder"/><br/>
-        /// 결과는 <see cref="ResponseTrData"/> 로 반환합니다.<br/>
-        /// <see cref="ResponseTrData.nErrCode"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
-        /// 주문실패 사유로 <see cref="ResponseTrData.rsp_msg"/> 에 오류메시지가 있습니다.<br/><br/>
+        /// 결과는 (int nRet, string msg) 로 반환합니다.<br/>
+        /// nRet 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
+        /// 주문실패 사유로 msg 에 오류메시지가 있습니다.<br/><br/>
         /// <code language="csharp">
         /// // 샘플: 해외선옵주문
-        /// var response = await SendOrderAsync(...);
+        /// var (nRet, msg) = await SendOrderAsync(...);
         /// // 결과처리
-        /// if (response.nErrCode == 0)
+        /// if (nRet == 0)
         /// {
         ///     // 주문성공 (서버까지 주문이 확실히 접수됨)
         /// }
         /// else
         /// {
-        ///     // 주문실패, response.rsp_msg 에 오류메시지가 있음
+        ///     // 주문실패, msg 에 오류메시지가 있음
         /// }
         /// </code>
         /// </summary>
         /// <inheritdoc cref="SendOrder"/>
-        public virtual async Task<ResponseTrData> SendOrderAsync(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, string sPrice, string sStopPrice, string sHogaGb, string sOrgOrderNo)
+        public virtual async Task<(int nRet, string msg)> SendOrderAsync(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, string sPrice, string sStopPrice, string sHogaGb, string sOrgOrderNo)
         {
             bool bExistOrderNumber = false;
             void action(_DKFOpenAPIEvents_OnReceiveTrDataEvent e)
@@ -1313,11 +1296,7 @@ namespace KFOpenApi.NET
             {
                 newAsync._async_msg = GetErrorMessage(nRet);
             }
-            return new()
-            {
-                nErrCode = nRet,
-                rsp_msg = newAsync._async_msg,
-            };
+            return (nRet, newAsync._async_msg);
         }
 
         #endregion

@@ -429,14 +429,14 @@ public class _DKHOpenAPIEvents_OnReceiveInvestRealDataEvent(string sRealKey) : E
 /// <summary>
 /// 실시간 조건검색 요청으로 신규종목이 편입되거나 기존 종목이 이탈될때 마다 발생됩니다.<br/> ※ 편입되었다가 순간적으로 다시 이탈되는 종목에대한 신호는 조건검색 서버마다 차이가 발생할 수 있습니다. 
 /// </summary>
-/// <param name="sTrCode">종목코드</param>
+/// <param name="strCode">종목코드</param>
 /// <param name="strType">이벤트 종류, "I":종목편입, "D", 종목이탈</param>
 /// <param name="strConditionName">조건식 이름</param>
 /// <param name="strConditionIndex">조건식 고유번호</param>
-public class _DKHOpenAPIEvents_OnReceiveRealConditionEvent(string sTrCode, string strType, string strConditionName, string strConditionIndex) : EventArgs
+public class _DKHOpenAPIEvents_OnReceiveRealConditionEvent(string strCode, string strType, string strConditionName, string strConditionIndex) : EventArgs
 {
     /// <summary>종목코드</summary>
-    public string sTrCode = sTrCode;
+    public string strCode = strCode;
     /// <summary>이벤트 종류, "I":종목편입, "D", 종목이탈</summary>
     public string strType = strType;
     /// <summary>조건식 이름</summary>
@@ -1896,11 +1896,12 @@ public class AxKHOpenAPI
     /// 서버응답없을 경우 -902(타임아웃)을 리턴합니다.
     /// </summary>
     /// <inheritdoc cref="SendCondition"/>
-    public virtual async Task<int> SendConditionAsync(string strScrNo, string strConditionName, int nIndex, int nSearch, Action<_DKHOpenAPIEvents_OnReceiveTrConditionEvent> action)
+    public virtual async Task<(int nRet, string sCodeList)> SendConditionAsync(string strScrNo, string strConditionName, int nIndex, int nSearch)
     {
+        string sCodeList = string.Empty;
         var newAsync = new AsyncNode([strScrNo, strConditionName])
         {
-            _async_tr_cond_action = action,
+            _async_tr_cond_action = (e) => { sCodeList = e.strCodeList; },
         };
         _async_list.Add(newAsync);
 
@@ -1922,7 +1923,7 @@ public class AxKHOpenAPI
             }
         }
         _async_list.Remove(newAsync);
-        return nRet;
+        return (nRet, sCodeList);
     }
 
     private int _async_Connect_nErrCode = 0;
@@ -1994,6 +1995,7 @@ public class AxKHOpenAPI
     #endregion
 
     #region 비동기 간편요청, 주문 (버젼 1.5.3 추가)
+
     class ScrNumManager
     {
         private const int _requreMinIndex = 9950;
@@ -2016,15 +2018,15 @@ public class AxKHOpenAPI
     /// 입력파라미터로 TR코드, 입력데이터, 싱글필드 리스트, 멀티필드 리스트를 전달하면 비동기로 요청하고 결과를 반환합니다.<br/>
     /// 싱글데이터, 멀티데이터는 Trim된 결과를 반환합니다.<br/>
     /// 함수 내 RQName, ScreenNumber가 자동으로(9950~9999) 생성되며 실시간 시세는 자동으로 해제됩니다.<br/>
-    /// 실시간 시세 필요 할 경우, <see cref="SetRealReg"/>를 이용하며, 이때 화면번호는 9950~9999를 제외한 값으로 이용해 주세요.<br/>
-    /// 결과는 <see cref="ResponseTrData"/> 로 반환합니다.<br/>
+    /// 실시간 시세 필요 할 경우, <see cref="AxKHOpenAPI.SetRealReg"/>를 이용하며, 이때 화면번호는 0000~8999 값으로 이용해 주세요.<br/>
+    /// 결과는 <see cref="ResponseData"/> 로 반환합니다.<br/>
     /// </summary>
     /// <param name="tr_cd">TR코드</param>
     /// <param name="indatas">입력데이터 리스트</param>
     /// <param name="singleFields">싱글 필드리스트</param>
     /// <param name="multiFields">멀티 필드 리스트</param>
     /// <param name="cont_key">연속조회 키</param>
-    /// <returns><inheritdoc cref="ResponseTrData"/></returns>
+    /// <returns><inheritdoc cref="ResponseData"/></returns>
     /// <remarks>
     /// <code language="csharp">
     /// // 샘플 1: 주식기본정보요청
@@ -2061,7 +2063,7 @@ public class AxKHOpenAPI
     /// // 결과처리
     /// if (response.nErrCode == 0)
     /// {
-    ///     // 요청성공, response.singleDatas, response.multiDatas 에 결과가 있음
+    ///     // 요청성공, response.OutputSingleDatas, response.OutputMultiDatas 에 결과가 있음
     /// }
     /// else
     /// {
@@ -2069,10 +2071,15 @@ public class AxKHOpenAPI
     /// }
     /// </code>
     /// </remarks>
-    public virtual async Task<ResponseTrData> RequestTrAsync(string tr_cd, IEnumerable<KeyValuePair<string, string>> indatas, IEnumerable<string> singleFields, IEnumerable<string> multiFields, string cont_key = "")
+    public async Task<ResponseData> RequestTrAsync(string tr_cd, IEnumerable<KeyValuePair<string, string>> indatas, IEnumerable<string> singleFields, IEnumerable<string> multiFields, string cont_key = "")
     {
         var scr_num = _scrNumManager.GetRequestScrNum();
-        ResponseTrData responseTrData = new();
+        ResponseData responseTrData = new()
+        {
+            InputDatas = indatas.ToArray(),
+            RequestSingleFields = singleFields.ToArray(),
+            RequestMultiFields = multiFields.ToArray(),
+        };
 
         if (tr_cd.ToUpper().Equals("OPTKWFID")) // 관심종목정보요청
         {
@@ -2095,13 +2102,13 @@ public class AxKHOpenAPI
                 (e) =>
                 {
                     DisconnectRealData(e.sScrNo);
-                    responseTrData.singleDatas = [];
-                    responseTrData.multiDatas = [];
+                    responseTrData.OutputSingleDatas = [];
+                    responseTrData.OutputMultiDatas = [];
                     var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRQName);
                     for (int i = 0; i < nRepeateCnt; i++)
                     {
                         var datas = multiFields.Select(x => GetCommData(e.sTrCode, e.sRQName, i, x).Trim()).ToArray();
-                        responseTrData.multiDatas.Add(datas);
+                        responseTrData.OutputMultiDatas.Add(datas);
                     }
                     responseTrData.cont_key = string.Empty;
                     responseTrData.rsp_msg = e.sMessage;
@@ -2116,8 +2123,6 @@ public class AxKHOpenAPI
             return responseTrData;
         }
 
-        // 일반 TR 요청
-
         foreach (var indata in indatas) SetInputValue(indata.Key, indata.Value);
 
         var out_prevNext = string.Empty;
@@ -2129,14 +2134,14 @@ public class AxKHOpenAPI
                 DisconnectRealData(e.sScrNo);
                 if (e.sPrevNext.Equals("2")) out_prevNext = "2";
 
-                responseTrData.singleDatas = singleFields.Select(x => GetCommData(e.sTrCode, e.sRQName, 0, x).Trim()).ToArray();
+                responseTrData.OutputSingleDatas = singleFields.Select(x => GetCommData(e.sTrCode, e.sRQName, 0, x).Trim()).ToArray();
 
-                responseTrData.multiDatas = [];
+                responseTrData.OutputMultiDatas = [];
                 var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRQName);
                 for (int i = 0; i < nRepeateCnt; i++)
                 {
                     var datas = multiFields.Select(x => GetCommData(e.sTrCode, e.sRQName, i, x).Trim()).ToArray();
-                    responseTrData.multiDatas.Add(datas);
+                    responseTrData.OutputMultiDatas.Add(datas);
                 }
 
                 responseTrData.cont_key = e.sPrevNext.Equals("2") ? "2" : string.Empty;
@@ -2152,29 +2157,32 @@ public class AxKHOpenAPI
         return responseTrData;
     }
 
+    /// <inheritdoc cref="RequestTrAsync(string, IEnumerable{KeyValuePair{string, string}}, IEnumerable{string}, IEnumerable{string}, string)"/>
+    public Task<ResponseData> RequestTrAsync(string tr_cd, IEnumerable<KeyValue<string, string>> indatas, IEnumerable<string> singleFields, IEnumerable<string> multiFields, string cont_key = "")
+        => RequestTrAsync(tr_cd, indatas.Select(x => new KeyValuePair<string, string>(x.Key, x.Value)), singleFields, multiFields, cont_key);
 
     private const string _async_SendOrder = "SendOrderAsync";
     /// <summary>
     /// 비동기로 <inheritdoc cref="SendOrder"/><br/>
-    /// 결과는 <see cref="ResponseTrData"/> 로 반환합니다.<br/>
-    /// <see cref="ResponseTrData.nErrCode"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
-    /// 주문실패 사유로 <see cref="ResponseTrData.rsp_msg"/> 에 오류메시지가 있습니다.<br/><br/>
+    /// 결과는 (int nRet, string msg) 로 반환합니다.<br/>
+    /// nRet 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
+    /// 주문실패 사유로 msg 에 오류메시지가 있습니다.<br/><br/>
     /// <code language="csharp">
     /// // 샘플: 주식주문
-    /// var response = await SendOrderAsync(...);
+    /// var (nRet, msg) = await SendOrderAsync(...);
     /// // 결과처리
-    /// if (response.nErrCode == 0)
+    /// if (nRet == 0)
     /// {
     ///     // 주문성공 (서버까지 주문이 확실히 접수됨)
     /// }
     /// else
     /// {
-    ///     // 주문실패, response.rsp_msg 에 오류메시지가 있음
+    ///     // 주문실패, msg 에 오류메시지가 있음
     /// }
     /// </code>
     /// </summary>
     /// <inheritdoc cref="SendOrder"/>
-    public virtual async Task<ResponseTrData> SendOrderAsync(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, int nPrice, string sHogaGb, string sOrgOrderNo)
+    public virtual async Task<(int nRet, string msg)> SendOrderAsync(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, int nPrice, string sHogaGb, string sOrgOrderNo)
     {
         bool bExistOrderNumber = false;
         void action(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
@@ -2214,34 +2222,30 @@ public class AxKHOpenAPI
         {
             newAsync._async_msg = GetErrorMessage(nRet);
         }
-        return new()
-        {
-            nErrCode = nRet,
-            rsp_msg = newAsync._async_msg,
-        };
+        return (nRet, newAsync._async_msg);
     }
 
     /// <summary>
     /// 비동기로 <inheritdoc cref="SendOrderFO"/><br/>
-    /// 결과는 <see cref="ResponseTrData"/> 로 반환합니다.<br/>
-    /// <see cref="ResponseTrData.nErrCode"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
-    /// 주문실패 사유로 <see cref="ResponseTrData.rsp_msg"/> 에 오류메시지가 있습니다.<br/><br/>
+    /// 결과는 (int nRet, string msg) 로 반환합니다.<br/>
+    /// nRet 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
+    /// 주문실패 사유로 msg 에 오류메시지가 있습니다.<br/><br/>
     /// <code language="csharp">
     /// // 샘플: 선물옵션주문
-    /// var response = await SendOrderFOAsync(...);
+    /// var (nRet, msg) = await SendOrderFOAsync(...);
     /// // 결과처리
-    /// if (response.nErrCode == 0)
+    /// if (nRet == 0)
     /// {
     ///     // 주문성공 (서버까지 주문이 확실히 접수됨)
     /// }
     /// else
     /// {
-    ///     // 주문실패, response.rsp_msg 에 오류메시지가 있음
+    ///     // 주문실패, msg 에 오류메시지가 있음
     /// }
     /// </code>
     /// </summary>
     /// <inheritdoc cref="SendOrderFO"/>
-    public virtual async Task<ResponseTrData> SendOrderFOAsync(string sRQName, string sScreenNo, string sAccNo, string sCode, int lOrdKind, string sSlbyTp, string sOrdTp, int lQty, string sPrice, string sOrgOrdNo)
+    public virtual async Task<(int nRet, string msg)> SendOrderFOAsync(string sRQName, string sScreenNo, string sAccNo, string sCode, int lOrdKind, string sSlbyTp, string sOrdTp, int lQty, string sPrice, string sOrgOrdNo)
     {
         bool bExistOrderNumber = false;
         void action(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
@@ -2281,34 +2285,30 @@ public class AxKHOpenAPI
         {
             newAsync._async_msg = GetErrorMessage(nRet);
         }
-        return new()
-        {
-            nErrCode = nRet,
-            rsp_msg = newAsync._async_msg,
-        };
+        return (nRet, newAsync._async_msg);
     }
 
     /// <summary>
     /// 비동기로 <inheritdoc cref="SendOrderCredit"/><br/>
-    /// 결과는 <see cref="ResponseTrData"/> 로 반환합니다.<br/>
-    /// <see cref="ResponseTrData.nErrCode"/> 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
-    /// 주문실패 사유로 <see cref="ResponseTrData.rsp_msg"/> 에 오류메시지가 있습니다.<br/><br/>
+    /// 결과는 (int nRet, string msg) 로 반환합니다.<br/>
+    /// nRet 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
+    /// 주문실패 사유로 msg 에 오류메시지가 있습니다.<br/><br/>
     /// <code language="csharp">
     /// // 샘플: 신용주문
-    /// var response = await SendOrderCreditAsync(...);
+    /// var (nRet, msg) = await SendOrderCreditAsync(...);
     /// // 결과처리
-    /// if (response.nErrCode == 0)
+    /// if (nRet == 0)
     /// {
     ///     // 주문성공 (서버까지 주문이 확실히 접수됨)
     /// }
     /// else
     /// {
-    ///     // 주문실패, response.rsp_msg 에 오류메시지가 있음
+    ///     // 주문실패, msg 에 오류메시지가 있음
     /// }
     /// </code>
     /// </summary>
     /// <inheritdoc cref="SendOrderCredit"/>
-    public virtual async Task<ResponseTrData> SendOrderCreditAsync(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, int nPrice, string sHogaGb, string sCreditGb, string sLoanDate, string sOrgOrderNo)
+    public virtual async Task<(int nRet, string msg)> SendOrderCreditAsync(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, int nPrice, string sHogaGb, string sCreditGb, string sLoanDate, string sOrgOrderNo)
     {
         bool bExistOrderNumber = false;
         void action(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
@@ -2348,11 +2348,7 @@ public class AxKHOpenAPI
         {
             newAsync._async_msg = GetErrorMessage(nRet);
         }
-        return new()
-        {
-            nErrCode = nRet,
-            rsp_msg = newAsync._async_msg,
-        };
+        return (nRet, newAsync._async_msg);
     }
 
     #endregion
