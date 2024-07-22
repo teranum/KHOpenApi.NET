@@ -9,7 +9,7 @@ internal class _15 : SampleBase
         var stock_account = accounts.FirstOrDefault(x => x.Contains("선물옵션"));
         if (stock_account == null)
         {
-            print("선물옵션가 없습니다.");
+            print("선물옵션계좌가 없습니다.");
             return;
         }
         var account = stock_account.Split(',')[0];
