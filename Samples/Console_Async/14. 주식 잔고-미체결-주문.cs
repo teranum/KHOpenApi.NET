@@ -6,7 +6,7 @@ internal class _14 : SampleBase
     {
         // 주식계좌 조회
         var accounts = api.GetLoginInfo("ACCTLIST_DETAIL").Split(';', StringSplitOptions.RemoveEmptyEntries);
-        var stock_account = accounts.FirstOrDefault(x => x.Contains("위탁종합"));
+        var stock_account = accounts.FirstOrDefault(x => x.Contains("위탁"));
         if (stock_account == null)
         {
             print("주식계좌가 없습니다.");

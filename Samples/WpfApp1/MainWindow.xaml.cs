@@ -57,7 +57,7 @@ namespace WpfApp1
             string itemCode = "005930";
             axKHOpenAPI.SetInputValue("종목코드", itemCode);
             string 종목명 = string.Empty;
-            int nRet = await axKHOpenAPI.CommRqDataAsync("주식기본정보요청", "OPT10001", 0, "1000", e =>
+            var (nRet, sMsg) = await axKHOpenAPI.CommRqDataAsync("주식기본정보요청", "OPT10001", 0, "1000", e =>
             {
                 종목명 = axKHOpenAPI.GetCommData(e.sTrCode, e.sRQName, 0, "종목명").Trim();
             });
@@ -65,7 +65,7 @@ namespace WpfApp1
             if (nRet == 0)
                 log_list.Items.Add(종목명);
             else
-                log_list.Items.Add($"비동기 요청실패({nRet})");
+                log_list.Items.Add($"비동기 요청실패({nRet}: {sMsg})");
         }
     }
 }

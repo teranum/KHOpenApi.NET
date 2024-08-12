@@ -340,9 +340,9 @@ public class _DKHOpenAPIEvents_OnReceiveTrDataEvent(string sScrNo, string sRQNam
     public string sPrevNext = sPrevNext;
     /// <summary>사용안함</summary>
     public int nDataLength = nDataLength;
-    /// <summary>사용안함, 단 비동기 요청시 응답 코드</summary>
+    /// <summary>사용안함</summary>
     public string sErrorCode = sErrorCode;
-    /// <summary>사용안함, 단 비동기 요청시 응답 메시지</summary>
+    /// <summary>사용안함</summary>
     public string sMessage = sMessage;
     /// <summary>사용안함</summary>
     public string sSplmMsg = sSplmMsg;
@@ -570,10 +570,9 @@ public class AxKHOpenAPI
             }
             if (async_node is not null)
             {
-                _async_list.Remove(async_node);
-                e.sMessage = async_node._async_msg;
+                async_node._async_evented = true;
                 async_node._async_tr_action?.Invoke(e);
-                async_node._async_wait.Set();
+                async_node.Set();
                 return;
             }
         }
@@ -600,6 +599,7 @@ public class AxKHOpenAPI
             }
             if (async_node is not null)
             {
+                async_node._async_evented = true;
                 async_node._async_msg = e.sMsg;
                 return;
             }
@@ -619,9 +619,9 @@ public class AxKHOpenAPI
         var async_node = _async_list.Find(x => x._ident_id == async_ident_id);
         if (async_node is not null)
         {
-            _async_Connect_nErrCode = e.nErrCode;
-            _async_list.Remove(async_node);
-            async_node._async_wait.Set();
+            async_node._async_evented = true;
+            async_node._async_result = e.nErrCode;
+            async_node.Set();
             return;
         }
         OnEventConnect?.Invoke(this, e);
@@ -643,9 +643,10 @@ public class AxKHOpenAPI
         var async_node = _async_list.Find(x => x._ident_id == async_ident_id);
         if (async_node is not null)
         {
-            _async_list.Remove(async_node);
-            async_node._async_tr_cond_action?.Invoke(e);
-            async_node._async_wait.Set();
+            async_node._async_evented = true;
+            async_node._async_result = 1;
+            async_node._async_msg = e.strCodeList;
+            async_node.Set();
             return;
         }
         OnReceiveTrCondition?.Invoke(this, e);
@@ -657,9 +658,10 @@ public class AxKHOpenAPI
         var async_node = _async_list.Find(x => x._ident_id == async_ident_id);
         if (async_node is not null)
         {
-            _async_ConditionVer_nRet = e.lRet;
-            _async_list.Remove(async_node);
-            async_node._async_wait.Set();
+            async_node._async_evented = true;
+            async_node._async_result = e.lRet;
+            async_node._async_msg = GetConditionNameList();
+            async_node.Set();
             return;
         }
         OnReceiveConditionVer?.Invoke(this, e);
@@ -1782,12 +1784,26 @@ public class AxKHOpenAPI
             return id;
         }
 
-        public readonly ManualResetEvent _async_wait = new(initialState: false);
-        public Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> _async_tr_action = null;
-        public Action<_DKHOpenAPIEvents_OnReceiveTrConditionEvent> _async_tr_cond_action = null;
+        public bool Set() => _async_wait.Set();
+        public void WaitOne(int millisecondsTimeout = 0)
+        {
+            if (millisecondsTimeout == 0)
+                _async_wait.WaitOne();
+            else
+            {
+                if (!_async_wait.WaitOne(millisecondsTimeout))
+                    if (!_async_evented)
+                        _async_result = -902;
+            }
+        }
 
-        // OnReceivedMessage 이벤트로 들어오는 데이터
+        private readonly ManualResetEvent _async_wait = new(initialState: false);
+        public Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> _async_tr_action = null;
+
+        // OnReceivedMessage 이벤트로 들어오는 데이터, or OnReceiveTrCondition 이벤트로 들어오는 데이터
+        public bool _async_evented = false;
         public string _async_msg = string.Empty;
+        public int _async_result = 0;
     }
 
     readonly List<AsyncNode> _async_list = [];
@@ -1795,23 +1811,27 @@ public class AxKHOpenAPI
     /// <summary>
     /// 비동기 요청을 수행합니다.<br/>
     /// action 콜백함수에서 <see cref="OnReceiveTrData"/> 이벤트를 서술해 줍니다.<br/>
-    /// 서버응답없을 경우 -902(타임아웃)을 리턴합니다.
     /// <code language="csharp" >
     /// // 샘플코드: OPT10001: 주식기본정보요청
     /// string 종목명 = string.Empty;
     /// axKHOpenApi.SetInputValue("종목코드", "005930"); // 삼성전자
-    /// int nRet = await axKHOpenApi.CommRqDataAsync("주식기본정보요청", "OPT10001", 0, "0001", (e) =>
+    /// var (nRet, sMsg) = await axKHOpenApi.CommRqDataAsync("주식기본정보요청", "OPT10001", 0, "0001", (e) =>
     /// {
     ///     종목명 = axKHOpenApi.GetCommData(e.sTrCode, e.sRQName, 0, "종목명");
     /// });
     /// if (nRet == 0) // 요청성공
     ///     Console.WriteLine("종목명: " + 종목명);
     /// else
-    ///     Console.WriteLine("요청실패: " + nRet);
+    ///     Console.WriteLine("요청실패: " + sMsg);
     /// </code>
     /// </summary>
-    /// <inheritdoc cref="CommRqData"/>
-    public async Task<int> CommRqDataAsync(string sRQName, string sTrCode, int nPrevNext, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
+    /// <returns>
+    /// (int nRet, string sMsg) 튜플로 결과를 반환합니다.<br/>
+    /// <inheritdoc cref="CommRqData"/><br/>
+    /// -902 타임아웃<br/>
+    /// 실패시 sMsg에 에러메시지가 전달됩니다.
+    /// </returns>
+    public async Task<(int nRet, string sMsg)> CommRqDataAsync(string sRQName, string sTrCode, int nPrevNext, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
     {
         var newAsync = new AsyncNode([sRQName, sTrCode, int.Parse(sScreenNo)])
         {
@@ -1822,33 +1842,24 @@ public class AxKHOpenAPI
         int nRet = CommRqData(sRQName, sTrCode, nPrevNext, sScreenNo);
         if (nRet == 0)
         {
-            bool bTimeOut = false;
-            Task taskAsync = Task.Run(() =>
-            {
-                if (!newAsync._async_wait.WaitOne(AsyncTimeOut))
-                {
-                    bTimeOut = true;
-                }
-            });
-            await taskAsync.ConfigureAwait(true);
-            if (bTimeOut && _async_list.IndexOf(newAsync) >= 0)
-            {
-                nRet = -902;
-            }
+            await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+            nRet = newAsync._async_result;
         }
         _async_list.Remove(newAsync);
-        return nRet;
+        string sMsg = newAsync._async_msg;
+        if (string.IsNullOrEmpty(sMsg))
+            sMsg = GetErrorMessage(newAsync._async_result);
+        return (nRet, sMsg);
     }
 
     /// <summary>
     /// 비동기 요청을 수행합니다.<br/>
     /// action 콜백함수에서 <see cref="OnReceiveTrData"/> 이벤트를 수신처리 합니다.<br/>
-    /// 서버응답없을 경우 -902(타임아웃)을 리턴합니다.
     /// <code language="csharp" >
     /// // 샘플코드: 관심종목정보요청
     /// // 삼성전자, 키움증권 현재가 요청
     /// List&lt;string> rcv_datas = [];
-    /// int nRet = await axKHOpenApi.CommKwRqDataAsync("005930;039490", 0, 2, 0, "관심종목정보요청", "0001", (e) =>
+    /// var (nRet, sMsg) = await axKHOpenApi.CommKwRqDataAsync("005930;039490", 0, 2, 0, "관심종목정보요청", "0001", (e) =>
     /// {
     ///     int nRepeatCnt = axKHOpenApi.GetRepeatCnt(e.sTrCode, e.sRQName);
     ///     for (int i = 0; i &lt; nRepeatCnt; i++)
@@ -1857,11 +1868,16 @@ public class AxKHOpenAPI
     /// if (nRet == 0) // 요청성공
     ///     rcv_datas.ForEach((s) => Console.WriteLine("현재가: " + s));
     /// else
-    ///     Console.WriteLine("요청실패: " + nRet);
+    ///     Console.WriteLine("요청실패: " + sMsg);
     /// </code>
     /// </summary>
-    /// <inheritdoc cref="CommKwRqData"/>
-    public async Task<int> CommKwRqDataAsync(string sArrCode, int bNext, int nCodeCount, int nTypeFlag, string sRQName, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
+    /// <returns>
+    /// (int nRet, string sMsg) 튜플로 결과를 반환합니다.<br/>
+    /// <inheritdoc cref="CommKwRqData"/><br/>
+    /// -902 타임아웃<br/>
+    /// 실패시 sMsg에 에러메시지가 전달됩니다.
+    /// </returns>
+    public async Task<(int nRet, string sMsg)> CommKwRqDataAsync(string sArrCode, int bNext, int nCodeCount, int nTypeFlag, string sRQName, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
     {
         var newAsync = new AsyncNode([sRQName, "OPTKWFID", int.Parse(sScreenNo)])
         {
@@ -1872,22 +1888,14 @@ public class AxKHOpenAPI
         int nRet = CommKwRqData(sArrCode, bNext, nCodeCount, nTypeFlag, sRQName, sScreenNo);
         if (nRet == 0)
         {
-            bool bTimeOut = false;
-            Task taskAsync = Task.Run(() =>
-            {
-                if (!newAsync._async_wait.WaitOne(AsyncTimeOut))
-                {
-                    bTimeOut = true;
-                }
-            });
-            await taskAsync.ConfigureAwait(true);
-            if (bTimeOut && _async_list.IndexOf(newAsync) >= 0)
-            {
-                nRet = -902;
-            }
+            await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+            nRet = newAsync._async_result;
         }
         _async_list.Remove(newAsync);
-        return nRet;
+        string sMsg = newAsync._async_msg;
+        if (string.IsNullOrEmpty(sMsg))
+            sMsg = GetErrorMessage(newAsync._async_result);
+        return (nRet, sMsg);
     }
 
     /// <summary>
@@ -1895,83 +1903,81 @@ public class AxKHOpenAPI
     /// action 콜백함수에서 <see cref="OnReceiveTrCondition"/> 이벤트를 수신처리 합니다.<br/>
     /// 서버응답없을 경우 -902(타임아웃)을 리턴합니다.
     /// </summary>
-    /// <inheritdoc cref="SendCondition"/>
-    public async Task<(int nRet, string sCodeList)> SendConditionAsync(string strScrNo, string strConditionName, int nIndex, int nSearch)
+    /// <returns>
+    /// (int nRet, string strCodeList) 튜플로 결과를 반환합니다.<br/>
+    /// <inheritdoc cref="SendCondition"/><br/>
+    /// 성공시 strCodeList에 검색종목리스트가 전달됩니다.(<see cref="OnReceiveTrCondition"/> 이벤트의 strCodeListr값<br/>
+    /// 실패시 strCodeList에 에러메시지가 전달됩니다.
+    /// </returns>
+    public async Task<(int nRet, string strCodeList)> SendConditionAsync(string strScrNo, string strConditionName, int nIndex, int nSearch)
     {
         string sCodeList = string.Empty;
-        var newAsync = new AsyncNode([strScrNo, strConditionName])
-        {
-            _async_tr_cond_action = (e) => { sCodeList = e.strCodeList; },
-        };
+        var newAsync = new AsyncNode([strScrNo, strConditionName]);
         _async_list.Add(newAsync);
 
         int nRet = SendCondition(strScrNo, strConditionName, nIndex, nSearch);
         if (nRet == 1)
         {
-            bool bTimeOut = false;
-            Task taskAsync = Task.Run(() =>
-            {
-                if (!newAsync._async_wait.WaitOne(AsyncTimeOut))
-                {
-                    bTimeOut = true;
-                }
-            });
-            await taskAsync.ConfigureAwait(true);
-            if (bTimeOut && _async_list.IndexOf(newAsync) >= 0)
-            {
-                nRet = -902;
-            }
+            await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+            nRet = newAsync._async_result;
+            sCodeList = newAsync._async_msg;
+            if (nRet != 1 && string.IsNullOrEmpty(sCodeList))
+                sCodeList = GetErrorMessage(newAsync._async_result);
         }
         _async_list.Remove(newAsync);
         return (nRet, sCodeList);
     }
 
-    private int _async_Connect_nErrCode = 0;
     /// <summary>
     /// 비동기 요청을 수행합니다.<br/>
     /// <inheritdoc cref="CommConnect"/>
     /// </summary>
-    /// <returns><inheritdoc cref="CommConnect"/><br/>-901: 이미 요청 작동중</returns>
+    /// <returns>
+    /// (int nRet, string sMsg) 튜플로 결과를 반환합니다.<br/>
+    /// <inheritdoc cref="CommConnect"/><br/>
+    /// 실패시 sMsg에 에러메시지가 전달됩니다.<br/>
+    /// </returns>
     /// <remarks>함수 내부에서  <see cref="OnEventConnect"/> 이벤트 처리가 자동으로 진횅되며 서버연결 성공/실패 결과를 반환합니다.</remarks>
-    public async Task<int> CommConnectAsync()
+    public async Task<(int nRet, string sMsg)> CommConnectAsync()
     {
-        if (_async_Connect_nErrCode == -1)
+        var hash_id = AsyncNode.GetIdentId(["CommConnectAsync"]);
+        if (_async_list.Exists((e) => e._ident_id == hash_id))
         {
-            return -901; // 이미 요청 작동중
+            return (-901, "이미 요청 작동중");
         }
-        _async_Connect_nErrCode = -1;
-        var newAsync = new AsyncNode(["CommConnectAsync"])
-        {
-        };
+        var newAsync = new AsyncNode(["CommConnectAsync"]);
         _async_list.Add(newAsync);
 
         int nRet = CommConnect();
         if (nRet == 0)
         {
-            await Task.Run(() =>
-            {
-                newAsync._async_wait.WaitOne();
-            });
-            nRet = _async_Connect_nErrCode;
+            await Task.Run(() => newAsync.WaitOne()).ConfigureAwait(true);
+            nRet = newAsync._async_result;
         }
+        string sMsg = newAsync._async_msg;
+        if (string.IsNullOrEmpty(sMsg))
+            sMsg = GetErrorMessage(newAsync._async_result);
         _async_list.Remove(newAsync);
-        _async_Connect_nErrCode = 0;
-        return nRet;
+        return (nRet, sMsg);
     }
 
-    private int _async_ConditionVer_nRet = 0;
     /// <summary>
     /// 비동기 조건식 불러오기 함수.<br/>
     /// <inheritdoc cref="GetConditionLoad"/>
     /// </summary>
-    /// <returns><inheritdoc cref="GetConditionLoad"/><br/>-901: 이미 요청 작동중</returns>
-    public async Task<int> GetConditionLoadAsync()
+    /// <returns>
+    /// (int nRet, string sCondList) 튜플로 결과를 반환합니다.<br/>
+    /// <inheritdoc cref="GetConditionLoad"/><br/>
+    /// 성공시 sCondList에 GetConditionNameList() 결과값이 전달됩니다.<br/>
+    /// 실패시 sCondList에 에러메시지가 전달됩니다.<br/>
+    /// </returns>
+    public async Task<(int nRet, string sCondList)> GetConditionLoadAsync()
     {
-        if (_async_ConditionVer_nRet == -1)
+        var hash_id = AsyncNode.GetIdentId(["GetConditionLoadAsync"]);
+        if (_async_list.Exists((e) => e._ident_id == hash_id))
         {
-            return -901; // 이미 요청 작동중
+            return (-901, "이미 요청 작동중");
         }
-        _async_ConditionVer_nRet = -1;
         var newAsync = new AsyncNode(["GetConditionLoadAsync"])
         {
         };
@@ -1980,15 +1986,14 @@ public class AxKHOpenAPI
         int nRet = GetConditionLoad();
         if (nRet == 1)
         {
-            await Task.Run(() =>
-            {
-                newAsync._async_wait.WaitOne();
-            });
-            nRet = _async_ConditionVer_nRet;
+            await Task.Run(() => newAsync.WaitOne()).ConfigureAwait(true);
+            nRet = newAsync._async_result;
         }
         _async_list.Remove(newAsync);
-        _async_ConditionVer_nRet = 0;
-        return nRet;
+        string sCondList = newAsync._async_msg;
+        if (nRet != 1 && string.IsNullOrEmpty(sCondList))
+            sCondList = GetErrorMessage(newAsync._async_result);
+        return (nRet, sCondList);
     }
 
 
@@ -2098,7 +2103,8 @@ public class AxKHOpenAPI
             }
             int.TryParse(타입구분, out int nTypeFlag);
             var codes = 종목코드.Split([';'], StringSplitOptions.RemoveEmptyEntries);
-            var nKwanRet = await CommKwRqDataAsync(종목코드, 0, codes.Length, nTypeFlag, tr_cd, scr_num,
+            responseTrData.tr_cd = tr_cd;
+            (responseTrData.nErrCode, responseTrData.rsp_msg) = await CommKwRqDataAsync(종목코드, 0, codes.Length, nTypeFlag, tr_cd, scr_num,
                 (e) =>
                 {
                     DisconnectRealData(e.sScrNo);
@@ -2111,15 +2117,8 @@ public class AxKHOpenAPI
                         responseTrData.OutputMultiDatas.Add(datas);
                     }
                     responseTrData.cont_key = string.Empty;
-                    responseTrData.rsp_msg = e.sMessage;
                 }
                 );
-            if (responseTrData.rsp_msg.Length == 0)
-            {
-                responseTrData.rsp_msg = GetErrorMessage(nKwanRet);
-            }
-            responseTrData.tr_cd = tr_cd;
-            responseTrData.nErrCode = nKwanRet;
             return responseTrData;
         }
 
@@ -2128,7 +2127,8 @@ public class AxKHOpenAPI
         var out_prevNext = string.Empty;
         var out_singles = new List<string>();
 
-        var nRet = await CommRqDataAsync(tr_cd, tr_cd, cont_key.Equals("2") ? 2 : 0, scr_num,
+        responseTrData.tr_cd = tr_cd;
+        (responseTrData.nErrCode, responseTrData.rsp_msg) = await CommRqDataAsync(tr_cd, tr_cd, cont_key.Equals("2") ? 2 : 0, scr_num,
             (e) =>
             {
                 DisconnectRealData(e.sScrNo);
@@ -2145,15 +2145,8 @@ public class AxKHOpenAPI
                 }
 
                 responseTrData.cont_key = e.sPrevNext.Equals("2") ? "2" : string.Empty;
-                responseTrData.rsp_msg = e.sMessage;
             }
             );
-        if (responseTrData.rsp_msg.Length == 0)
-        {
-            responseTrData.rsp_msg = GetErrorMessage(nRet);
-        }
-        responseTrData.tr_cd = tr_cd;
-        responseTrData.nErrCode = nRet;
         return responseTrData;
     }
 
@@ -2164,12 +2157,9 @@ public class AxKHOpenAPI
     private const string _async_SendOrder = "SendOrderAsync";
     /// <summary>
     /// 비동기로 <inheritdoc cref="SendOrder"/><br/>
-    /// 결과는 (int nRet, string msg) 로 반환합니다.<br/>
-    /// nRet 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
-    /// 주문실패 사유로 msg 에 오류메시지가 있습니다.<br/><br/>
     /// <code language="csharp">
     /// // 샘플: 주식주문
-    /// var (nRet, msg) = await SendOrderAsync(...);
+    /// var (nRet, sMsg) = await SendOrderAsync(...);
     /// // 결과처리
     /// if (nRet == 0)
     /// {
@@ -2177,12 +2167,17 @@ public class AxKHOpenAPI
     /// }
     /// else
     /// {
-    ///     // 주문실패, msg 에 오류메시지가 있음
+    ///     // 주문실패, sMsg 에 오류메시지가 있음
     /// }
     /// </code>
     /// </summary>
-    /// <inheritdoc cref="SendOrder"/>
-    public async Task<(int nRet, string msg)> SendOrderAsync(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, int nPrice, string sHogaGb, string sOrgOrderNo)
+    /// <returns>
+    /// 결과는 (int nRet, string sMsg) 로 반환합니다.<br/>
+    /// <inheritdoc cref="SendOrder"/><br/>
+    /// nRet 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
+    /// 주문실패 사유로 sMsg 에 오류메시지가 있습니다.
+    /// </returns>
+    public async Task<(int nRet, string sMsg)> SendOrderAsync(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, int nPrice, string sHogaGb, string sOrgOrderNo)
     {
         bool bExistOrderNumber = false;
         void action(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
@@ -2199,40 +2194,25 @@ public class AxKHOpenAPI
         int nRet = SendOrder(sRQName, sScreenNo, sAccNo, nOrderType, sCode, nQty, nPrice, sHogaGb, sOrgOrderNo);
         if (nRet == 0)
         {
-            bool bTimeOut = false;
-            Task taskAsync = Task.Run(() =>
-            {
-                if (!newAsync._async_wait.WaitOne(AsyncTimeOut))
-                {
-                    bTimeOut = true;
-                }
-            });
-            await taskAsync.ConfigureAwait(true);
-            if (bTimeOut && _async_list.IndexOf(newAsync) >= 0)
-            {
-                nRet = -902;
-            }
+            await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+            nRet = newAsync._async_result;
             if (nRet == 0 && !bExistOrderNumber)
             {
                 nRet = -903;
             }
         }
         _async_list.Remove(newAsync);
-        if (newAsync._async_msg.Length == 0)
-        {
-            newAsync._async_msg = GetErrorMessage(nRet);
-        }
-        return (nRet, newAsync._async_msg);
+        string sMsg = newAsync._async_msg;
+        if (string.IsNullOrEmpty(sMsg))
+            sMsg = GetErrorMessage(nRet);
+        return (nRet, sMsg);
     }
 
     /// <summary>
     /// 비동기로 <inheritdoc cref="SendOrderFO"/><br/>
-    /// 결과는 (int nRet, string msg) 로 반환합니다.<br/>
-    /// nRet 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
-    /// 주문실패 사유로 msg 에 오류메시지가 있습니다.<br/><br/>
     /// <code language="csharp">
     /// // 샘플: 선물옵션주문
-    /// var (nRet, msg) = await SendOrderFOAsync(...);
+    /// var (nRet, sMsg) = await SendOrderFOAsync(...);
     /// // 결과처리
     /// if (nRet == 0)
     /// {
@@ -2240,12 +2220,17 @@ public class AxKHOpenAPI
     /// }
     /// else
     /// {
-    ///     // 주문실패, msg 에 오류메시지가 있음
+    ///     // 주문실패, sMsg 에 오류메시지가 있음
     /// }
     /// </code>
     /// </summary>
-    /// <inheritdoc cref="SendOrderFO"/>
-    public async Task<(int nRet, string msg)> SendOrderFOAsync(string sRQName, string sScreenNo, string sAccNo, string sCode, int lOrdKind, string sSlbyTp, string sOrdTp, int lQty, string sPrice, string sOrgOrdNo)
+    /// <returns>
+    /// 결과는 (int nRet, string sMsg) 로 반환합니다.<br/>
+    /// <inheritdoc cref="SendOrderFO"/><br/>
+    /// nRet 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
+    /// 주문실패 사유로 sMsg 에 오류메시지가 있습니다.
+    /// </returns>
+    public async Task<(int nRet, string sMsg)> SendOrderFOAsync(string sRQName, string sScreenNo, string sAccNo, string sCode, int lOrdKind, string sSlbyTp, string sOrdTp, int lQty, string sPrice, string sOrgOrdNo)
     {
         bool bExistOrderNumber = false;
         void action(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
@@ -2262,40 +2247,25 @@ public class AxKHOpenAPI
         int nRet = SendOrderFO(sRQName, sScreenNo, sAccNo, sCode, lOrdKind, sSlbyTp, sOrdTp, lQty, sPrice, sOrgOrdNo);
         if (nRet == 0)
         {
-            bool bTimeOut = false;
-            Task taskAsync = Task.Run(() =>
-            {
-                if (!newAsync._async_wait.WaitOne(AsyncTimeOut))
-                {
-                    bTimeOut = true;
-                }
-            });
-            await taskAsync.ConfigureAwait(true);
-            if (bTimeOut && _async_list.IndexOf(newAsync) >= 0)
-            {
-                nRet = -902;
-            }
+            await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+            nRet = newAsync._async_result;
             if (nRet == 0 && !bExistOrderNumber)
             {
                 nRet = -903;
             }
         }
         _async_list.Remove(newAsync);
-        if (newAsync._async_msg.Length == 0)
-        {
-            newAsync._async_msg = GetErrorMessage(nRet);
-        }
-        return (nRet, newAsync._async_msg);
+        string sMsg = newAsync._async_msg;
+        if (string.IsNullOrEmpty(sMsg))
+            sMsg = GetErrorMessage(nRet);
+        return (nRet, sMsg);
     }
 
     /// <summary>
     /// 비동기로 <inheritdoc cref="SendOrderCredit"/><br/>
-    /// 결과는 (int nRet, string msg) 로 반환합니다.<br/>
-    /// nRet 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
-    /// 주문실패 사유로 msg 에 오류메시지가 있습니다.<br/><br/>
     /// <code language="csharp">
     /// // 샘플: 신용주문
-    /// var (nRet, msg) = await SendOrderCreditAsync(...);
+    /// var (nRet, sMsg) = await SendOrderCreditAsync(...);
     /// // 결과처리
     /// if (nRet == 0)
     /// {
@@ -2303,12 +2273,17 @@ public class AxKHOpenAPI
     /// }
     /// else
     /// {
-    ///     // 주문실패, msg 에 오류메시지가 있음
+    ///     // 주문실패, sMsg 에 오류메시지가 있음
     /// }
     /// </code>
     /// </summary>
-    /// <inheritdoc cref="SendOrderCredit"/>
-    public async Task<(int nRet, string msg)> SendOrderCreditAsync(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, int nPrice, string sHogaGb, string sCreditGb, string sLoanDate, string sOrgOrderNo)
+    /// <returns>
+    /// 결과는 (int nRet, string sMsg) 로 반환합니다.<br/>
+    /// <inheritdoc cref="SendOrderCredit"/><br/>
+    /// nRet 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
+    /// 주문실패 사유로 sMsg 에 오류메시지가 있습니다.
+    /// </returns>
+    public async Task<(int nRet, string sMsg)> SendOrderCreditAsync(string sRQName, string sScreenNo, string sAccNo, int nOrderType, string sCode, int nQty, int nPrice, string sHogaGb, string sCreditGb, string sLoanDate, string sOrgOrderNo)
     {
         bool bExistOrderNumber = false;
         void action(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
@@ -2325,30 +2300,18 @@ public class AxKHOpenAPI
         int nRet = SendOrderCredit(sRQName, sScreenNo, sAccNo, nOrderType, sCode, nQty, nPrice, sHogaGb, sCreditGb, sLoanDate, sOrgOrderNo);
         if (nRet == 0)
         {
-            bool bTimeOut = false;
-            Task taskAsync = Task.Run(() =>
-            {
-                if (!newAsync._async_wait.WaitOne(AsyncTimeOut))
-                {
-                    bTimeOut = true;
-                }
-            });
-            await taskAsync.ConfigureAwait(true);
-            if (bTimeOut && _async_list.IndexOf(newAsync) >= 0)
-            {
-                nRet = -902;
-            }
+            await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+            nRet = newAsync._async_result;
             if (nRet == 0 && !bExistOrderNumber)
             {
                 nRet = -903;
             }
         }
         _async_list.Remove(newAsync);
-        if (newAsync._async_msg.Length == 0)
-        {
-            newAsync._async_msg = GetErrorMessage(nRet);
-        }
-        return (nRet, newAsync._async_msg);
+        string sMsg = newAsync._async_msg;
+        if (string.IsNullOrEmpty(sMsg))
+            sMsg = GetErrorMessage(nRet);
+        return (nRet, sMsg);
     }
 
     #endregion

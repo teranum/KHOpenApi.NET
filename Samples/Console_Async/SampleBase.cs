@@ -28,10 +28,11 @@ namespace CSharp
         }
 
         // Main: 로그인 및 구현부 호출
+        protected static string _sCondList = string.Empty;
         public async Task Main()
         {
             // 로그인
-            int nRet = await api.CommConnectAsync();
+            var (nRet, sMsg) = await api.CommConnectAsync();
             if (nRet != 0)
             {
                 print($"연결실패: {api.GetErrorMessage(nRet)}");
@@ -39,7 +40,7 @@ namespace CSharp
             }
 
             // 조건검색식 목록 로딩
-            nRet = await api.GetConditionLoadAsync();
+            (nRet, _sCondList) = await api.GetConditionLoadAsync();
             if (nRet != 1)
             {
                 print($"조건검색식 로딩실패: {api.GetErrorMessage(nRet)}");

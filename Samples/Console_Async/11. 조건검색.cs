@@ -5,7 +5,7 @@ internal class _11 : SampleBase
     public override async Task ActionImplement()
     {
         // 먼저 조건검색식 리스트 표시
-        var conditions = api.GetConditionNameList().Split(';', StringSplitOptions.RemoveEmptyEntries);
+        var conditions = _sCondList.Split(';', StringSplitOptions.RemoveEmptyEntries);
         var conditionItems = conditions.Select(x => x.Split('^')).Select(x => (int.Parse(x[0]), x[1]));
         print(conditions);
 

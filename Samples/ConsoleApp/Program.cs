@@ -35,7 +35,8 @@ class Sample(nint handle)
 
         // 로그인
         OutLog("로그인 요청 (CommConnectAsync)...");
-        if (0 != await api.CommConnectAsync())
+        var (nRet, sMsg) = await api.CommConnectAsync();
+        if (0 != nRet)
         {
             OutLog("로그인 요청 (CommConnectAsync): 실패");
             return;
@@ -55,13 +56,14 @@ class Sample(nint handle)
         // 사용자 조건검색리스트요청
         OutLog();
         OutLog("사용자 조건검색리스트요청 (GetConditionLoadAsync)...");
-        if (1 != await api.GetConditionLoadAsync())
+        (nRet, string sCondList) = await api.GetConditionLoadAsync();
+        if (1 != nRet)
         {
             OutLog("사용자 조건검색리스트요청: 실패");
             return;
         }
 
-        var cond_list = api.GetConditionNameList().Split(';', StringSplitOptions.RemoveEmptyEntries).ToList();
+        var cond_list = sCondList.Split(';', StringSplitOptions.RemoveEmptyEntries).ToList();
         OutLog($"조건검색식 개수: {cond_list.Count}");
         cond_list.ForEach(OutLog);
 
@@ -90,7 +92,7 @@ class Sample(nint handle)
         OutLog();
         OutLog("관심종목정보요청: 삼성전자, 키움증권 현재가 출력 (CommKwRqDataAsync)");
         List<string> rcv_datas = [];
-        int nRet = await api.CommKwRqDataAsync("005930;039490", 0, 2, 0, "관심종목정보요청", "0001", (e) =>
+        (nRet, sMsg) = await api.CommKwRqDataAsync("005930;039490", 0, 2, 0, "관심종목정보요청", "0001", (e) =>
         {
             int nRepeatCnt = api.GetRepeatCnt(e.sTrCode, e.sRQName);
             for (int i = 0; i < nRepeatCnt; i++)
@@ -127,7 +129,7 @@ class Sample(nint handle)
         api.SetInputValue("종목코드", "005930");
         api.SetInputValue("기준일자", "");
         api.SetInputValue("수정주가구분", "1");
-        int reqResult = await api.CommRqDataAsync("주식일봉차트조회요청", "opt10081", 0, "9001",
+        var (nRet, sMsg) = await api.CommRqDataAsync("주식일봉차트조회요청", "opt10081", 0, "9001",
             (e) =>
             {
                 api.DisconnectRealData("9001");
@@ -145,9 +147,9 @@ class Sample(nint handle)
                 }
             });
 
-        if (reqResult != 0)
+        if (nRet != 0)
         {
-            OutLog($"주식일봉차트조회요청 (CommRqDataAsync): 실패({reqResult})");
+            OutLog($"주식일봉차트조회요청 (CommRqDataAsync): 실패({nRet}: {sMsg})");
             return;
         }
 

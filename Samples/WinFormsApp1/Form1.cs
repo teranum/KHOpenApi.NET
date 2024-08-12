@@ -66,14 +66,14 @@ namespace WinFormsApp1
 
             string result = string.Empty;
             axKHOpenAPI.SetInputValue("종목코드", textBox_KH_code.Text);
-            int nRet = await axKHOpenAPI.CommRqDataAsync("종목정보요청", "OPT10001", 0, "0101", (e) =>
+            var (nRet, sMsg) = await axKHOpenAPI.CommRqDataAsync("종목정보요청", "OPT10001", 0, "0101", (e) =>
             {
                 result = $"[{e.sTrCode}], {e.sRQName} : ";
                 for (int i = 0; i < reqName.Length; i++)
                 {
                     result += axKHOpenAPI.GetCommData(e.sTrCode, e.sRQName, 0, reqName[i]).Trim() + " ";
                 }
-            }).ConfigureAwait(true);
+            });
 
             if (nRet == 0)
             {
@@ -81,7 +81,7 @@ namespace WinFormsApp1
             }
             else
             {
-                log_list.Items.Add("종목정보요청 실패");
+                log_list.Items.Add($"종목정보요청 실패: {sMsg}");
             }
         }
 
@@ -121,7 +121,7 @@ namespace WinFormsApp1
             }
             else
             {
-                log_list.Items.Add("종목차트요청 실패");
+                log_list.Items.Add($"종목차트요청 실패: {resposeTrData.rsp_msg}");
             }
 
 
@@ -129,7 +129,7 @@ namespace WinFormsApp1
             string result = string.Empty;
             List<string> listChart = [];
             axKHOpenAPI.SetInputValue("종목코드", textBox_KH_code.Text);
-            int nRet = await axKHOpenAPI.CommRqDataAsync("종목차트요청", "OPT10081", 0, "0101", (e)=>
+            var (nRet, sMsg) = await axKHOpenAPI.CommRqDataAsync("종목차트요청", "OPT10081", 0, "0101", (e)=>
             {
                 // 종목코드
                 string 종목코드 = axKHOpenAPI.GetCommData(e.sTrCode, e.sRQName, 0, "종목코드").Trim();
@@ -146,7 +146,7 @@ namespace WinFormsApp1
                     }
                     listChart.Add(line);
                 }
-            }).ConfigureAwait(true);
+            });
 
             if (nRet == 0)
             {
@@ -159,7 +159,7 @@ namespace WinFormsApp1
             }
             else
             {
-                listBox_result.Items.Add("종목차트요청 실패");
+                listBox_result.Items.Add($"종목차트요청 실패: {sMsg}");
             }
 
              */

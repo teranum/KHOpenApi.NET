@@ -193,7 +193,7 @@ namespace KHOpenApi.NET
         public string sRecordName = sRecordName;
         /// <summary>연속조회 유무를 판단하는 값 0: 연속(추가조회)데이터 없음, 2:연속(추가조회) 데이터 있음</summary>
         public string sPreNext = sPreNext;
-        /// <summary>사용안함, 단 비동기 요청시 응답 메시지</summary>
+        /// <summary>사용안함</summary>
         public string sMessage = sMessage;
     }
 
@@ -314,10 +314,9 @@ namespace KHOpenApi.NET
                 }
                 if (async_node is not null)
                 {
-                    _async_list.Remove(async_node);
-                    e.sMessage = async_node._async_msg;
+                    async_node._async_evented = true;
                     async_node._async_tr_action?.Invoke(e);
-                    async_node._async_wait.Set();
+                    async_node.Set();
                     return;
                 }
             }
@@ -344,6 +343,7 @@ namespace KHOpenApi.NET
                 }
                 if (async_node is not null)
                 {
+                    async_node._async_evented = true;
                     async_node._async_msg = e.sMsg;
                     return;
                 }
@@ -363,9 +363,9 @@ namespace KHOpenApi.NET
             var async_node = _async_list.Find(x => x._ident_id == async_ident_id);
             if (async_node is not null)
             {
-                _async_Connect_nErrCode = e.nErrCode;
-                _async_list.Remove(async_node);
-                async_node._async_wait.Set();
+                async_node._async_evented = true;
+                async_node._async_result = e.nErrCode;
+                async_node.Set();
                 return;
             }
             OnEventConnect?.Invoke(this, e);
@@ -643,7 +643,7 @@ namespace KHOpenApi.NET
         }
 
         /// <summary>
-        /// 해외선물 상품리스트를 반환한다.
+        /// 해외옵션 상품리스트를 반환한다.
         /// </summary>
         /// <returns>해외옵션 상품리스트, 상품간 구분은 ";"</returns>
         /// <exception cref="InvalidActiveXStateException"></exception>
@@ -661,7 +661,7 @@ namespace KHOpenApi.NET
         /// 해외상품별 해외선물 종목코드 리스트를 반환
         /// </summary>
         /// <param name="sItem">해외상품 입력 (6A, ES, ...)  </param>
-        /// <returns>해외선물 종목코드리스트, 상품간 구분은 ";"</returns>
+        /// <returns>해외선물 종목코드리스트, 종목간 구분은 ";"</returns>
         /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetGlobalFutureCodelist(string sItem)
         {
@@ -677,7 +677,7 @@ namespace KHOpenApi.NET
         /// 해외상품별 해외옵션 종목코드 리스트를 반환
         /// </summary>
         /// <param name="sItem">해외상품 입력 (6A, ES, ...)  </param>
-        /// <returns>해외옵션 종목코드리스트, 상품간 구분은 ";"</returns>
+        /// <returns>해외옵션 종목코드리스트, 종목간 구분은 ";"</returns>
         /// <exception cref="InvalidActiveXStateException"></exception>
         public virtual string GetGlobalOptionCodelist(string sItem)
         {
@@ -1043,11 +1043,26 @@ namespace KHOpenApi.NET
                 return id;
             }
 
-            public readonly ManualResetEvent _async_wait = new(initialState: false);
+            public bool Set() => _async_wait.Set();
+            public void WaitOne(int millisecondsTimeout = 0)
+            {
+                if (millisecondsTimeout == 0)
+                    _async_wait.WaitOne();
+                else
+                {
+                    if (!_async_wait.WaitOne(millisecondsTimeout))
+                        if (!_async_evented)
+                            _async_result = -902;
+                }
+            }
+
+            private readonly ManualResetEvent _async_wait = new(initialState: false);
             public Action<_DKFOpenAPIEvents_OnReceiveTrDataEvent> _async_tr_action = null;
 
             // OnReceivedMessage 이벤트로 들어오는 데이터
+            public bool _async_evented = false;
             public string _async_msg = string.Empty;
+            public int _async_result = 0;
         }
 
         readonly List<AsyncNode> _async_list = [];
@@ -1062,7 +1077,7 @@ namespace KHOpenApi.NET
         /// <param name="sScreenNo"><inheritdoc cref="CommRqData"/></param>
         /// <param name="action">이벤트 콜백 함수</param>
         /// <returns><inheritdoc cref="CommRqData"/><br/>-902: TimeOut</returns>
-        public virtual async Task<int> CommRqDataAsync(string sRQName, string sTrCode, string sPrevNext, string sScreenNo, Action<_DKFOpenAPIEvents_OnReceiveTrDataEvent> action)
+        public virtual async Task<(int nRet, string sMsg)> CommRqDataAsync(string sRQName, string sTrCode, string sPrevNext, string sScreenNo, Action<_DKFOpenAPIEvents_OnReceiveTrDataEvent> action)
         {
             var newAsync = new AsyncNode([sRQName, sTrCode, int.Parse(sScreenNo)])
             {
@@ -1073,38 +1088,32 @@ namespace KHOpenApi.NET
             int nRet = CommRqData(sRQName, sTrCode, sPrevNext, sScreenNo);
             if (nRet == 0)
             {
-                bool bTimeOut = false;
-                Task taskAsync = Task.Run(() =>
-                {
-                    if (!newAsync._async_wait.WaitOne(AsyncTimeOut))
-                    {
-                        bTimeOut = true;
-                    }
-                });
-                await taskAsync.ConfigureAwait(true);
-                if (bTimeOut && _async_list.IndexOf(newAsync) >= 0)
-                {
-                    nRet = -902;
-                }
+                await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+                nRet = newAsync._async_result;
             }
             _async_list.Remove(newAsync);
-            return nRet;
+            string sMsg = newAsync._async_msg;
+            if (string.IsNullOrEmpty(sMsg))
+                sMsg = GetErrorMessage(nRet);
+            return (nRet, sMsg);
         }
 
-        private int _async_Connect_nErrCode = 0;
         /// <summary>
         /// 비동기 요청을 수행합니다.<br/>
         /// <inheritdoc cref="CommConnect"/>
         /// </summary>
         /// <param name="nAutoUpgrade"><inheritdoc cref="CommConnect"/></param>
         /// <returns><inheritdoc cref="CommConnect"/><br/>-901: 이미 요청 작동중</returns>
-        public virtual async Task<int> CommConnectAsync(int nAutoUpgrade)
+        public virtual async Task<(int nRet, string sMsg)> CommConnectAsync(int nAutoUpgrade)
         {
-            if (_async_Connect_nErrCode == -1)
+            var hash_id = AsyncNode.GetIdentId(["CommConnectAsync"]);
+            foreach (var async in _async_list)
             {
-                return -901; // 이미 요청 작동중
+                if (async._ident_id == hash_id)
+                {
+                    return (-901, "이미 요청 작동중");
+                }
             }
-            _async_Connect_nErrCode = -1;
             var newAsync = new AsyncNode(["CommConnectAsync"])
             {
             };
@@ -1113,15 +1122,14 @@ namespace KHOpenApi.NET
             int nRet = CommConnect(nAutoUpgrade);
             if (nRet == 0)
             {
-                await Task.Run(() =>
-                {
-                    newAsync._async_wait.WaitOne();
-                });
-                nRet = _async_Connect_nErrCode;
+                await Task.Run(() => newAsync.WaitOne()).ConfigureAwait(true);
+                nRet = newAsync._async_result;
             }
             _async_list.Remove(newAsync);
-            _async_Connect_nErrCode = 0;
-            return nRet;
+            string sMsg = newAsync._async_msg;
+            if (string.IsNullOrEmpty(sMsg))
+                sMsg = GetErrorMessage(nRet);
+            return (nRet, sMsg);
         }
         #endregion
 
@@ -1202,7 +1210,8 @@ namespace KHOpenApi.NET
 
             foreach (var indata in indatas) SetInputValue(indata.Key, indata.Value);
 
-            int nRet = await CommRqDataAsync(tr_cd, tr_cd, cont_key, scr_num, action);
+            responseTrData.tr_cd = tr_cd;
+            (responseTrData.nErrCode, responseTrData.rsp_msg) = await CommRqDataAsync(tr_cd, tr_cd, cont_key, scr_num, action);
 
             void action(_DKFOpenAPIEvents_OnReceiveTrDataEvent e)
             {
@@ -1219,15 +1228,8 @@ namespace KHOpenApi.NET
                 }
 
                 responseTrData.cont_key = e.sPreNext;
-                responseTrData.rsp_msg = e.sMessage;
             }
 
-            if (responseTrData.rsp_msg.Length == 0)
-            {
-                responseTrData.rsp_msg = GetErrorMessage(nRet);
-            }
-            responseTrData.tr_cd = tr_cd;
-            responseTrData.nErrCode = nRet;
             return responseTrData;
         }
 
@@ -1273,30 +1275,17 @@ namespace KHOpenApi.NET
             int nRet = SendOrder(sRQName, sScreenNo, sAccNo, nOrderType, sCode, nQty, sPrice, sStopPrice, sHogaGb, sOrgOrderNo);
             if (nRet == 0)
             {
-                bool bTimeOut = false;
-                Task taskAsync = Task.Run(() =>
-                {
-                    if (!newAsync._async_wait.WaitOne(AsyncTimeOut))
-                    {
-                        bTimeOut = true;
-                    }
-                });
-                await taskAsync.ConfigureAwait(true);
-                if (bTimeOut && _async_list.IndexOf(newAsync) >= 0)
-                {
-                    nRet = -902;
-                }
+                await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
                 if (nRet == 0 && !bExistOrderNumber)
                 {
                     nRet = -903;
                 }
             }
             _async_list.Remove(newAsync);
-            if (newAsync._async_msg.Length == 0)
-            {
-                newAsync._async_msg = GetErrorMessage(nRet);
-            }
-            return (nRet, newAsync._async_msg);
+            string sMsg = newAsync._async_msg;
+            if (string.IsNullOrEmpty(sMsg))
+                sMsg = GetErrorMessage(nRet);
+            return (nRet, sMsg);
         }
 
         #endregion

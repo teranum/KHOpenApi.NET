@@ -2,11 +2,11 @@
 - 32비트/64비트 공용, 키움증권 OpenApi C# wrapper class
 - 개발환경: Visual Studio 2022, netstandard2.0
 - WinUI3, WPF, Winforms 지원
-- 비동기 TR 요청 지원 (CommRqDataAsync, CommKwRqDataAsync, SendConditionAsync)
-- 64비트사용시, 추가 설치 필요 https://github.com/teranum/64bit-kiwoom-openapi
+- 비동기 로그인, TR 요청 지원 (CommConnectAsync, CommRqDataAsync, CommKwRqDataAsync, GetConditionLoadAsync, SendConditionAsync)
+- 비동기 주문 지원 (SendOrderAsync, SendOrderFOAsync, SendOrderCreditAsync)
+- 비동기 간편 TR 요청 지원 (RequestTrAsync)
 
 ---------------
-KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
 
 ---------------
 ## 1. WPF
@@ -59,18 +59,20 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
         // 비동기 로그인, 조건식 로딩 (nuget 버전 1.5.0 이상 지원)
         async Task TestLoginAsync()
         {
-            if (0 != await axKHOpenAPI.CommConnectAsync())
+            var (nRet, sMsg) = await axKHOpenAPI.CommConnectAsync();
+            if (0 != nRet)
             {
                 OutLog("로그인 요청(CommConnect): 실패");
                 return;
             }
-            if (1 != await axKHOpenAPI.GetConditionLoadAsync())
+            (nRet, string sConditionList) = await axKHOpenAPI.GetConditionLoadAsync();
+            if (1 != nRet)
             {
                 OutLog("사용자 조건검색리스트요청: 실패");
                 return;
             }
 
-            var cond_list = axKHOpenAPI.GetConditionNameList().Split(';', StringSplitOptions.RemoveEmptyEntries).ToList();
+            var cond_list = sConditionList.Split(';', StringSplitOptions.RemoveEmptyEntries).ToList();
             OutLog($"조건검색식 개수: {cond_list.Count}");
 
             // DoWork...
@@ -83,15 +85,15 @@ KOAStudio WPF Full source Project : https://github.com/teranum/KOAStudio
             string itemCode = "005930";
             axKHOpenAPI.SetInputValue("종목코드", itemCode);
             string 종목명 = string.Empty;
-            int nRet = await axKHOpenAPI.CommRqDataAsync("주식기본정보요청", "OPT10001", 0, "1000", e =>
+            var (nRet, sMsg) = await axKHOpenAPI.CommRqDataAsync("주식기본정보요청", "OPT10001", 0, "1000", e =>
             {
                 종목명 = axKHOpenAPI.GetCommData(e.sTrCode, e.sRQName, 0, "종목명").Trim();
             });
-            // nRet: 0 성공, 음수 실패(-901: 중복요청오류, -902: 5초이상 응답없음, 그외 키움 오류코드 참조)
+            // nRet: 0 성공, 음수 실패(sMsg에 오류내용)
             if (nRet == 0)
                 log_list.Items.Add(종목명);
             else
-                log_list.Items.Add($"비동기 요청실패({nRet})");
+                log_list.Items.Add($"비동기 요청실패({sMsg})");
         }
 
         // 비동기 간편요청 (nuget 버전 1.5.3 이상 지원)
