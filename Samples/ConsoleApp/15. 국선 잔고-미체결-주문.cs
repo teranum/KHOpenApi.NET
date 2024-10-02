@@ -29,7 +29,7 @@ internal class _15 : SampleBase
                 , []
                 , ["매매구분", "종목코드", "종목명", "보유수량", "매입단가", "현재가"]
             );
-            print("잔고내역 (매매구분값이 1일때 매도)", jango_response.RequestMultiFields, jango_response.OutputMultiDatas.ToArray());
+            print("잔고내역 (매매구분값이 1일때 매도)", jango_response.InMultiFields, jango_response.OutputMultiDatas.ToArray());
 
             // 미체결조회
             var miche_response = await api.RequestTrAsync("OPT50026",
@@ -44,7 +44,7 @@ internal class _15 : SampleBase
                 , []
                 , ["주문번호", "매매구분", "종목코드", "종목명", "주문수량", "주문가격", "미체결수량"]
             );
-            print("미체결내역 (매매구분값이 1일때 매도)", miche_response.RequestMultiFields, miche_response.OutputMultiDatas.ToArray());
+            print("미체결내역 (매매구분값이 1일때 매도)", miche_response.InMultiFields, miche_response.OutputMultiDatas.ToArray());
 
             // 주문요청 입력
             var 주문요청 = await GetInputAsync("주문을 입력하세요 (1:매수, 2:매도, 3:정정, 4:취소):");

@@ -1044,16 +1044,19 @@ namespace KHOpenApi.NET
             }
 
             public bool Set() => _async_wait.Set();
-            public void WaitOne(int millisecondsTimeout = 0)
+
+            public Task<bool> Wait(int millisecondsTimeout = -1)
             {
-                if (millisecondsTimeout == 0)
-                    _async_wait.WaitOne();
-                else
+                return Task.Run(() =>
                 {
                     if (!_async_wait.WaitOne(millisecondsTimeout))
+                    {
                         if (!_async_evented)
                             _async_result = -902;
-                }
+                        return false;
+                    }
+                    return true;
+                });
             }
 
             private readonly ManualResetEvent _async_wait = new(initialState: false);
@@ -1085,16 +1088,14 @@ namespace KHOpenApi.NET
             };
             _async_list.Add(newAsync);
 
+            string sMsg = string.Empty;
             int nRet = CommRqData(sRQName, sTrCode, sPrevNext, sScreenNo);
-            if (nRet != 0)
-            {
-                _async_list.Remove(newAsync);
-                return (nRet, GetErrorMessage(nRet));
-            }
-            await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+            if (nRet != 0) goto Final;
+            await newAsync.Wait(AsyncTimeOut);
             nRet = newAsync._async_result;
+            sMsg = newAsync._async_msg;
+        Final:
             _async_list.Remove(newAsync);
-            string sMsg = newAsync._async_msg;
             if (string.IsNullOrEmpty(sMsg))
                 sMsg = GetErrorMessage(nRet);
             return (nRet, sMsg);
@@ -1121,16 +1122,14 @@ namespace KHOpenApi.NET
             };
             _async_list.Add(newAsync);
 
+            string sMsg = string.Empty;
             int nRet = CommConnect(nAutoUpgrade);
-            if (nRet != 0)
-            {
-                _async_list.Remove(newAsync);
-                return (nRet, GetErrorMessage(nRet));
-            }
-            await Task.Run(() => newAsync.WaitOne()).ConfigureAwait(true);
+            if (nRet != 0) goto Final;
+            await newAsync.Wait();
             nRet = newAsync._async_result;
+            sMsg = newAsync._async_msg;
+        Final:
             _async_list.Remove(newAsync);
-            string sMsg = newAsync._async_msg;
             if (string.IsNullOrEmpty(sMsg))
                 sMsg = GetErrorMessage(nRet);
             return (nRet, sMsg);
@@ -1281,19 +1280,18 @@ namespace KHOpenApi.NET
             };
             _async_list.Add(newAsync);
 
+            string sMsg = string.Empty;
             int nRet = SendOrder(sRQName, sScreenNo, sAccNo, nOrderType, sCode, nQty, sPrice, sStopPrice, sHogaGb, sOrgOrderNo);
-            if (nRet != 0)
-            {
-                _async_list.Remove(newAsync);
-                return (nRet, GetErrorMessage(nRet));
-            }
-            await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+            if (nRet != 0) goto Final;
+            await newAsync.Wait(AsyncTimeOut);
+            nRet = newAsync._async_result;
+            sMsg = newAsync._async_msg;
             if (nRet == 0 && !bExistOrderNumber)
             {
                 nRet = -903;
             }
+        Final:
             _async_list.Remove(newAsync);
-            string sMsg = newAsync._async_msg;
             if (string.IsNullOrEmpty(sMsg))
                 sMsg = GetErrorMessage(nRet);
             return (nRet, sMsg);

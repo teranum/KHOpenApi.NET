@@ -174,7 +174,7 @@ namespace CSharp
             Console.WriteLine($"tr_cd: {responseTrData.tr_cd}");
             Console.WriteLine("입력데이터");
             Console.ForegroundColor = ConsoleColor.Gray;
-            print(responseTrData.InputDatas);
+            print(responseTrData.InValues);
             Console.ForegroundColor = ConsoleColor.DarkYellow;
             Console.WriteLine("출력데이터");
             Console.ForegroundColor = ConsoleColor.Gray;
@@ -183,14 +183,14 @@ namespace CSharp
             Console.WriteLine($"cont_key: {responseTrData.cont_key}");
             Console.WriteLine();
 
-            if (responseTrData.RequestSingleFields.Length > 0)
+            if (responseTrData.InSingleFields.Length > 0)
             {
-                print("싱글데이터", responseTrData.RequestSingleFields, [responseTrData.OutputSingleDatas]);
+                print("싱글데이터", responseTrData.InSingleFields, [responseTrData.OutputSingleDatas]);
             }
 
-            if (responseTrData.RequestMultiFields.Length > 0)
+            if (responseTrData.InMultiFields.Length > 0)
             {
-                print("멀티데이터", responseTrData.RequestMultiFields, [.. responseTrData.OutputMultiDatas]);
+                print("멀티데이터", responseTrData.InMultiFields, [.. responseTrData.OutputMultiDatas]);
             }
         }
     }
