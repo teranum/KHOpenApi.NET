@@ -1044,16 +1044,19 @@ namespace KHOpenApi.NET
             }
 
             public bool Set() => _async_wait.Set();
-            public void WaitOne(int millisecondsTimeout = 0)
+
+            public Task<bool> Wait(int millisecondsTimeout = -1)
             {
-                if (millisecondsTimeout == 0)
-                    _async_wait.WaitOne();
-                else
+                return Task.Run(() =>
                 {
                     if (!_async_wait.WaitOne(millisecondsTimeout))
+                    {
                         if (!_async_evented)
                             _async_result = -902;
-                }
+                        return false;
+                    }
+                    return true;
+                });
             }
 
             private readonly ManualResetEvent _async_wait = new(initialState: false);
@@ -1085,14 +1088,14 @@ namespace KHOpenApi.NET
             };
             _async_list.Add(newAsync);
 
+            string sMsg = string.Empty;
             int nRet = CommRqData(sRQName, sTrCode, sPrevNext, sScreenNo);
-            if (nRet == 0)
-            {
-                await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
-                nRet = newAsync._async_result;
-            }
+            if (nRet != 0) goto Final;
+            await newAsync.Wait(AsyncTimeOut);
+            nRet = newAsync._async_result;
+            sMsg = newAsync._async_msg;
+        Final:
             _async_list.Remove(newAsync);
-            string sMsg = newAsync._async_msg;
             if (string.IsNullOrEmpty(sMsg))
                 sMsg = GetErrorMessage(nRet);
             return (nRet, sMsg);
@@ -1119,14 +1122,14 @@ namespace KHOpenApi.NET
             };
             _async_list.Add(newAsync);
 
+            string sMsg = string.Empty;
             int nRet = CommConnect(nAutoUpgrade);
-            if (nRet == 0)
-            {
-                await Task.Run(() => newAsync.WaitOne()).ConfigureAwait(true);
-                nRet = newAsync._async_result;
-            }
+            if (nRet != 0) goto Final;
+            await newAsync.Wait();
+            nRet = newAsync._async_result;
+            sMsg = newAsync._async_msg;
+        Final:
             _async_list.Remove(newAsync);
-            string sMsg = newAsync._async_msg;
             if (string.IsNullOrEmpty(sMsg))
                 sMsg = GetErrorMessage(nRet);
             return (nRet, sMsg);
@@ -1204,33 +1207,38 @@ namespace KHOpenApi.NET
         public virtual async Task<ResponseData> RequestTrAsync(string tr_cd, IEnumerable<KeyValuePair<string, string>> indatas, IEnumerable<string> singleFields, IEnumerable<string> multiFields, string cont_key = "")
         {
             var scr_num = _scrNumManager.GetRequestScrNum();
-            ResponseData responseTrData = new();
+            ResponseData response = new()
+            {
+                tr_cd = tr_cd,
+                InValues = indatas.ToArray(),
+                InSingleFields = singleFields.ToArray(),
+                InMultiFields = multiFields.ToArray(),
+            };
 
             // 일반 TR 요청
 
-            foreach (var indata in indatas) SetInputValue(indata.Key, indata.Value);
+            foreach (var inValue in response.InValues) SetInputValue(inValue.Key, inValue.Value);
 
-            responseTrData.tr_cd = tr_cd;
-            (responseTrData.nErrCode, responseTrData.rsp_msg) = await CommRqDataAsync(tr_cd, tr_cd, cont_key, scr_num, action);
+            (response.nErrCode, response.rsp_msg) = await CommRqDataAsync(tr_cd, tr_cd, cont_key, scr_num, action);
 
             void action(_DKFOpenAPIEvents_OnReceiveTrDataEvent e)
             {
                 DisconnectRealData(e.sScrNo);
 
-                responseTrData.OutputSingleDatas = singleFields.Select(x => GetCommData(e.sTrCode, e.sRQName, 0, x).Trim()).ToArray();
+                response.OutputSingleDatas = response.InSingleFields.Select(x => GetCommData(e.sTrCode, e.sRQName, 0, x).Trim()).ToArray();
 
-                responseTrData.OutputMultiDatas = [];
+                response.OutputMultiDatas = [];
                 var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRQName);
                 for (int i = 0; i < nRepeateCnt; i++)
                 {
-                    var datas = multiFields.Select(x => GetCommData(e.sTrCode, e.sRQName, i, x).Trim()).ToArray();
-                    responseTrData.OutputMultiDatas.Add(datas);
+                    var datas = response.InMultiFields.Select(x => GetCommData(e.sTrCode, e.sRQName, i, x).Trim()).ToArray();
+                    response.OutputMultiDatas.Add(datas);
                 }
 
-                responseTrData.cont_key = e.sPreNext;
+                response.cont_key = e.sPreNext;
             }
 
-            return responseTrData;
+            return response;
         }
 
         /// <inheritdoc cref="RequestTrAsync(string, IEnumerable{KeyValuePair{string, string}}, IEnumerable{string}, IEnumerable{string}, string)"/>
@@ -1239,7 +1247,7 @@ namespace KHOpenApi.NET
 
         private const string _async_SendOrder = "SendOrderAsync";
         /// <summary>
-        /// 비동기로 <inheritdoc cref="SendOrder"/><br/>
+        /// 비동기로 주문을 서버로 전송합니다.<br/>
         /// 결과는 (int nRet, string msg) 로 반환합니다.<br/>
         /// nRet 값이 0이면 서버까지 주문이 확실히 성공, 0이 아니면 주문실패입니다.<br/>
         /// 주문실패 사유로 msg 에 오류메시지가 있습니다.<br/><br/>
@@ -1272,17 +1280,18 @@ namespace KHOpenApi.NET
             };
             _async_list.Add(newAsync);
 
+            string sMsg = string.Empty;
             int nRet = SendOrder(sRQName, sScreenNo, sAccNo, nOrderType, sCode, nQty, sPrice, sStopPrice, sHogaGb, sOrgOrderNo);
-            if (nRet == 0)
+            if (nRet != 0) goto Final;
+            await newAsync.Wait(AsyncTimeOut);
+            nRet = newAsync._async_result;
+            sMsg = newAsync._async_msg;
+            if (nRet == 0 && !bExistOrderNumber)
             {
-                await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
-                if (nRet == 0 && !bExistOrderNumber)
-                {
-                    nRet = -903;
-                }
+                nRet = -903;
             }
+        Final:
             _async_list.Remove(newAsync);
-            string sMsg = newAsync._async_msg;
             if (string.IsNullOrEmpty(sMsg))
                 sMsg = GetErrorMessage(nRet);
             return (nRet, sMsg);

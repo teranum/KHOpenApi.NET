@@ -22,50 +22,67 @@ namespace WpfApp1
             Title = "WpfApp " + (Environment.Is64BitProcess ? "(64비트)" : "(32비트)");
 
             // ActiveX 세팅
-            System.IntPtr Handle = new WindowInteropHelper(Application.Current.MainWindow).EnsureHandle();
+            var Handle = new WindowInteropHelper(Application.Current.MainWindow).EnsureHandle();
 
             axKHOpenAPI = new AxKHOpenAPI(Handle);
-            axKHOpenAPI.OnEventConnect += (s, e) => log_list.Items.Add(e.nErrCode == 0 ? "국내 로그인 성공" : "국내 로그인 실패");
             button_login_KH.IsEnabled = axKHOpenAPI.Created;
 
             axKFOpenAPI = new AxKFOpenAPI(Handle);
-            axKFOpenAPI.OnEventConnect += (s, e) => log_list.Items.Add(e.nErrCode == 0 ? "해외 로그인 성공" : "해외 로그인 실패");
             button_login_KF.IsEnabled = axKFOpenAPI.Created;
         }
 
-        private void button_login_KH_Click(object sender, RoutedEventArgs e)
+        private async void button_login_KH_Click(object sender, RoutedEventArgs e)
         {
             // 국내 로그인 요청
-            axKHOpenAPI.CommConnect();
+            log_list.Items.Add("국내 로그인 요청중...");
+            var (ret, msg) = await axKHOpenAPI.CommConnectAsync();
+            if (ret == 0)
+            {
+                log_list.Items.Add("국내 로그인 성공");
+            }
+            else
+            {
+                log_list.Items.Add("국내 로그인 실패: " + msg);
+            }
         }
 
-        private void button_login_KF_Click(object sender, RoutedEventArgs e)
+        private async void button_login_KF_Click(object sender, RoutedEventArgs e)
         {
             // 해외 로그인 요청
-            axKFOpenAPI.CommConnect(1);
-        }
-
-        private void button_Async_Click(object sender, RoutedEventArgs e)
-        {
-            _ = TestAsync();
-        }
-
-        // 비동기 요청 테스트 (nuget 버전 1.5.0 이상 지원)
-        async Task TestAsync()
-        {
-            // 국내 종목정보 가져오기
-            string itemCode = "005930";
-            axKHOpenAPI.SetInputValue("종목코드", itemCode);
-            string 종목명 = string.Empty;
-            var (nRet, sMsg) = await axKHOpenAPI.CommRqDataAsync("주식기본정보요청", "OPT10001", 0, "1000", e =>
+            log_list.Items.Add("해외 로그인 요청중...");
+            var (ret, msg) = await axKFOpenAPI.CommConnectAsync(1);
+            if (ret == 0)
             {
-                종목명 = axKHOpenAPI.GetCommData(e.sTrCode, e.sRQName, 0, "종목명").Trim();
-            });
-            // nRet: 0 성공, 음수 실패(-901: 중복요청오류, -902: 5초이상 응답없음, 그외 키움 오류코드 참조)
-            if (nRet == 0)
-                log_list.Items.Add(종목명);
+                log_list.Items.Add("해외 로그인 성공");
+            }
             else
-                log_list.Items.Add($"비동기 요청실패({nRet}: {sMsg})");
+            {
+                log_list.Items.Add("해외 로그인 실패: " + msg);
+            }
+        }
+
+        private async void button_Async_Click(object sender, RoutedEventArgs e)
+        {
+            if (axKHOpenAPI.GetConnectState() == 0)
+            {
+                log_list.Items.Add("로그인을 먼저 해주세요.");
+                return;
+            }
+
+            // 국내 종목정보 요청
+            var response = await axKHOpenAPI.RequestTrAsync("OPT10001"
+                , [("종목코드", "005930")]
+                , ["종목코드", "종목명", "시가", "고가", "저가", "현재가"]
+                , []);
+            if (response.nErrCode != 0)
+            {
+                log_list.Items.Add($"종목정보요청 실패: {response.rsp_msg}");
+            }
+
+            for (int i = 0; i < response.OutputSingleDatas.Length; i++)
+            {
+                log_list.Items.Add($"{response.InSingleFields[i]}: {response.OutputSingleDatas[i]}");
+            }
         }
     }
 }

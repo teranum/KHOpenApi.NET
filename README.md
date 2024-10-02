@@ -1,5 +1,5 @@
 # [![NuGet version](https://badge.fury.io/nu/KHOpenApi.NET.png)](https://badge.fury.io/nu/KHOpenApi.NET)  KHOpenApi.NET (영웅문-Hero, 영웅문-Global)
-- 32비트/64비트 공용, 키움증권 OpenApi C# wrapper class
+- 키움증권 OpenApi C# wrapper class
 - 개발환경: Visual Studio 2022, netstandard2.0
 - WinUI3, WPF, Winforms 지원
 - 비동기 로그인, TR 요청 지원 (CommConnectAsync, CommRqDataAsync, CommKwRqDataAsync, GetConditionLoadAsync, SendConditionAsync)
@@ -23,27 +23,43 @@
         {
             InitializeComponent();
             // ActiveX 세팅
-            System.IntPtr Handle = new WindowInteropHelper(Application.Current.MainWindow).EnsureHandle();
+            var Handle = new WindowInteropHelper(Application.Current.MainWindow).EnsureHandle();
 
             axKHOpenAPI = new AxKHOpenAPI(Handle);
-            axKHOpenAPI.OnEventConnect += (s, e) => log_list.Items.Add(e.nErrCode == 0 ? "국내 로그인 성공" : "국내 로그인 실패");
             button_login_KH.IsEnabled = axKHOpenAPI.Created;
 
             axKFOpenAPI = new AxKFOpenAPI(Handle);
-            axKFOpenAPI.OnEventConnect += (s, e) => log_list.Items.Add(e.nErrCode == 0 ? "해외 로그인 성공" : "해외 로그인 실패");
             button_login_KF.IsEnabled = axKFOpenAPI.Created;
         }
 
-        private void button_login_KH_Click(object sender, RoutedEventArgs e)
+        private async void button_login_KH_Click(object sender, RoutedEventArgs e)
         {
             // 국내 로그인 요청
-            axKHOpenAPI.CommConnect();
+            log_list.Items.Add("국내 로그인 요청중...");
+            var (ret, msg) = await axKHOpenAPI.CommConnectAsync();
+            if (ret == 0)
+            {
+                log_list.Items.Add("국내 로그인 성공");
+            }
+            else
+            {
+                log_list.Items.Add("국내 로그인 실패: " + msg);
+            }
         }
 
-        private void button_login_KF_Click(object sender, RoutedEventArgs e)
+        private async void button_login_KF_Click(object sender, RoutedEventArgs e)
         {
             // 해외 로그인 요청
-            axKFOpenAPI.CommConnect(1);
+            log_list.Items.Add("해외 로그인 요청중...");
+            var (ret, msg) = await axKFOpenAPI.CommConnectAsync(1);
+            if (ret == 0)
+            {
+                log_list.Items.Add("해외 로그인 성공");
+            }
+            else
+            {
+                log_list.Items.Add("해외 로그인 실패: " + msg);
+            }
         }
 ```
 
@@ -62,17 +78,17 @@
             var (nRet, sMsg) = await axKHOpenAPI.CommConnectAsync();
             if (0 != nRet)
             {
-                OutLog("로그인 요청(CommConnect): 실패");
+                OutLog($"로그인 실패: {sMsg}");
                 return;
             }
-            (nRet, string sConditionList) = await axKHOpenAPI.GetConditionLoadAsync();
+            (nRet, sMsg) = await axKHOpenAPI.GetConditionLoadAsync();
             if (1 != nRet)
             {
-                OutLog("사용자 조건검색리스트요청: 실패");
+                OutLog($"사용자 조건검색리스트요청 실패: {sMsg}");
                 return;
             }
 
-            var cond_list = sConditionList.Split(';', StringSplitOptions.RemoveEmptyEntries).ToList();
+            var cond_list = sMsg.Split(';', StringSplitOptions.RemoveEmptyEntries).ToList();
             OutLog($"조건검색식 개수: {cond_list.Count}");
 
             // DoWork...
@@ -93,7 +109,7 @@
             if (nRet == 0)
                 log_list.Items.Add(종목명);
             else
-                log_list.Items.Add($"비동기 요청실패({sMsg})");
+                log_list.Items.Add($"비동기 요청실패: {sMsg}");
         }
 
         // 비동기 간편요청 (nuget 버전 1.5.3 이상 지원)
@@ -118,14 +134,6 @@
             
             // 샘플 3: 관심종목정보요청
             var response = await axKHOpenAPI.RequestTrAsync("OPTKWFID", [("종목코드", "005930")], [], ["종목명", "현재가", "기준가", "시가", "고가", "저가"]);
-            
-            // 샘플 4: 관심종목정보요청(선물옵션)
-            var indatas = new Dictionary<string, string> 
-            {
-                { "종목코드", "101V9000;101VC000" }, // (종목코드는 세미콜론으로 구분)
-                { "타입구분", "3" }, // 0:주식 종목, 3:선물옵션 종목 (기본값은 0)
-            };
-            var response = await axKHOpenAPI.RequestTrAsync("OPTKWFID", indatas, [], ["종목명", "현재가", "기준가", "시가", "고가", "저가"]);
             
             // 샘플 4: 거래대금상위요청
             var response = await api.RequestTrAsync(
@@ -152,13 +160,13 @@
         // 비동기 조건검색 (nuget 버전 1.5.3 이상 지원)
         async Task TestConditionAsync()
         {
-            var (nRet, sCodeList) = await api.SendConditionAsync("8001", conditionInfo.Name, conditionInfo.Code, 0);
+            var (nRet, sMsg) = await api.SendConditionAsync("8001", conditionInfo.Name, conditionInfo.Code, 0);
             if (nRet != 1)
             {
-                print($"검색식 요청실패: {api.GetErrorMessage(nRet)}");
+                print($"검색식 요청실패: {sMsg}");
                 return;
             }
-            // sCodeList 에 검색된 종목코드가 있음 (세미콜론으로 구분 종목코드1;종목코드2..., 또는 현재가 포함 설정시 종목코드1^현재가1;종목코드2^현재가2 ...로 구분))
+            // sMsg 에 검색된 종목코드가 있음 (세미콜론으로 구분 종목코드1;종목코드2..., 또는 현재가 포함 설정시 종목코드1^현재가1;종목코드2^현재가2 ...로 구분))
         }
 
         // 비동기 주문 (nuget 버전 1.5.3 이상 지원)
@@ -168,12 +176,12 @@
             string itemCode = "005930";
             int qty = 1;
             int price = 80000;
-            var (nRet, msg) = await axKHOpenAPI.SendOrderAsync("매수주문", "0101", 계좌번호, 1, itemCode, qty, price, "00", string.Empty);
+            var (nRet, sMsg) = await axKHOpenAPI.SendOrderAsync("매수주문", "0101", 계좌번호, 1, itemCode, qty, price, "00", string.Empty);
 
             // 결과처리
             if (nRet != 0)
             {
-                print($"주문 요청실패: {msg}"); // 실패사유 출력
+                print($"주문 요청실패: {sMsg}"); // 실패사유 출력
                 return;
             }
 
