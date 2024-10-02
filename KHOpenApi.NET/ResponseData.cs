@@ -24,11 +24,11 @@ public class ResponseData
     // OPTIONS
 
     /// <summary>TR 요청시, 입력으로 설정한 데이터 배열</summary>
-    public KeyValuePair<string, string>[] InputDatas { get; set; } = [];
+    public KeyValuePair<string, string>[] InValues { get; set; } = [];
 
     /// <summary>TR 요청시, 가져올-싱글데이터로 설정한 데이터 배열</summary>
-    public string[] RequestSingleFields { get; set; } = [];
+    public string[] InSingleFields { get; set; } = [];
     /// <summary>TR 요청시, 가져올-멀티데이터로 설정한 데이터 배열</summary>
-    public string[] RequestMultiFields { get; set; } = [];
+    public string[] InMultiFields { get; set; } = [];
 
 }

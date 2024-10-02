@@ -680,7 +680,7 @@ public class AxKHOpenAPI
             throw new InvalidActiveXStateException("CommConnect", ActiveXInvokeKind.MethodInvoke);
         }
 
-        return ocx?.CommConnect() ?? throw new InvalidActiveXStateException("CommConnect", ActiveXInvokeKind.MethodInvoke);
+        return ocx.CommConnect();
     }
 
     /// <summary>
@@ -1840,11 +1840,13 @@ public class AxKHOpenAPI
         _async_list.Add(newAsync);
 
         int nRet = CommRqData(sRQName, sTrCode, nPrevNext, sScreenNo);
-        if (nRet == 0)
+        if (nRet != 0)
         {
-            await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
-            nRet = newAsync._async_result;
+            _async_list.Remove(newAsync);
+            return (nRet, GetErrorMessage(nRet));
         }
+        await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+        nRet = newAsync._async_result;
         _async_list.Remove(newAsync);
         string sMsg = newAsync._async_msg;
         if (string.IsNullOrEmpty(sMsg))
@@ -1853,7 +1855,7 @@ public class AxKHOpenAPI
     }
 
     /// <summary>
-    /// 비동기 요청을 수행합니다.<br/>
+    /// <see cref="CommKwRqData"/> 비동기 요청을 수행합니다.<br/>
     /// action 콜백함수에서 <see cref="OnReceiveTrData"/> 이벤트를 수신처리 합니다.<br/>
     /// <code language="csharp" >
     /// // 샘플코드: 관심종목정보요청
@@ -1879,18 +1881,26 @@ public class AxKHOpenAPI
     /// </returns>
     public async Task<(int nRet, string sMsg)> CommKwRqDataAsync(string sArrCode, int bNext, int nCodeCount, int nTypeFlag, string sRQName, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
     {
-        var newAsync = new AsyncNode([sRQName, "OPTKWFID", int.Parse(sScreenNo)])
+        string sTrCode = nTypeFlag switch
+        {
+            0 => "OPTKWFID",
+            3 => "OPTFOFID",
+            _ => throw new ArgumentException("0 또는 3만 허용됩니다.", nameof(nTypeFlag)),
+        };
+        var newAsync = new AsyncNode([sRQName, sTrCode, int.Parse(sScreenNo)])
         {
             _async_tr_action = action,
         };
         _async_list.Add(newAsync);
 
         int nRet = CommKwRqData(sArrCode, bNext, nCodeCount, nTypeFlag, sRQName, sScreenNo);
-        if (nRet == 0)
+        if (nRet != 0)
         {
-            await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
-            nRet = newAsync._async_result;
+            _async_list.Remove(newAsync);
+            return (nRet, GetErrorMessage(nRet));
         }
+        await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+        nRet = newAsync._async_result;
         _async_list.Remove(newAsync);
         string sMsg = newAsync._async_msg;
         if (string.IsNullOrEmpty(sMsg))
@@ -1916,14 +1926,16 @@ public class AxKHOpenAPI
         _async_list.Add(newAsync);
 
         int nRet = SendCondition(strScrNo, strConditionName, nIndex, nSearch);
-        if (nRet == 1)
+        if (nRet != 1)
         {
-            await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
-            nRet = newAsync._async_result;
-            sCodeList = newAsync._async_msg;
-            if (nRet != 1 && string.IsNullOrEmpty(sCodeList))
-                sCodeList = GetErrorMessage(newAsync._async_result);
+            _async_list.Remove(newAsync);
+            return (nRet, GetErrorMessage(nRet));
         }
+        await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+        nRet = newAsync._async_result;
+        sCodeList = newAsync._async_msg;
+        if (nRet != 1 && string.IsNullOrEmpty(sCodeList))
+            sCodeList = GetErrorMessage(newAsync._async_result);
         _async_list.Remove(newAsync);
         return (nRet, sCodeList);
     }
@@ -1949,11 +1961,13 @@ public class AxKHOpenAPI
         _async_list.Add(newAsync);
 
         int nRet = CommConnect();
-        if (nRet == 0)
+        if (nRet != 0)
         {
-            await Task.Run(() => newAsync.WaitOne()).ConfigureAwait(true);
-            nRet = newAsync._async_result;
+            _async_list.Remove(newAsync);
+            return (nRet, GetErrorMessage(nRet));
         }
+        await Task.Run(() => newAsync.WaitOne()).ConfigureAwait(true);
+        nRet = newAsync._async_result;
         string sMsg = newAsync._async_msg;
         if (string.IsNullOrEmpty(sMsg))
             sMsg = GetErrorMessage(newAsync._async_result);
@@ -1984,11 +1998,13 @@ public class AxKHOpenAPI
         _async_list.Add(newAsync);
 
         int nRet = GetConditionLoad();
-        if (nRet == 1)
+        if (nRet != 1)
         {
-            await Task.Run(() => newAsync.WaitOne()).ConfigureAwait(true);
-            nRet = newAsync._async_result;
+            _async_list.Remove(newAsync);
+            return (nRet, GetErrorMessage(nRet));
         }
+        await Task.Run(() => newAsync.WaitOne()).ConfigureAwait(true);
+        nRet = newAsync._async_result;
         _async_list.Remove(newAsync);
         string sCondList = newAsync._async_msg;
         if (nRet != 1 && string.IsNullOrEmpty(sCondList))
@@ -2079,75 +2095,65 @@ public class AxKHOpenAPI
     public async Task<ResponseData> RequestTrAsync(string tr_cd, IEnumerable<KeyValuePair<string, string>> indatas, IEnumerable<string> singleFields, IEnumerable<string> multiFields, string cont_key = "")
     {
         var scr_num = _scrNumManager.GetRequestScrNum();
-        ResponseData responseTrData = new()
+        ResponseData response = new()
         {
-            InputDatas = indatas.ToArray(),
-            RequestSingleFields = singleFields.ToArray(),
-            RequestMultiFields = multiFields.ToArray(),
+            tr_cd = tr_cd,
+            InValues = indatas.ToArray(),
+            InSingleFields = singleFields.ToArray(),
+            InMultiFields = multiFields.ToArray(),
         };
-
-        if (tr_cd.ToUpper().Equals("OPTKWFID")) // 관심종목정보요청
+        string tr_upper = tr_cd.ToUpper();
+        if (tr_upper.Equals("OPTKWFID") || tr_upper.Equals("OPTFOFID")) // 관심종목정보요청
         {
             string 종목코드 = string.Empty;
-            string 타입구분 = "0";
-            foreach (var indata in indatas)
+            int nTypeFlag = tr_upper.Equals("OPTKWFID") ? 0 : 3;
+            foreach (var indata in response.InValues)
             {
                 if (indata.Key.Equals("종목코드") || indata.Key.Equals("sArrCode"))
                 {
                     종목코드 = indata.Value;
                 }
-                else if (indata.Key.Equals("타입구분") || indata.Key.Equals("nTypeFlag"))
-                {
-                    타입구분 = indata.Value;
-                }
             }
-            int.TryParse(타입구분, out int nTypeFlag);
             var codes = 종목코드.Split([';'], StringSplitOptions.RemoveEmptyEntries);
-            responseTrData.tr_cd = tr_cd;
-            (responseTrData.nErrCode, responseTrData.rsp_msg) = await CommKwRqDataAsync(종목코드, 0, codes.Length, nTypeFlag, tr_cd, scr_num,
+            (response.nErrCode, response.rsp_msg) = await CommKwRqDataAsync(종목코드, 0, codes.Length, nTypeFlag, tr_cd, scr_num,
                 (e) =>
                 {
                     DisconnectRealData(e.sScrNo);
-                    responseTrData.OutputSingleDatas = [];
-                    responseTrData.OutputMultiDatas = [];
+                    response.OutputSingleDatas = [];
+                    response.OutputMultiDatas = [];
                     var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRQName);
                     for (int i = 0; i < nRepeateCnt; i++)
                     {
-                        var datas = multiFields.Select(x => GetCommData(e.sTrCode, e.sRQName, i, x).Trim()).ToArray();
-                        responseTrData.OutputMultiDatas.Add(datas);
+                        var datas = response.InMultiFields.Select(x => GetCommData(e.sTrCode, e.sRQName, i, x).Trim()).ToArray();
+                        response.OutputMultiDatas.Add(datas);
                     }
-                    responseTrData.cont_key = string.Empty;
+                    response.cont_key = string.Empty;
                 }
                 );
-            return responseTrData;
+            return response;
         }
 
-        foreach (var indata in indatas) SetInputValue(indata.Key, indata.Value);
+        foreach (var inValue in response.InValues) SetInputValue(inValue.Key, inValue.Value);
 
-        var out_prevNext = string.Empty;
-        var out_singles = new List<string>();
-
-        responseTrData.tr_cd = tr_cd;
-        (responseTrData.nErrCode, responseTrData.rsp_msg) = await CommRqDataAsync(tr_cd, tr_cd, cont_key.Equals("2") ? 2 : 0, scr_num,
+        (response.nErrCode, response.rsp_msg) = await CommRqDataAsync(tr_cd, tr_cd, cont_key.Equals("2") ? 2 : 0, scr_num,
             (e) =>
             {
                 DisconnectRealData(e.sScrNo);
-                if (e.sPrevNext.Equals("2")) out_prevNext = "2";
 
-                responseTrData.OutputSingleDatas = singleFields.Select(x => GetCommData(e.sTrCode, e.sRQName, 0, x).Trim()).ToArray();
+                response.OutputSingleDatas = response.InSingleFields.Select(x => GetCommData(e.sTrCode, e.sRQName, 0, x).Trim()).ToArray();
 
-                responseTrData.OutputMultiDatas = [];
+                response.OutputMultiDatas = [];
                 var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRQName);
                 for (int i = 0; i < nRepeateCnt; i++)
                 {
-                    var datas = multiFields.Select(x => GetCommData(e.sTrCode, e.sRQName, i, x).Trim()).ToArray();
-                    responseTrData.OutputMultiDatas.Add(datas);
+                    var datas = response.InMultiFields.Select(x => GetCommData(e.sTrCode, e.sRQName, i, x).Trim()).ToArray();
+                    response.OutputMultiDatas.Add(datas);
                 }
 
-                responseTrData.cont_key = e.sPrevNext.Equals("2") ? "2" : string.Empty;
+                response.cont_key = e.sPrevNext.Equals("2") ? "2" : string.Empty;
             }
             );
-        return responseTrData;
+        return response;
     }
 
     /// <inheritdoc cref="RequestTrAsync(string, IEnumerable{KeyValuePair{string, string}}, IEnumerable{string}, IEnumerable{string}, string)"/>

@@ -16,31 +16,45 @@ namespace WinFormsApp1
 
             // ActiveX 세팅
             axKHOpenAPI = new AxKHOpenAPI(Handle);
-            axKHOpenAPI.OnEventConnect += (s, e) => log_list.Items.Add(e.nErrCode == 0 ? "국내 로그인 성공" : "국내 로그인 실패");
             button_login_KH.Enabled = axKHOpenAPI.Created;
 
             axKFOpenAPI = new AxKFOpenAPI(Handle);
-            axKFOpenAPI.OnEventConnect += (s, e) => log_list.Items.Add(e.nErrCode == 0 ? "해외 로그인 성공" : "해외 로그인 실패");
             button_login_KF.Enabled = axKFOpenAPI.Created;
         }
 
-        private void button_login_KH_Click(object sender, EventArgs e)
+        private async void button_login_KH_Click(object sender, EventArgs e)
         {
             // 국내 로그인 요청
             if (axKHOpenAPI.GetConnectState() == 0)
             {
-                log_list.Items.Add("국내 로그인 요청");
-                axKHOpenAPI.CommConnect();
+                log_list.Items.Add("국내 로그인 요청중...");
+                var (ret, msg) = await axKHOpenAPI.CommConnectAsync();
+                if (ret == 0)
+                {
+                    log_list.Items.Add("국내 로그인 성공");
+                }
+                else
+                {
+                    log_list.Items.Add("국내 로그인 실패: " + msg);
+                }
             }
         }
 
-        private void button_login_KF_Click(object sender, EventArgs e)
+        private async void button_login_KF_Click(object sender, EventArgs e)
         {
             // 해외 로그인 요청
             if (axKFOpenAPI.GetConnectState() == 0)
             {
-                log_list.Items.Add("해외 로그인 요청");
-                axKFOpenAPI.CommConnect(1);
+                log_list.Items.Add("해외 로그인 요청중...");
+                var (ret, msg) = await axKFOpenAPI.CommConnectAsync(1);
+                if (ret == 0)
+                {
+                    log_list.Items.Add("해외 로그인 성공");
+                }
+                else
+                {
+                    log_list.Items.Add("해외 로그인 실패: " + msg);
+                }
             }
         }
 
@@ -53,35 +67,18 @@ namespace WinFormsApp1
             }
 
             // 국내 종목정보 요청
-            string[] reqName =
-                [
-                "종목코드",
-                "종목명",
-                "시가",
-                "고가",
-                "저가",
-                "현재가",
-                // ...
-                ];
-
-            string result = string.Empty;
-            axKHOpenAPI.SetInputValue("종목코드", textBox_KH_code.Text);
-            var (nRet, sMsg) = await axKHOpenAPI.CommRqDataAsync("종목정보요청", "OPT10001", 0, "0101", (e) =>
+            var response = await axKHOpenAPI.RequestTrAsync("OPT10001"
+                , [("종목코드", textBox_KH_code.Text)]
+                , ["종목코드", "종목명", "시가", "고가", "저가", "현재가"]
+                , []);
+            if (response.nErrCode != 0)
             {
-                result = $"[{e.sTrCode}], {e.sRQName} : ";
-                for (int i = 0; i < reqName.Length; i++)
-                {
-                    result += axKHOpenAPI.GetCommData(e.sTrCode, e.sRQName, 0, reqName[i]).Trim() + " ";
-                }
-            });
-
-            if (nRet == 0)
-            {
-                log_list.Items.Add(result);
+                log_list.Items.Add($"종목정보요청 실패: {response.rsp_msg}");
             }
-            else
+
+            for (int i = 0; i < response.OutputSingleDatas.Length; i++)
             {
-                log_list.Items.Add($"종목정보요청 실패: {sMsg}");
+                log_list.Items.Add($"{response.InSingleFields[i]}: {response.OutputSingleDatas[i]}");
             }
         }
 
@@ -114,15 +111,14 @@ namespace WinFormsApp1
             };
 
             var resposeTrData = await axKHOpenAPI.RequestTrAsync("OPT10081", indatas, [], reqName);
-            if (resposeTrData.nErrCode == 0)
-            {
-                log_list.Items.Add($"[{resposeTrData.tr_cd}] : {resposeTrData.OutputMultiDatas.Count}개");
-                resposeTrData.OutputMultiDatas.Select(x => string.Join(" ", x)).ToList().ForEach(x => log_list.Items.Add(x));
-            }
-            else
+            if (resposeTrData.nErrCode != 0)
             {
                 log_list.Items.Add($"종목차트요청 실패: {resposeTrData.rsp_msg}");
+                return;
             }
+
+            log_list.Items.Add($"[{resposeTrData.tr_cd}] : {resposeTrData.OutputMultiDatas.Count}개");
+            resposeTrData.OutputMultiDatas.Select(x => string.Join(" ", x)).ToList().ForEach(x => log_list.Items.Add(x));
 
 
             /* 같은 요청을 CommRqDataAsync 이용할 경우

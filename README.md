@@ -1,5 +1,5 @@
 # [![NuGet version](https://badge.fury.io/nu/KHOpenApi.NET.png)](https://badge.fury.io/nu/KHOpenApi.NET)  KHOpenApi.NET (영웅문-Hero, 영웅문-Global)
-- 32비트/64비트 공용, 키움증권 OpenApi C# wrapper class
+- 키움증권 OpenApi C# wrapper class
 - 개발환경: Visual Studio 2022, netstandard2.0
 - WinUI3, WPF, Winforms 지원
 - 비동기 로그인, TR 요청 지원 (CommConnectAsync, CommRqDataAsync, CommKwRqDataAsync, GetConditionLoadAsync, SendConditionAsync)
@@ -118,14 +118,6 @@
             
             // 샘플 3: 관심종목정보요청
             var response = await axKHOpenAPI.RequestTrAsync("OPTKWFID", [("종목코드", "005930")], [], ["종목명", "현재가", "기준가", "시가", "고가", "저가"]);
-            
-            // 샘플 4: 관심종목정보요청(선물옵션)
-            var indatas = new Dictionary<string, string> 
-            {
-                { "종목코드", "101V9000;101VC000" }, // (종목코드는 세미콜론으로 구분)
-                { "타입구분", "3" }, // 0:주식 종목, 3:선물옵션 종목 (기본값은 0)
-            };
-            var response = await axKHOpenAPI.RequestTrAsync("OPTKWFID", indatas, [], ["종목명", "현재가", "기준가", "시가", "고가", "저가"]);
             
             // 샘플 4: 거래대금상위요청
             var response = await api.RequestTrAsync(
