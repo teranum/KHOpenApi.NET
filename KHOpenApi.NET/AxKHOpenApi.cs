@@ -1785,16 +1785,19 @@ public class AxKHOpenAPI
         }
 
         public bool Set() => _async_wait.Set();
-        public void WaitOne(int millisecondsTimeout = 0)
+
+        public Task<bool> Wait(int millisecondsTimeout = -1)
         {
-            if (millisecondsTimeout == 0)
-                _async_wait.WaitOne();
-            else
+            return Task.Run(() =>
             {
                 if (!_async_wait.WaitOne(millisecondsTimeout))
+                {
                     if (!_async_evented)
                         _async_result = -902;
-            }
+                    return false;
+                }
+                return true;
+            });
         }
 
         private readonly ManualResetEvent _async_wait = new(initialState: false);
@@ -1839,18 +1842,16 @@ public class AxKHOpenAPI
         };
         _async_list.Add(newAsync);
 
+        string sMsg = string.Empty;
         int nRet = CommRqData(sRQName, sTrCode, nPrevNext, sScreenNo);
-        if (nRet != 0)
-        {
-            _async_list.Remove(newAsync);
-            return (nRet, GetErrorMessage(nRet));
-        }
-        await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+        if (nRet != 0) goto Final;
+        await newAsync.Wait(AsyncTimeOut);
         nRet = newAsync._async_result;
+        sMsg = newAsync._async_msg;
+    Final:
         _async_list.Remove(newAsync);
-        string sMsg = newAsync._async_msg;
         if (string.IsNullOrEmpty(sMsg))
-            sMsg = GetErrorMessage(newAsync._async_result);
+            sMsg = GetErrorMessage(nRet);
         return (nRet, sMsg);
     }
 
@@ -1893,18 +1894,16 @@ public class AxKHOpenAPI
         };
         _async_list.Add(newAsync);
 
+        string sMsg = string.Empty;
         int nRet = CommKwRqData(sArrCode, bNext, nCodeCount, nTypeFlag, sRQName, sScreenNo);
-        if (nRet != 0)
-        {
-            _async_list.Remove(newAsync);
-            return (nRet, GetErrorMessage(nRet));
-        }
-        await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+        if (nRet != 0) goto Final;
+        await newAsync.Wait(AsyncTimeOut);
         nRet = newAsync._async_result;
+        sMsg = newAsync._async_msg;
+    Final:
         _async_list.Remove(newAsync);
-        string sMsg = newAsync._async_msg;
         if (string.IsNullOrEmpty(sMsg))
-            sMsg = GetErrorMessage(newAsync._async_result);
+            sMsg = GetErrorMessage(nRet);
         return (nRet, sMsg);
     }
 
@@ -1925,19 +1924,17 @@ public class AxKHOpenAPI
         var newAsync = new AsyncNode([strScrNo, strConditionName]);
         _async_list.Add(newAsync);
 
+        string sMsg = string.Empty;
         int nRet = SendCondition(strScrNo, strConditionName, nIndex, nSearch);
-        if (nRet != 1)
-        {
-            _async_list.Remove(newAsync);
-            return (nRet, GetErrorMessage(nRet));
-        }
-        await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
+        if (nRet != 1) goto Final;
+        await newAsync.Wait(AsyncTimeOut);
         nRet = newAsync._async_result;
-        sCodeList = newAsync._async_msg;
-        if (nRet != 1 && string.IsNullOrEmpty(sCodeList))
-            sCodeList = GetErrorMessage(newAsync._async_result);
+        sMsg = newAsync._async_msg;
+    Final:
         _async_list.Remove(newAsync);
-        return (nRet, sCodeList);
+        if (string.IsNullOrEmpty(sMsg))
+            sMsg = GetErrorMessage(nRet);
+        return (nRet, sMsg);
     }
 
     /// <summary>
@@ -1960,18 +1957,16 @@ public class AxKHOpenAPI
         var newAsync = new AsyncNode(["CommConnectAsync"]);
         _async_list.Add(newAsync);
 
+        string sMsg = string.Empty;
         int nRet = CommConnect();
-        if (nRet != 0)
-        {
-            _async_list.Remove(newAsync);
-            return (nRet, GetErrorMessage(nRet));
-        }
-        await Task.Run(() => newAsync.WaitOne()).ConfigureAwait(true);
+        if (nRet != 0) goto Final;
+        await newAsync.Wait();
         nRet = newAsync._async_result;
-        string sMsg = newAsync._async_msg;
-        if (string.IsNullOrEmpty(sMsg))
-            sMsg = GetErrorMessage(newAsync._async_result);
+        sMsg = newAsync._async_msg;
+    Final:
         _async_list.Remove(newAsync);
+        if (string.IsNullOrEmpty(sMsg))
+            sMsg = GetErrorMessage(nRet);
         return (nRet, sMsg);
     }
 
@@ -1997,19 +1992,17 @@ public class AxKHOpenAPI
         };
         _async_list.Add(newAsync);
 
+        string sMsg = string.Empty;
         int nRet = GetConditionLoad();
-        if (nRet != 1)
-        {
-            _async_list.Remove(newAsync);
-            return (nRet, GetErrorMessage(nRet));
-        }
-        await Task.Run(() => newAsync.WaitOne()).ConfigureAwait(true);
+        if (nRet != 1) goto Final;
+        await newAsync.Wait();
         nRet = newAsync._async_result;
+        sMsg = newAsync._async_msg;
+    Final:
         _async_list.Remove(newAsync);
-        string sCondList = newAsync._async_msg;
-        if (nRet != 1 && string.IsNullOrEmpty(sCondList))
-            sCondList = GetErrorMessage(newAsync._async_result);
-        return (nRet, sCondList);
+        if (string.IsNullOrEmpty(sMsg))
+            sMsg = GetErrorMessage(nRet);
+        return (nRet, sMsg);
     }
 
 
@@ -2106,7 +2099,6 @@ public class AxKHOpenAPI
         if (tr_upper.Equals("OPTKWFID") || tr_upper.Equals("OPTFOFID")) // 관심종목정보요청
         {
             string 종목코드 = string.Empty;
-            int nTypeFlag = tr_upper.Equals("OPTKWFID") ? 0 : 3;
             foreach (var indata in response.InValues)
             {
                 if (indata.Key.Equals("종목코드") || indata.Key.Equals("sArrCode"))
@@ -2114,13 +2106,12 @@ public class AxKHOpenAPI
                     종목코드 = indata.Value;
                 }
             }
-            var codes = 종목코드.Split([';'], StringSplitOptions.RemoveEmptyEntries);
-            (response.nErrCode, response.rsp_msg) = await CommKwRqDataAsync(종목코드, 0, codes.Length, nTypeFlag, tr_cd, scr_num,
+            var count = 종목코드.Split([';'], StringSplitOptions.RemoveEmptyEntries).Length;
+            int nTypeFlag = tr_upper.Equals("OPTKWFID") ? 0 : 3;
+            (response.nErrCode, response.rsp_msg) = await CommKwRqDataAsync(종목코드, 0, count, nTypeFlag, tr_cd, scr_num,
                 (e) =>
                 {
                     DisconnectRealData(e.sScrNo);
-                    response.OutputSingleDatas = [];
-                    response.OutputMultiDatas = [];
                     var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRQName);
                     for (int i = 0; i < nRepeateCnt; i++)
                     {
@@ -2139,10 +2130,7 @@ public class AxKHOpenAPI
             (e) =>
             {
                 DisconnectRealData(e.sScrNo);
-
                 response.OutputSingleDatas = response.InSingleFields.Select(x => GetCommData(e.sTrCode, e.sRQName, 0, x).Trim()).ToArray();
-
-                response.OutputMultiDatas = [];
                 var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRQName);
                 for (int i = 0; i < nRepeateCnt; i++)
                 {
@@ -2197,18 +2185,18 @@ public class AxKHOpenAPI
         };
         _async_list.Add(newAsync);
 
+        string sMsg = string.Empty;
         int nRet = SendOrder(sRQName, sScreenNo, sAccNo, nOrderType, sCode, nQty, nPrice, sHogaGb, sOrgOrderNo);
-        if (nRet == 0)
+        if (nRet != 0) goto Final;
+        await newAsync.Wait(AsyncTimeOut);
+        nRet = newAsync._async_result;
+        sMsg = newAsync._async_msg;
+        if (nRet == 0 && !bExistOrderNumber)
         {
-            await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
-            nRet = newAsync._async_result;
-            if (nRet == 0 && !bExistOrderNumber)
-            {
-                nRet = -903;
-            }
+            nRet = -903;
         }
+    Final:
         _async_list.Remove(newAsync);
-        string sMsg = newAsync._async_msg;
         if (string.IsNullOrEmpty(sMsg))
             sMsg = GetErrorMessage(nRet);
         return (nRet, sMsg);
@@ -2250,18 +2238,18 @@ public class AxKHOpenAPI
         };
         _async_list.Add(newAsync);
 
+        string sMsg = string.Empty;
         int nRet = SendOrderFO(sRQName, sScreenNo, sAccNo, sCode, lOrdKind, sSlbyTp, sOrdTp, lQty, sPrice, sOrgOrdNo);
-        if (nRet == 0)
+        if (nRet != 0) goto Final;
+        await newAsync.Wait(AsyncTimeOut);
+        nRet = newAsync._async_result;
+        sMsg = newAsync._async_msg;
+        if (nRet == 0 && !bExistOrderNumber)
         {
-            await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
-            nRet = newAsync._async_result;
-            if (nRet == 0 && !bExistOrderNumber)
-            {
-                nRet = -903;
-            }
+            nRet = -903;
         }
+    Final:
         _async_list.Remove(newAsync);
-        string sMsg = newAsync._async_msg;
         if (string.IsNullOrEmpty(sMsg))
             sMsg = GetErrorMessage(nRet);
         return (nRet, sMsg);
@@ -2303,18 +2291,18 @@ public class AxKHOpenAPI
         };
         _async_list.Add(newAsync);
 
+        string sMsg = string.Empty;
         int nRet = SendOrderCredit(sRQName, sScreenNo, sAccNo, nOrderType, sCode, nQty, nPrice, sHogaGb, sCreditGb, sLoanDate, sOrgOrderNo);
-        if (nRet == 0)
+        if (nRet != 0) goto Final;
+        await newAsync.Wait(AsyncTimeOut);
+        nRet = newAsync._async_result;
+        sMsg = newAsync._async_msg;
+        if (nRet == 0 && !bExistOrderNumber)
         {
-            await Task.Run(() => newAsync.WaitOne(AsyncTimeOut)).ConfigureAwait(true);
-            nRet = newAsync._async_result;
-            if (nRet == 0 && !bExistOrderNumber)
-            {
-                nRet = -903;
-            }
+            nRet = -903;
         }
+    Final:
         _async_list.Remove(newAsync);
-        string sMsg = newAsync._async_msg;
         if (string.IsNullOrEmpty(sMsg))
             sMsg = GetErrorMessage(nRet);
         return (nRet, sMsg);
