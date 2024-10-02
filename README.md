@@ -35,36 +35,30 @@
         private async void button_login_KH_Click(object sender, RoutedEventArgs e)
         {
             // 국내 로그인 요청
-            if (axKHOpenAPI.GetConnectState() == 0)
+            log_list.Items.Add("국내 로그인 요청중...");
+            var (ret, msg) = await axKHOpenAPI.CommConnectAsync();
+            if (ret == 0)
             {
-                log_list.Items.Add("국내 로그인 요청중...");
-                var (ret, msg) = await axKHOpenAPI.CommConnectAsync();
-                if (ret == 0)
-                {
-                    log_list.Items.Add("국내 로그인 성공");
-                }
-                else
-                {
-                    log_list.Items.Add("국내 로그인 실패: " + msg);
-                }
+                log_list.Items.Add("국내 로그인 성공");
+            }
+            else
+            {
+                log_list.Items.Add("국내 로그인 실패: " + msg);
             }
         }
 
         private async void button_login_KF_Click(object sender, RoutedEventArgs e)
         {
             // 해외 로그인 요청
-            if (axKFOpenAPI.GetConnectState() == 0)
+            log_list.Items.Add("해외 로그인 요청중...");
+            var (ret, msg) = await axKFOpenAPI.CommConnectAsync(1);
+            if (ret == 0)
             {
-                log_list.Items.Add("해외 로그인 요청중...");
-                var (ret, msg) = await axKFOpenAPI.CommConnectAsync(1);
-                if (ret == 0)
-                {
-                    log_list.Items.Add("해외 로그인 성공");
-                }
-                else
-                {
-                    log_list.Items.Add("해외 로그인 실패: " + msg);
-                }
+                log_list.Items.Add("해외 로그인 성공");
+            }
+            else
+            {
+                log_list.Items.Add("해외 로그인 실패: " + msg);
             }
         }
 ```
