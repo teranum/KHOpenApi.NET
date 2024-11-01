@@ -1074,12 +1074,16 @@ namespace KHOpenApi.NET
         /// 비동기 요청을 수행합니다.<br/>
         /// <inheritdoc cref="CommRqData"/>
         /// </summary>
-        /// <param name="sRQName"><inheritdoc cref="CommRqData"/></param>
-        /// <param name="sTrCode"><inheritdoc cref="CommRqData"/></param>
-        /// <param name="sPrevNext"><inheritdoc cref="CommRqData"/></param>
-        /// <param name="sScreenNo"><inheritdoc cref="CommRqData"/></param>
+        /// <param name="sRQName">사용자구분명 입력</param>
+        /// <param name="sTrCode">Tr목록의 TrCode 입력 (예 : opt10001)</param>
+        /// <param name="sPrevNext">서버에서 내려준 Next키 값  입력</param>
+        /// <param name="sScreenNo">4자리의 화면번호 입력 (1 ~ 9999 : 숫자형식으로만 가능)</param>
         /// <param name="action">이벤트 콜백 함수</param>
-        /// <returns><inheritdoc cref="CommRqData"/><br/>-902: TimeOut</returns>
+        /// <returns>
+        /// (int nRet, string sMsg) 튜플로 결과를 반환합니다.<br/>
+        /// nRet값 0이면 성공이며, 그외 실패입니다.<br/>
+        /// 실패시 sMsg에 에러메시지가 전달됩니다.
+        /// </returns>
         public virtual async Task<(int nRet, string sMsg)> CommRqDataAsync(string sRQName, string sTrCode, string sPrevNext, string sScreenNo, Action<_DKFOpenAPIEvents_OnReceiveTrDataEvent> action)
         {
             var newAsync = new AsyncNode([sRQName, sTrCode, int.Parse(sScreenNo)])
@@ -1096,7 +1100,7 @@ namespace KHOpenApi.NET
             sMsg = newAsync._async_msg;
         Final:
             _async_list.Remove(newAsync);
-            if (string.IsNullOrEmpty(sMsg))
+            if (nRet != 0 && string.IsNullOrEmpty(sMsg))
                 sMsg = GetErrorMessage(nRet);
             return (nRet, sMsg);
         }
@@ -1105,8 +1109,12 @@ namespace KHOpenApi.NET
         /// 비동기 요청을 수행합니다.<br/>
         /// <inheritdoc cref="CommConnect"/>
         /// </summary>
-        /// <param name="nAutoUpgrade"><inheritdoc cref="CommConnect"/></param>
-        /// <returns><inheritdoc cref="CommConnect"/><br/>-901: 이미 요청 작동중</returns>
+        /// <param name="nAutoUpgrade">버전처리시, 수동 또는 자동 설정을 위한 구분값(0 : 수동진행, 1 : 자동진행)</param>
+        /// <returns>
+        /// (int nRet, string sMsg) 튜플로 결과를 반환합니다.<br/>
+        /// nRet값 0이면 성공이며, 그외 실패입니다.<br/>
+        /// 실패시 sMsg에 에러메시지가 전달됩니다.
+        /// </returns>
         public virtual async Task<(int nRet, string sMsg)> CommConnectAsync(int nAutoUpgrade)
         {
             var hash_id = AsyncNode.GetIdentId(["CommConnectAsync"]);
@@ -1130,7 +1138,7 @@ namespace KHOpenApi.NET
             sMsg = newAsync._async_msg;
         Final:
             _async_list.Remove(newAsync);
-            if (string.IsNullOrEmpty(sMsg))
+            if (nRet != 0 && string.IsNullOrEmpty(sMsg))
                 sMsg = GetErrorMessage(nRet);
             return (nRet, sMsg);
         }
@@ -1292,7 +1300,7 @@ namespace KHOpenApi.NET
             }
         Final:
             _async_list.Remove(newAsync);
-            if (string.IsNullOrEmpty(sMsg))
+            if (nRet != 0 && string.IsNullOrEmpty(sMsg))
                 sMsg = GetErrorMessage(nRet);
             return (nRet, sMsg);
         }

@@ -1812,7 +1812,7 @@ public class AxKHOpenAPI
     readonly List<AsyncNode> _async_list = [];
 
     /// <summary>
-    /// 비동기 요청을 수행합니다.<br/>
+    /// <see cref="CommRqData"/> 비동기 요청을 수행합니다.<br/>
     /// action 콜백함수에서 <see cref="OnReceiveTrData"/> 이벤트를 서술해 줍니다.<br/>
     /// <code language="csharp" >
     /// // 샘플코드: OPT10001: 주식기본정보요청
@@ -1828,10 +1828,14 @@ public class AxKHOpenAPI
     ///     Console.WriteLine("요청실패: " + sMsg);
     /// </code>
     /// </summary>
+    /// <param name="sRQName">사용자 구분명 (임의로 지정, 한글지원)</param>
+    /// <param name="sTrCode">조회하려는 TR이름</param>
+    /// <param name="nPrevNext">연속조회여부</param>
+    /// <param name="sScreenNo">화면번호 (4자리 숫자 임의로 지정)</param>
+    /// <param name="action">이벤트 콜백함수</param>
     /// <returns>
     /// (int nRet, string sMsg) 튜플로 결과를 반환합니다.<br/>
-    /// <inheritdoc cref="CommRqData"/><br/>
-    /// -902 타임아웃<br/>
+    /// nRet값 0이면 성공이며, 그외 실패입니다.<br/>
     /// 실패시 sMsg에 에러메시지가 전달됩니다.
     /// </returns>
     public async Task<(int nRet, string sMsg)> CommRqDataAsync(string sRQName, string sTrCode, int nPrevNext, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
@@ -1850,7 +1854,7 @@ public class AxKHOpenAPI
         sMsg = newAsync._async_msg;
     Final:
         _async_list.Remove(newAsync);
-        if (string.IsNullOrEmpty(sMsg))
+        if (nRet != 0 && string.IsNullOrEmpty(sMsg))
             sMsg = GetErrorMessage(nRet);
         return (nRet, sMsg);
     }
@@ -1874,10 +1878,16 @@ public class AxKHOpenAPI
     ///     Console.WriteLine("요청실패: " + sMsg);
     /// </code>
     /// </summary>
+    /// <param name="sArrCode">조회하려는 종목코드 리스트</param>
+    /// <param name="bNext">연속조회 여부 0:기본값, 1:연속조회(지원안함)</param>
+    /// <param name="nCodeCount">종목코드 갯수</param>
+    /// <param name="nTypeFlag">0:주식 종목, 3:선물옵션 종목</param>
+    /// <param name="sRQName">사용자 구분명</param>
+    /// <param name="sScreenNo">화면번호</param>
+    /// <param name="action">이벤트 콜백함수</param>
     /// <returns>
     /// (int nRet, string sMsg) 튜플로 결과를 반환합니다.<br/>
-    /// <inheritdoc cref="CommKwRqData"/><br/>
-    /// -902 타임아웃<br/>
+    /// nRet값 0이면 성공이며, 그외 실패입니다.<br/>
     /// 실패시 sMsg에 에러메시지가 전달됩니다.
     /// </returns>
     public async Task<(int nRet, string sMsg)> CommKwRqDataAsync(string sArrCode, int bNext, int nCodeCount, int nTypeFlag, string sRQName, string sScreenNo, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> action)
@@ -1902,51 +1912,21 @@ public class AxKHOpenAPI
         sMsg = newAsync._async_msg;
     Final:
         _async_list.Remove(newAsync);
-        if (string.IsNullOrEmpty(sMsg))
+        if (nRet != 0 && string.IsNullOrEmpty(sMsg))
             sMsg = GetErrorMessage(nRet);
         return (nRet, sMsg);
     }
 
     /// <summary>
-    /// 비동기 요청을 수행합니다.<br/>
-    /// action 콜백함수에서 <see cref="OnReceiveTrCondition"/> 이벤트를 수신처리 합니다.<br/>
-    /// 서버응답없을 경우 -902(타임아웃)을 리턴합니다.
-    /// </summary>
-    /// <returns>
-    /// (int nRet, string strCodeList) 튜플로 결과를 반환합니다.<br/>
-    /// <inheritdoc cref="SendCondition"/><br/>
-    /// 성공시 strCodeList에 검색종목리스트가 전달됩니다.(<see cref="OnReceiveTrCondition"/> 이벤트의 strCodeListr값<br/>
-    /// 실패시 strCodeList에 에러메시지가 전달됩니다.
-    /// </returns>
-    public async Task<(int nRet, string strCodeList)> SendConditionAsync(string strScrNo, string strConditionName, int nIndex, int nSearch)
-    {
-        string sCodeList = string.Empty;
-        var newAsync = new AsyncNode([strScrNo, strConditionName]);
-        _async_list.Add(newAsync);
-
-        string sMsg = string.Empty;
-        int nRet = SendCondition(strScrNo, strConditionName, nIndex, nSearch);
-        if (nRet != 1) goto Final;
-        await newAsync.Wait(AsyncTimeOut);
-        nRet = newAsync._async_result;
-        sMsg = newAsync._async_msg;
-    Final:
-        _async_list.Remove(newAsync);
-        if (string.IsNullOrEmpty(sMsg))
-            sMsg = GetErrorMessage(nRet);
-        return (nRet, sMsg);
-    }
-
-    /// <summary>
-    /// 비동기 요청을 수행합니다.<br/>
+    /// 비동기 로그인 요청을 수행합니다.<br/>
     /// <inheritdoc cref="CommConnect"/>
     /// </summary>
+    /// <remarks>함수 내부에서  <see cref="OnEventConnect"/> 이벤트 처리가 자동으로 진행되며 서버연결 성공/실패 결과를 반환합니다.</remarks>
     /// <returns>
     /// (int nRet, string sMsg) 튜플로 결과를 반환합니다.<br/>
-    /// <inheritdoc cref="CommConnect"/><br/>
-    /// 실패시 sMsg에 에러메시지가 전달됩니다.<br/>
+    /// nRet값 0이면 성공이며, 그외 실패입니다.<br/>
+    /// 실패시 sMsg에 에러메시지가 전달됩니다.
     /// </returns>
-    /// <remarks>함수 내부에서  <see cref="OnEventConnect"/> 이벤트 처리가 자동으로 진횅되며 서버연결 성공/실패 결과를 반환합니다.</remarks>
     public async Task<(int nRet, string sMsg)> CommConnectAsync()
     {
         var hash_id = AsyncNode.GetIdentId(["CommConnectAsync"]);
@@ -1965,8 +1945,45 @@ public class AxKHOpenAPI
         sMsg = newAsync._async_msg;
     Final:
         _async_list.Remove(newAsync);
-        if (string.IsNullOrEmpty(sMsg))
+        if (nRet != 0 && string.IsNullOrEmpty(sMsg))
             sMsg = GetErrorMessage(nRet);
+        return (nRet, sMsg);
+    }
+
+    /// <summary>
+    /// 비동기 조건검색 요청을 수행합니다.<br/>
+    /// </summary>
+    /// <remarks>함수 내부에서  <see cref="OnReceiveTrCondition"/> 이벤트 처리가 자동으로 진행되며 strCodeListr값을 반환합니다.</remarks>
+    /// <param name="strScrNo">화면번호</param>
+    /// <param name="strConditionName">조건식 이름</param>
+    /// <param name="nIndex">조건식 고유번호</param>
+    /// <param name="nSearch">실시간옵션. 0:조건검색만, 1:조건검색+실시간 조건검색</param>
+    /// <returns>
+    /// (int nRet, string strCodeList) 튜플로 결과를 반환합니다.<br/>
+    /// nRet값 1이면 성공이며, 그외 실패입니다.<br/>
+    /// 성공시 strCodeList에 검색종목리스트가 전달됩니다.<br/>
+    /// 실패시 strCodeList에 에러메시지가 전달됩니다.<br/>
+    /// </returns>
+    public async Task<(int nRet, string strCodeList)> SendConditionAsync(string strScrNo, string strConditionName, int nIndex, int nSearch)
+    {
+        var newAsync = new AsyncNode([strScrNo, strConditionName]);
+        _async_list.Add(newAsync);
+
+        string sMsg = string.Empty;
+        int nRet = SendCondition(strScrNo, strConditionName, nIndex, nSearch);
+        if (nRet != 1) goto Final;
+        await newAsync.Wait(AsyncTimeOut);
+        nRet = newAsync._async_result;
+        sMsg = newAsync._async_msg;
+    Final:
+        _async_list.Remove(newAsync);
+        if (nRet != 1 && string.IsNullOrEmpty(sMsg))
+        {
+            if (nRet == 0)
+                sMsg = "조건검색 요청 실패";
+            else
+                sMsg = GetErrorMessage(nRet);
+        }
         return (nRet, sMsg);
     }
 
@@ -1974,11 +1991,12 @@ public class AxKHOpenAPI
     /// 비동기 조건식 불러오기 함수.<br/>
     /// <inheritdoc cref="GetConditionLoad"/>
     /// </summary>
+    /// <remarks>함수 내부에서  <see cref="OnReceiveConditionVer"/> 이벤트 처리가 자동으로 진행되며 성공시 조건검색식리스트를 반환합니다.</remarks>
     /// <returns>
     /// (int nRet, string sCondList) 튜플로 결과를 반환합니다.<br/>
-    /// <inheritdoc cref="GetConditionLoad"/><br/>
+    /// nRet값 1이면 성공이며, 그외 실패입니다.<br/>
     /// 성공시 sCondList에 GetConditionNameList() 결과값이 전달됩니다.<br/>
-    /// 실패시 sCondList에 에러메시지가 전달됩니다.<br/>
+    /// 실패시 sCondList에 에러메시지가 전달됩니다.
     /// </returns>
     public async Task<(int nRet, string sCondList)> GetConditionLoadAsync()
     {
@@ -2000,8 +2018,13 @@ public class AxKHOpenAPI
         sMsg = newAsync._async_msg;
     Final:
         _async_list.Remove(newAsync);
-        if (string.IsNullOrEmpty(sMsg))
-            sMsg = GetErrorMessage(nRet);
+        if (nRet != 1 && string.IsNullOrEmpty(sMsg))
+        {
+            if (nRet == 0)
+                sMsg = "조건검색 목록 요청 실패";
+            else
+                sMsg = GetErrorMessage(nRet);
+        }
         return (nRet, sMsg);
     }
 
@@ -2197,7 +2220,7 @@ public class AxKHOpenAPI
         }
     Final:
         _async_list.Remove(newAsync);
-        if (string.IsNullOrEmpty(sMsg))
+        if (nRet != 0 && string.IsNullOrEmpty(sMsg))
             sMsg = GetErrorMessage(nRet);
         return (nRet, sMsg);
     }
@@ -2250,7 +2273,7 @@ public class AxKHOpenAPI
         }
     Final:
         _async_list.Remove(newAsync);
-        if (string.IsNullOrEmpty(sMsg))
+        if (nRet != 0 && string.IsNullOrEmpty(sMsg))
             sMsg = GetErrorMessage(nRet);
         return (nRet, sMsg);
     }
@@ -2303,7 +2326,7 @@ public class AxKHOpenAPI
         }
     Final:
         _async_list.Remove(newAsync);
-        if (string.IsNullOrEmpty(sMsg))
+        if (nRet != 0 && string.IsNullOrEmpty(sMsg))
             sMsg = GetErrorMessage(nRet);
         return (nRet, sMsg);
     }
