@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace KHOpenApi.NET;
@@ -38,7 +39,16 @@ public class AxKFOpenAPI : AxBase
 
     internal void RaiseOnOnReceiveTrData(object sender, _DKFOpenAPIEvents_OnReceiveTrDataEvent e)
     {
-        if (InternalAsyncNode is not null && InternalAsyncNode.EventCallback is not null && InternalAsyncNode.EventCallback((int)EventId.OnReceiveTrData, e))
+        bool handled = false;
+        foreach (var node in InternalAsyncNodes)
+        {
+            if (node.EventCallback is not null && node.EventCallback((int)EventId.OnReceiveTrData, e))
+            {
+                handled = true;
+                break;
+            }
+        }
+        if (handled)
             return;
 
         OnReceiveTrData?.Invoke(this, e);
@@ -51,7 +61,16 @@ public class AxKFOpenAPI : AxBase
 
     internal void RaiseOnOnReceiveMsg(object sender, _DKFOpenAPIEvents_OnReceiveMsgEvent e)
     {
-        if (InternalAsyncNode is not null && InternalAsyncNode.EventCallback is not null && InternalAsyncNode.EventCallback((int)EventId.OnReceiveMsg, e))
+        bool handled = false;
+        foreach (var node in InternalAsyncNodes)
+        {
+            if (node.EventCallback is not null && node.EventCallback((int)EventId.OnReceiveMsg, e))
+            {
+                handled = true;
+                break;
+            }
+        }
+        if (handled)
             return;
 
         OnReceiveMsg?.Invoke(this, e);
@@ -64,7 +83,16 @@ public class AxKFOpenAPI : AxBase
 
     internal void RaiseOnOnEventConnect(object sender, _DKFOpenAPIEvents_OnEventConnectEvent e)
     {
-        if (InternalAsyncNode is not null && InternalAsyncNode.EventCallback is not null && InternalAsyncNode.EventCallback((int)EventId.OnEventConnect, e))
+        bool handled = false;
+        foreach (var node in InternalAsyncNodes)
+        {
+            if (node.EventCallback is not null && node.EventCallback((int)EventId.OnEventConnect, e))
+            {
+                handled = true;
+                break;
+            }
+        }
+        if (handled)
             return;
 
         OnEventConnect?.Invoke(this, e);

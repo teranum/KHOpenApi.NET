@@ -87,7 +87,8 @@ public static class AxKHOpenApiExtension
     public static async Task<(int nRet, string sMsg)> CommConnectAsync(this AxKHOpenAPI api)
     {
         // 이미 비동기 요청이 진행 중인지 확인
-        if (api.InternalAsyncNode != null)
+        int nIdentId = AsyncNode.GetIdentId(["CommConnectAsync"]);
+        if (api.InternalAsyncNodes.Any(x => x.IdentId == nIdentId))
             return (InternalErrorCodes.ERR_ASYNC_WORKING, api.GetErrorMessage(InternalErrorCodes.ERR_ASYNC_WORKING));
 
         int nRet = DEF_SUCCESS_CODE;
@@ -106,23 +107,19 @@ public static class AxKHOpenApiExtension
         };
 
         // 비동기 노드 설정 및 연결 요청
-        api.InternalAsyncNode = asyncNode;
+        api.InternalAsyncNodes.Add(asyncNode);
         nRet = api.CommConnect();
         if (nRet == DEF_SUCCESS_CODE)
         {
             await asyncNode.Wait(); // 연결 완료까지 대기
         }
-        api.InternalAsyncNode = null; // 비동기 노드 정리
+        api.InternalAsyncNodes.Remove(asyncNode); // 비동기 노드 정리
 
         return (nRet, api.GetErrorMessage(nRet));
     }
 
     private static async Task<(int nRet, string sMsg)> CommReqAsync(this AxKHOpenAPI api, string sRQName, string sTrCode, string sScreenNo, Func<int> reqFunc, Action<_DKHOpenAPIEvents_OnReceiveTrDataEvent> eventCallback)
     {
-        // 중복 요청 방지 검사
-        if (api.InternalAsyncNode != null)
-            return (InternalErrorCodes.ERR_ASYNC_WORKING, api.GetErrorMessage(InternalErrorCodes.ERR_ASYNC_WORKING));
-
         int nRet = 0;
         // 데이터 요청을 위한 비동기 노드 생성 (요청명, TR코드, 화면번호로 식별)
         int.TryParse(sScreenNo, out var nScreenNo);
@@ -163,11 +160,11 @@ public static class AxKHOpenApiExtension
         };
 
         // 비동기 노드 설정 및 데이터 요청
-        api.InternalAsyncNode = asyncNode;
+        api.InternalAsyncNodes.Add(asyncNode);
         nRet = reqFunc();
         if (nRet == DEF_SUCCESS_CODE && !await asyncNode.Wait(api.AsyncTimeOut))
             nRet = InternalErrorCodes.ERR_ASYNC_TIMEOUT;
-        api.InternalAsyncNode = null; // 비동기 노드 정리
+        api.InternalAsyncNodes.Remove(asyncNode); // 비동기 노드 정리
 
         // 에러 메시지 처리
         string sMsg = asyncNode.Msg;
@@ -276,10 +273,6 @@ public static class AxKHOpenApiExtension
     /// </returns>
     public static async Task<(int nRet, string strCodeList)> SendConditionAsync(this AxKHOpenAPI api, string strScrNo, string strConditionName, int nIndex, int nSearch)
     {
-        // 중복 요청 방지 검사
-        if (api.InternalAsyncNode != null)
-            return (InternalErrorCodes.ERR_ASYNC_WORKING, api.GetErrorMessage(InternalErrorCodes.ERR_ASYNC_WORKING));
-
         int nRet = DEF_SUCCESS_CODE;
         // 데이터 요청을 위한 비동기 노드 생성 (요청명, TR코드, 화면번호로 식별)
         int.TryParse(strScrNo, out var nScreenNo);
@@ -303,11 +296,11 @@ public static class AxKHOpenApiExtension
         };
 
         // 비동기 노드 설정 및 데이터 요청
-        api.InternalAsyncNode = asyncNode;
+        api.InternalAsyncNodes.Add(asyncNode);
         nRet = api.SendCondition(strScrNo, strConditionName, nIndex, nSearch);
         if (nRet == DEF_CONDITION_SUCCESS_CODE && !await asyncNode.Wait(api.AsyncTimeOut))
             nRet = InternalErrorCodes.ERR_ASYNC_TIMEOUT;
-        api.InternalAsyncNode = null; // 비동기 노드 정리
+        api.InternalAsyncNodes.Remove(asyncNode); // 비동기 노드 정리
 
         // 에러 메시지 처리
         string sMsg = asyncNode.Msg;
@@ -335,7 +328,8 @@ public static class AxKHOpenApiExtension
     public static async Task<(int nRet, string sCondList)> GetConditionLoadAsync(this AxKHOpenAPI api)
     {
         // 중복 요청 방지 검사
-        if (api.InternalAsyncNode != null)
+        int nIdentId = AsyncNode.GetIdentId(["GetConditionLoadAsync"]);
+        if (api.InternalAsyncNodes.Any(x => x.IdentId == nIdentId))
             return (InternalErrorCodes.ERR_ASYNC_WORKING, api.GetErrorMessage(InternalErrorCodes.ERR_ASYNC_WORKING));
 
         int nRet = DEF_SUCCESS_CODE;
@@ -363,11 +357,11 @@ public static class AxKHOpenApiExtension
         };
 
         // 비동기 노드 설정 및 데이터 요청
-        api.InternalAsyncNode = asyncNode;
+        api.InternalAsyncNodes.Add(asyncNode);
         nRet = api.GetConditionLoad();
         if (nRet == DEF_CONDITION_SUCCESS_CODE && !await asyncNode.Wait(api.AsyncTimeOut))
             nRet = InternalErrorCodes.ERR_ASYNC_TIMEOUT;
-        api.InternalAsyncNode = null; // 비동기 노드 정리
+        api.InternalAsyncNodes.Remove(asyncNode); // 비동기 노드 정리
 
         // 에러 메시지 처리
         string sMsg = asyncNode.Msg;
@@ -383,10 +377,6 @@ public static class AxKHOpenApiExtension
 
     private static async Task<(int nRet, string sMsg)> OrderAsync(this AxKHOpenAPI api, string sRQName, string sScreenNo, Func<int> orderFunc)
     {
-        // 중복 주문 방지 검사
-        if (api.InternalAsyncNode != null)
-            return (InternalErrorCodes.ERR_ASYNC_WORKING, api.GetErrorMessage(InternalErrorCodes.ERR_ASYNC_WORKING));
-
         int nRet = DEF_SUCCESS_CODE;
         string sOrderNumber = string.Empty; // 주문번호 저장용
         const string _async_SendOrder = "SendOrderAsync";
@@ -430,11 +420,11 @@ public static class AxKHOpenApiExtension
         };
 
         // 비동기 노드 설정 및 주문 전송
-        api.InternalAsyncNode = asyncNode;
+        api.InternalAsyncNodes.Add(asyncNode);
         nRet = orderFunc();
         if (nRet == DEF_SUCCESS_CODE && !await asyncNode.Wait(api.AsyncTimeOut))
             nRet = InternalErrorCodes.ERR_ASYNC_TIMEOUT;
-        api.InternalAsyncNode = null; // 비동기 노드 정리
+        api.InternalAsyncNodes.Remove(asyncNode); // 비동기 노드 정리
 
         // 주문번호가 없으면 주문 실패로 처리
         if (nRet == DEF_SUCCESS_CODE && string.IsNullOrEmpty(sOrderNumber))

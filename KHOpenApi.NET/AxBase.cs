@@ -1,5 +1,6 @@
 ﻿using KHOpenApi.NET.Internals;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -140,7 +141,7 @@ public abstract partial class AxBase : IDisposable
     /// </summary>
     /// <returns>이벤트를 처리할 개체</returns>
     protected abstract object CreateEventSink();
-    internal AsyncNode? InternalAsyncNode = null;
+    internal List<AsyncNode> InternalAsyncNodes = [];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowIfNull([NotNull] object? obj)
