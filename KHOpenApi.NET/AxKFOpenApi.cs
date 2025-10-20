@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace KHOpenApi.NET;
@@ -39,19 +38,8 @@ public class AxKFOpenAPI : AxBase
 
     internal void RaiseOnOnReceiveTrData(object sender, _DKFOpenAPIEvents_OnReceiveTrDataEvent e)
     {
-        bool handled = false;
-        foreach (var node in InternalAsyncNodes)
-        {
-            if (node.EventCallback is not null && node.EventCallback((int)EventId.OnReceiveTrData, e))
-            {
-                handled = true;
-                break;
-            }
-        }
-        if (handled)
-            return;
-
-        OnReceiveTrData?.Invoke(this, e);
+        if (!ProcInternalAsyncNode((int)EventId.OnReceiveTrData, e))
+            OnReceiveTrData?.Invoke(this, e);
     }
 
     internal void RaiseOnOnReceiveRealData(object sender, _DKFOpenAPIEvents_OnReceiveRealDataEvent e)
@@ -61,19 +49,8 @@ public class AxKFOpenAPI : AxBase
 
     internal void RaiseOnOnReceiveMsg(object sender, _DKFOpenAPIEvents_OnReceiveMsgEvent e)
     {
-        bool handled = false;
-        foreach (var node in InternalAsyncNodes)
-        {
-            if (node.EventCallback is not null && node.EventCallback((int)EventId.OnReceiveMsg, e))
-            {
-                handled = true;
-                break;
-            }
-        }
-        if (handled)
-            return;
-
-        OnReceiveMsg?.Invoke(this, e);
+        if (!ProcInternalAsyncNode((int)EventId.OnReceiveMsg, e))
+            OnReceiveMsg?.Invoke(this, e);
     }
 
     internal void RaiseOnOnReceiveChejanData(object sender, _DKFOpenAPIEvents_OnReceiveChejanDataEvent e)
@@ -83,19 +60,8 @@ public class AxKFOpenAPI : AxBase
 
     internal void RaiseOnOnEventConnect(object sender, _DKFOpenAPIEvents_OnEventConnectEvent e)
     {
-        bool handled = false;
-        foreach (var node in InternalAsyncNodes)
-        {
-            if (node.EventCallback is not null && node.EventCallback((int)EventId.OnEventConnect, e))
-            {
-                handled = true;
-                break;
-            }
-        }
-        if (handled)
-            return;
-
-        OnEventConnect?.Invoke(this, e);
+        if (!ProcInternalAsyncNode((int)EventId.OnEventConnect, e))
+            OnEventConnect?.Invoke(this, e);
     }
 
     #endregion

@@ -53,19 +53,8 @@ public class AxKHOpenAPI : AxBase
     public event _DKHOpenAPIEvents_OnReceiveConditionVerEventHandler? OnReceiveConditionVer;
     internal void RaiseOnOnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
     {
-        bool handled = false;
-        foreach (var node in InternalAsyncNodes)
-        {
-            if (node.EventCallback is not null && node.EventCallback((int)EventId.OnReceiveTrData, e))
-            {
-                handled = true;
-                break;
-            }
-        }
-        if (handled)
-            return;
-
-        OnReceiveTrData?.Invoke(this, e);
+        if (!ProcInternalAsyncNode((int)EventId.OnReceiveTrData, e))
+            OnReceiveTrData?.Invoke(this, e);
     }
 
     internal void RaiseOnOnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
@@ -75,19 +64,8 @@ public class AxKHOpenAPI : AxBase
 
     internal void RaiseOnOnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
     {
-        bool handled = false;
-        foreach (var node in InternalAsyncNodes)
-        {
-            if (node.EventCallback is not null && node.EventCallback((int)EventId.OnReceiveMsg, e))
-            {
-                handled = true;
-                break;
-            }
-        }
-        if (handled)
-            return;
-
-        OnReceiveMsg?.Invoke(this, e);
+        if (!ProcInternalAsyncNode((int)EventId.OnReceiveMsg, e))
+            OnReceiveMsg?.Invoke(this, e);
     }
 
     internal void RaiseOnOnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
@@ -97,19 +75,8 @@ public class AxKHOpenAPI : AxBase
 
     internal void RaiseOnOnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
     {
-        bool handled = false;
-        foreach (var node in InternalAsyncNodes)
-        {
-            if (node.EventCallback is not null && node.EventCallback((int)EventId.OnEventConnect, e))
-            {
-                handled = true;
-                break;
-            }
-        }
-        if (handled)
-            return;
-
-        OnEventConnect?.Invoke(this, e);
+        if (!ProcInternalAsyncNode((int)EventId.OnEventConnect, e))
+            OnEventConnect?.Invoke(this, e);
     }
 
     internal void RaiseOnOnReceiveInvestRealData(object sender, _DKHOpenAPIEvents_OnReceiveInvestRealDataEvent e)
@@ -124,36 +91,14 @@ public class AxKHOpenAPI : AxBase
 
     internal void RaiseOnOnReceiveTrCondition(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e)
     {
-        bool handled = false;
-        foreach (var node in InternalAsyncNodes)
-        {
-            if (node.EventCallback is not null && node.EventCallback((int)EventId.OnReceiveTrCondition, e))
-            {
-                handled = true;
-                break;
-            }
-        }
-        if (handled)
-            return;
-
-        OnReceiveTrCondition?.Invoke(this, e);
+        if (!ProcInternalAsyncNode((int)EventId.OnReceiveTrCondition, e))
+            OnReceiveTrCondition?.Invoke(this, e);
     }
 
     internal void RaiseOnOnReceiveConditionVer(object sender, _DKHOpenAPIEvents_OnReceiveConditionVerEvent e)
     {
-        bool handled = false;
-        foreach (var node in InternalAsyncNodes)
-        {
-            if (node.EventCallback is not null && node.EventCallback((int)EventId.OnReceiveConditionVer, e))
-            {
-                handled = true;
-                break;
-            }
-        }
-        if (handled)
-            return;
-
-        OnReceiveConditionVer?.Invoke(this, e);
+        if (!ProcInternalAsyncNode((int)EventId.OnReceiveConditionVer, e))
+            OnReceiveConditionVer?.Invoke(this, e);
     }
 
     #endregion

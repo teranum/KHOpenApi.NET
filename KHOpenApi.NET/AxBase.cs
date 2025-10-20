@@ -143,6 +143,31 @@ public abstract partial class AxBase : IDisposable
     protected abstract object CreateEventSink();
     internal List<AsyncNode> InternalAsyncNodes = [];
 
+    /// <summary>
+    /// 내부 비동기 노드에 이벤트를 전달하고 처리 여부를 반환합니다.
+    /// 모든 <see cref="AsyncNode.EventCallback"/>를 호출하며,
+    /// 하나라도 true를 반환하면 처리된 것으로 간주합니다.
+    /// </summary>
+    /// <param name="evenId">이벤트 식별자.</param>
+    /// <param name="e">이벤트 페이로드(임의 형식).</param>
+    /// <returns>하나 이상의 콜백이 이벤트를 처리했으면 true, 아니면 false.</returns>
+    /// <remarks>
+    /// - 예외 처리: 콜백 내부에서 발생한 예외는 전파됩니다.
+    /// - 스레드 안전성: <see cref="InternalAsyncNodes"/> 접근은 동기화가 필요할 수 있습니다.
+    /// </remarks>
+    protected bool ProcInternalAsyncNode(int evenId, EventArgs e)
+    {
+        foreach (var node in InternalAsyncNodes)
+        {
+            if (node.EventCallback is not null && node.EventCallback(evenId, e))
+            {
+                // 이벤트가 처리되었음을 나타냄
+                return true;
+            }
+        }
+        return false;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowIfNull([NotNull] object? obj)
     {

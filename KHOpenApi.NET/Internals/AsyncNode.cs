@@ -7,7 +7,7 @@ namespace KHOpenApi.NET.Internals;
 internal class AsyncNode(object[] objs) : IDisposable
 {
     public readonly int IdentId = GetIdentId(objs);
-    public Func<int, object, bool>? EventCallback;
+    public Func<int, EventArgs, bool>? EventCallback;
     public bool EventReceived = false;
     public string Msg = string.Empty;
 
