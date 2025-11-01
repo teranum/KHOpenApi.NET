@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KHOpenApi.NET;
+﻿namespace KHOpenApi.NET;
 
 /// <summary>
 /// 로그인 처리 이벤트입니다. 성공이면 인자값 nErrCode가 0이며 에러는 다음과 같은 값이 전달됩니다.

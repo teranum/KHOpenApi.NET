@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KHOpenApi.NET;
+﻿namespace KHOpenApi.NET;
 
 /// <summary>
 /// 저장된 사용자 조건식 불러오기 요청에 대한 응답 수신시 발생되는 이벤트입니다.

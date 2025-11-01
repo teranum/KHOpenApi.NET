@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KHOpenApi.NET;
+﻿namespace KHOpenApi.NET;
 
 /// <summary>
 /// 실시간 조건검색 요청으로 신규종목이 편입되거나 기존 종목이 이탈될때 마다 발생됩니다.<br/> ※ 편입되었다가 순간적으로 다시 이탈되는 종목에대한 신호는 조건검색 서버마다 차이가 발생할 수 있습니다. 

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KHOpenApi.NET;
+﻿namespace KHOpenApi.NET;
 
 /// <summary>
 /// 예약 이벤트. 실시간 등록을 통해 등록한 실시간 데이터를 수신하면 발생합니다.

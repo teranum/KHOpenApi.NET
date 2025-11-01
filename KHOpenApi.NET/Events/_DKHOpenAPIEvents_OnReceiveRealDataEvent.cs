@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KHOpenApi.NET;
+﻿namespace KHOpenApi.NET;
 
 /// <summary>
 /// 실시간데이터를 수신했을때 발생됩니다.

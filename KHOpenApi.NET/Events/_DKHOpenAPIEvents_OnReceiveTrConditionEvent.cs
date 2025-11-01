@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KHOpenApi.NET;
+﻿namespace KHOpenApi.NET;
 
 /// <summary>
 /// 조건검색 요청에대한 서버 응답 수신시 발생하는 이벤트입니다. <br/>

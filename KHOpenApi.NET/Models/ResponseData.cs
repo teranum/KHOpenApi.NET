@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace KHOpenApi.NET;
+﻿namespace KHOpenApi.NET;
 
 /// <summary>요청 응답 데이터</summary>
 public class ResponseData

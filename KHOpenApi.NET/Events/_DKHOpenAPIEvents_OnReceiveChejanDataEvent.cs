@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KHOpenApi.NET;
+﻿namespace KHOpenApi.NET;
 
 /// <summary>
 /// 주문전송 후 주문접수, 체결통보, 잔고통보를 수신할 때 마다 발생됩니다.<br/> <see cref="AxKHOpenAPI.GetChejanData"/>함수를 이용해서 FID항목별 값을 얻을수 있습니다.

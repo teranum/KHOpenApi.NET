@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KHOpenApi.NET;
+﻿namespace KHOpenApi.NET;
 
 /// <summary>
 /// 데이터 요청 또는 주문전송 후에 서버가 보낸 메시지를 수신합니다.<br/><br/>

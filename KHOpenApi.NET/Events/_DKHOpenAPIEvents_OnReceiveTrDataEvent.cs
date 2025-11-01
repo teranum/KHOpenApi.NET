@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KHOpenApi.NET;
+﻿namespace KHOpenApi.NET;
 
 /// <summary>요청했던 조회데이터를 수신했을때 발생됩니다. 수신된 데이터는 이 이벤트내부에서 <see cref="AxKHOpenAPI.GetCommData"/> 함수를 이용해서 얻어올 수 있습니다.</summary>
 public class _DKHOpenAPIEvents_OnReceiveTrDataEvent(string sScrNo, string sRQName, string sTrCode, string sRecordName, string sPrevNext, int nDataLength, string sErrorCode, string sMessage, string sSplmMsg) : EventArgs

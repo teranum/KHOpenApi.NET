@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace KHOpenApi.NET.Internals;
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
