@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using KHOpenApi.NET.Attributes;
 
 namespace KHOpenApi.NET;
 
@@ -7,7 +6,8 @@ namespace KHOpenApi.NET;
 /// <summary>
 /// 해외선물옵션용 OpenAPI+ ActiveX 컨트롤을 위한 래퍼 클래스
 /// </summary>
-[Guid("d1acab7d-a3af-49e4-9004-c9e98344e17a")]
+//[ComId("d1acab7d-a3af-49e4-9004-c9e98344e17a")]
+[ComId("KFOPENAPI.KFOpenAPICtrl.1")]
 public class AxKFOpenAPI : AxBase
 {
     #region 이벤트 핸들러

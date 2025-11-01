@@ -1,12 +1,10 @@
-﻿using KHOpenApi.NET.Internals;
-using System;
-using System.Collections.Generic;
+﻿using KHOpenApi.NET.Attributes;
+using KHOpenApi.NET.Internals;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
-using System.Threading;
 
 namespace KHOpenApi.NET;
 
@@ -73,6 +71,23 @@ public abstract partial class AxBase : IDisposable
     {
         EnsureStaThread();
 
+        // Get ComId attribute
+        string clsid = string.Empty;
+        var comIdAttr = (ComIdAttribute?)Attribute.GetCustomAttribute(GetType(), typeof(ComIdAttribute));
+        if (comIdAttr != null)
+        {
+            var comid = comIdAttr.Value;
+            if (!Guid.TryParse(comid, out Guid guid))
+            {
+                guid = Type.GetTypeFromProgID(comid)?.GUID ?? throw new InvalidOperationException("ComId 값이 유효하지 않습니다.");
+            }
+            clsid = guid.ToString("B");
+        }
+        else
+        {
+            throw new InvalidOperationException("ComId가 클래스에 정의되어 있지 않습니다.");
+        }
+
         // 부모 윈도우 핸들이 없으면 자동으로 찾기
         if (hWndParent == IntPtr.Zero)
         {
@@ -88,9 +103,7 @@ public abstract partial class AxBase : IDisposable
         // ATL ActiveX 윈도우 초기화
         if (NativeMethods.AtlAxWinInit())
         {
-            // 현재 타입의 GUID를 문자열로 변환
-            var clsid = GetType().GUID.ToString("B");
-            // 컨트롤 ID를 GUID 해시를 기반으로 생성 (9000-9999 범위)
+            // 컨트롤 ID를 clsid 해시를 기반으로 생성 (9000-9999 범위)
             int ctrl_id = 9000 + (int)((uint)clsid.GetHashCode() % 1000);
 
             const int WS_VISIBLE = 0x10000000; // 윈도우 스타일 상수
