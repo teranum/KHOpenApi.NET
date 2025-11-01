@@ -5,7 +5,7 @@
 /// </summary>
 /// <param name="comId">대상 클래스에 매핑할 COM 식별자 문자열입니다.</param>
 [AttributeUsage(AttributeTargets.Class)]
-public class ComIdAttribute(string comId) : Attribute
+public sealed class ComIdAttribute(string comId) : Attribute
 {
     /// <summary>
     /// 지정된 COM 식별자 값입니다.
