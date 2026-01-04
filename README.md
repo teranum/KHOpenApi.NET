@@ -58,7 +58,7 @@
 ## 🔧 지원 환경
 
 ### 개발 환경
-- **IDE**: Visual Studio 2022
+- **IDE**: Visual Studio 2022-2026
 - **프레임워크**: .NET Standard 2.0
 - **플랫폼**: Windows 10/11
 
