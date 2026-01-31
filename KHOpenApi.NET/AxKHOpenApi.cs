@@ -6,7 +6,7 @@ namespace KHOpenApi.NET;
 /// <summary>
 /// 키움 OpenAPI+ ActiveX 컨트롤을 위한 래퍼 클래스
 /// </summary>
-//[Guid("a1574a0d-6bfa-4bd7-9020-ded88711818d")]
+//[ComId("a1574a0d-6bfa-4bd7-9020-ded88711818d")]
 [ComId("KHOPENAPI.KHOpenAPICtrl.1")]
 public class AxKHOpenAPI : AxBase
 {
