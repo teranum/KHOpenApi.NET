@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 
 namespace KHOpenApi.NET;
 
+#pragma warning disable S3376, S1450, S907
+
 [ComImport]
 [Guid("CF20FBB6-EDD4-4BE5-A473-FEF91977DEB6")]
 [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
@@ -558,9 +560,8 @@ public class AxKHOpenAPI
     public event _DKHOpenAPIEvents_OnReceiveConditionVerEventHandler OnReceiveConditionVer;
     internal void RaiseOnOnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
     {
-        if (_async_list.Count > 0)
+        if (_async_list.Count > 0 && int.TryParse(e.sScrNo, out var scr_no))
         {
-            var scr_no = int.Parse(e.sScrNo);
             int async_ident_id = AsyncNode.GetIdentId([e.sRQName, _async_SendOrder, scr_no]);
             var async_node = _async_list.Find(x => x._ident_id == async_ident_id);
             if (async_node is null)
@@ -587,9 +588,8 @@ public class AxKHOpenAPI
 
     internal void RaiseOnOnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
     {
-        if (_async_list.Count > 0)
+        if (_async_list.Count > 0 && int.TryParse(e.sScrNo, out var scr_no))
         {
-            var scr_no = int.Parse(e.sScrNo);
             int async_ident_id = AsyncNode.GetIdentId([e.sRQName, _async_SendOrder, scr_no]);
             var async_node = _async_list.Find(x => x._ident_id == async_ident_id);
             if (async_node is null)
@@ -2114,6 +2114,7 @@ public class AxKHOpenAPI
         ResponseData response = new()
         {
             tr_cd = tr_cd,
+            scr_num = scr_num,
             InValues = indatas.ToArray(),
             InSingleFields = singleFields.ToArray(),
             InMultiFields = multiFields.ToArray(),
@@ -2134,7 +2135,7 @@ public class AxKHOpenAPI
             (response.nErrCode, response.rsp_msg) = await CommKwRqDataAsync(종목코드, 0, count, nTypeFlag, tr_cd, scr_num,
                 (e) =>
                 {
-                    DisconnectRealData(e.sScrNo);
+                    //DisconnectRealData(e.sScrNo);
                     var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRQName);
                     for (int i = 0; i < nRepeateCnt; i++)
                     {
@@ -2152,7 +2153,7 @@ public class AxKHOpenAPI
         (response.nErrCode, response.rsp_msg) = await CommRqDataAsync(tr_cd, tr_cd, cont_key.Equals("2") ? 2 : 0, scr_num,
             (e) =>
             {
-                DisconnectRealData(e.sScrNo);
+                //DisconnectRealData(e.sScrNo);
                 response.OutputSingleDatas = response.InSingleFields.Select(x => GetCommData(e.sTrCode, e.sRQName, 0, x).Trim()).ToArray();
                 var nRepeateCnt = GetRepeatCnt(e.sTrCode, e.sRQName);
                 for (int i = 0; i < nRepeateCnt; i++)
