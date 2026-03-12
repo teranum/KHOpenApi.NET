@@ -240,7 +240,6 @@ public static class AxKFOpenApiExtension
     /// <param name="singleFields">싱글 필드리스트</param>
     /// <param name="multiFields">멀티 필드 리스트</param>
     /// <param name="cont_key">연속조회 경우 설정. default: 빈문자</param>
-    /// <param name="reqRealData">실시간데이터 허용시 true로 설정. default: false</param>
     /// <returns><inheritdoc cref="ResponseData"/></returns>
     /// <remarks>
     /// <code language="csharp">
@@ -277,7 +276,7 @@ public static class AxKFOpenApiExtension
     /// }
     /// </code>
     /// </remarks>
-    public static async Task<ResponseData> RequestTrAsync(this AxKFOpenAPI api, string tr_cd, IEnumerable<KeyValuePair<string, string>> indatas, IEnumerable<string> singleFields, IEnumerable<string> multiFields, string cont_key = "", bool reqRealData = false)
+    public static async Task<ResponseData> RequestTrAsync(this AxKFOpenAPI api, string tr_cd, IEnumerable<KeyValuePair<string, string>> indatas, IEnumerable<string> singleFields, IEnumerable<string> multiFields, string cont_key = "")
     {
         // 화면번호 할당 (요청 식별용)
         var scr_num = ScrNumManager.GetRequestScrNum();
@@ -286,6 +285,7 @@ public static class AxKFOpenApiExtension
         ResponseData response = new()
         {
             tr_cd = tr_cd,
+            scr_num = scr_num,
             InValues = [.. indatas],
             InSingleFields = [.. singleFields],
             InMultiFields = [.. multiFields],
@@ -316,10 +316,6 @@ public static class AxKFOpenApiExtension
 
             // 연속조회 키 저장
             response.cont_key = e.sPrevNext;
-
-            // 실시간 데이터가 불필요한 경우 연결 해제
-            if (!reqRealData)
-                api.DisconnectRealData(e.sScrNo);
         }
 
         return response;
@@ -328,7 +324,7 @@ public static class AxKFOpenApiExtension
     /// <summary>
     /// KeyValue 타입을 사용하는 RequestTrAsync 오버로드
     /// </summary>
-    /// <inheritdoc cref="RequestTrAsync(AxKFOpenAPI, string, IEnumerable{KeyValuePair{string, string}}, IEnumerable{string}, IEnumerable{string}, string, bool)"/>
-    public static Task<ResponseData> RequestTrAsync(this AxKFOpenAPI api, string tr_cd, IEnumerable<KeyValue<string, string>> indatas, IEnumerable<string> singleFields, IEnumerable<string> multiFields, string cont_key = "", bool reqRealData = false)
-        => api.RequestTrAsync(tr_cd, indatas.Select(x => new KeyValuePair<string, string>(x.Key, x.Value)), singleFields, multiFields, cont_key, reqRealData);
+    /// <inheritdoc cref="RequestTrAsync(AxKFOpenAPI, string, IEnumerable{KeyValuePair{string, string}}, IEnumerable{string}, IEnumerable{string}, string)"/>
+    public static Task<ResponseData> RequestTrAsync(this AxKFOpenAPI api, string tr_cd, IEnumerable<KeyValue<string, string>> indatas, IEnumerable<string> singleFields, IEnumerable<string> multiFields, string cont_key = "")
+        => api.RequestTrAsync(tr_cd, indatas.Select(x => new KeyValuePair<string, string>(x.Key, x.Value)), singleFields, multiFields, cont_key);
 }
